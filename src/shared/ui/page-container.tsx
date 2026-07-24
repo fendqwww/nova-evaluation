@@ -10,7 +10,7 @@ export const PageContainer = React.forwardRef<HTMLElement, PageContainerProps>(
       className={cn(
         "mx-auto w-full max-w-lg flex-1 px-5",
         "pt-[max(1.25rem,var(--app-safe-top))]",
-        "pb-[calc(var(--bottom-nav-height)+max(1rem,var(--app-safe-bottom)))]",
+        "pb-[calc(var(--bottom-nav-height)+max(1.5rem,var(--app-safe-bottom)))]",
         className,
       )}
       {...props}

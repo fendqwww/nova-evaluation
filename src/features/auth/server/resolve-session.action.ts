@@ -12,6 +12,7 @@ export interface ResolvedProfile {
   primaryGoal: string;
   occupation: string;
   timezone: string;
+  themeColor: string;
 }
 
 export interface ResolvedSession {
@@ -20,6 +21,7 @@ export interface ResolvedSession {
     firstName: string;
     lastName: string | null;
     username: string | null;
+    photoUrl: string | null;
   };
   onboardingCompleted: boolean;
   profile: ResolvedProfile | null;
@@ -54,6 +56,7 @@ export async function resolveSession(rawInitData: string): Promise<ResolvedSessi
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
+      photoUrl: user.photoUrl,
     },
     onboardingCompleted: user.onboardingCompletedAt !== null,
     profile: user.profile
@@ -66,6 +69,7 @@ export async function resolveSession(rawInitData: string): Promise<ResolvedSessi
           primaryGoal: user.profile.primaryGoal,
           occupation: user.profile.occupation,
           timezone: user.profile.timezone,
+          themeColor: user.profile.themeColor,
         }
       : null,
   };

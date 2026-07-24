@@ -21,7 +21,7 @@ export default function DashboardPage() {
       redirectWhen={(session) => !session.onboardingCompleted}
       redirectTo="/onboarding"
     >
-      {(session) => <DashboardView session={session} />}
+      {() => <DashboardView />}
     </SessionBoundary>
   );
 }

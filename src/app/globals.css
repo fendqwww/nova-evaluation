@@ -4,20 +4,40 @@
   --background: #09090b;
   --foreground: #fafafa;
   --muted-foreground: #a1a1aa;
-  --card: #131316;
+
+  /* Surface elevation: page -> card -> nested/active. Depth comes from
+     stepping through these, not from shadows alone. */
+  --surface-0: #09090b;
+  --surface-1: #131316;
+  --surface-2: #1c1c21;
+
   --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
   --input: rgba(255, 255, 255, 0.06);
-  --ring: #3b82f6;
-  --accent: #3b82f6;
-  --accent-hover: #60a5fa;
+
+  /* Accent is the only thing a theme changes — overridden per
+     [data-theme] below. Every other accent-* token derives from it via
+     color-mix() so a theme is a single hex value, not four. */
+  --accent: #2a6baf;
   --accent-foreground: #fafafa;
+
   --destructive: #ef4444;
   --destructive-foreground: #fafafa;
 
-  --radius: 0.625rem;
+  /* Fixed category tints for iconography — deliberately independent of
+     the user's chosen accent theme, so the dashboard reads as
+     color-coded categories (goals/habits/tasks) rather than "everything
+     is the same blue". */
+  --tint-green: #22c55e;
+  --tint-purple: #a78bfa;
+  --tint-orange: #fb923c;
+  --tint-blue: #60a5fa;
 
-  /* Fixed height reserved for the persistent bottom navigation. */
-  --bottom-nav-height: 4rem;
+  --radius: 0.875rem;
+
+  /* Fixed height reserved for the floating bottom navigation, including
+     its gap from the screen edge. */
+  --bottom-nav-height: 4.5rem;
 
   /*
    * Prefer Telegram's own content-safe-area (accounts for its header/bottom
@@ -34,25 +54,66 @@
   );
 }
 
+/* Theme palettes — chosen at onboarding, stored on Profile.themeColor,
+   applied as a data-theme attribute on <html>. Adding a theme later is a
+   one-line addition here, nothing else in the app references a raw hex. */
+[data-theme="ocean"] {
+  --accent: #2a6baf;
+}
+[data-theme="purple"] {
+  --accent: #7c6aef;
+}
+[data-theme="emerald"] {
+  --accent: #22b573;
+}
+[data-theme="orange"] {
+  --accent: #e8823d;
+}
+[data-theme="rose"] {
+  --accent: #e1547a;
+}
+[data-theme="graphite"] {
+  --accent: #9ca3af;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
-  --color-card: var(--card);
+
+  --color-surface-0: var(--surface-0);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-card: var(--surface-1);
   --color-card-foreground: var(--foreground);
+
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
-  --color-ring: var(--ring);
+  --color-ring: var(--accent);
+
   --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
+  --color-accent-hover: color-mix(in srgb, var(--accent) 82%, white 18%);
+  --color-accent-muted: color-mix(in srgb, var(--accent) 16%, transparent);
+  --color-accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
   --color-accent-foreground: var(--accent-foreground);
+
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
 
+  --color-tint-green: var(--tint-green);
+  --color-tint-green-muted: color-mix(in srgb, var(--tint-green) 16%, transparent);
+  --color-tint-purple: var(--tint-purple);
+  --color-tint-purple-muted: color-mix(in srgb, var(--tint-purple) 16%, transparent);
+  --color-tint-orange: var(--tint-orange);
+  --color-tint-orange-muted: color-mix(in srgb, var(--tint-orange) 16%, transparent);
+  --color-tint-blue: var(--tint-blue);
+  --color-tint-blue-muted: color-mix(in srgb, var(--tint-blue) 16%, transparent);
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 4px);
-  --radius-xl: calc(var(--radius) + 8px);
+  --radius-lg: calc(var(--radius) + 6px);
+  --radius-xl: calc(var(--radius) + 10px);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

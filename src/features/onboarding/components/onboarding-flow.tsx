@@ -9,6 +9,7 @@ import { HeightStep } from "@/features/onboarding/components/steps/height-step";
 import { WeightStep } from "@/features/onboarding/components/steps/weight-step";
 import { GenderStep } from "@/features/onboarding/components/steps/gender-step";
 import { GoalStep } from "@/features/onboarding/components/steps/goal-step";
+import { ThemeStep } from "@/features/onboarding/components/steps/theme-step";
 import { OccupationStep } from "@/features/onboarding/components/steps/occupation-step";
 import { TimezoneStep } from "@/features/onboarding/components/steps/timezone-step";
 import type { ResolvedSession } from "@/features/auth/server/resolve-session.action";
@@ -77,6 +78,9 @@ export function OnboardingFlow({ session }: { session: ResolvedSession }) {
                 onNext={next}
                 onBack={onBack}
               />
+            )}
+            {stepId === "theme" && (
+              <ThemeStep defaultValue={values.themeColor} onNext={next} onBack={onBack} />
             )}
             {stepId === "occupation" && (
               <OccupationStep

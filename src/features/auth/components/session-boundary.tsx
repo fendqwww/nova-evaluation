@@ -29,6 +29,13 @@ export function SessionBoundary({
     }
   }, [shouldRedirect, redirectTo, router]);
 
+  const themeColor = data?.profile?.themeColor;
+  useEffect(() => {
+    if (themeColor) {
+      document.documentElement.dataset.theme = themeColor;
+    }
+  }, [themeColor]);
+
   if (isError) {
     return <TelegramAuthError onRetry={() => refetch()} />;
   }

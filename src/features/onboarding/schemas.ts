@@ -52,6 +52,39 @@ export const OCCUPATION_OPTIONS = OCCUPATION_VALUES.map((value) => ({
   label: OCCUPATION_LABELS[value],
 }));
 
+export const THEME_VALUES = [
+  "ocean",
+  "purple",
+  "emerald",
+  "orange",
+  "rose",
+  "graphite",
+] as const;
+export type ThemeValue = (typeof THEME_VALUES)[number];
+export const THEME_LABELS: Record<ThemeValue, string> = {
+  ocean: "Океан",
+  purple: "Аметист",
+  emerald: "Изумруд",
+  orange: "Закат",
+  rose: "Роза",
+  graphite: "Графит",
+};
+// Kept in sync by hand with the [data-theme] blocks in src/app/globals.css —
+// used only to render an accurate preview swatch during theme selection.
+export const THEME_SWATCH_HEX: Record<ThemeValue, string> = {
+  ocean: "#2A6BAF",
+  purple: "#7C6AEF",
+  emerald: "#22B573",
+  orange: "#E8823D",
+  rose: "#E1547A",
+  graphite: "#9CA3AF",
+};
+export const THEME_OPTIONS = THEME_VALUES.map((value) => ({
+  value,
+  label: THEME_LABELS[value],
+  swatch: THEME_SWATCH_HEX[value],
+}));
+
 export const onboardingProfileSchema = z.object({
   name: z.string().trim().min(1, "Введите имя").max(60, "Слишком длинное имя"),
   age: z.coerce.number().int().min(10, "Минимум 10 лет").max(120, "Максимум 120 лет"),
@@ -69,6 +102,7 @@ export const onboardingProfileSchema = z.object({
   primaryGoal: z.enum(PRIMARY_GOAL_VALUES),
   occupation: z.enum(OCCUPATION_VALUES),
   timezone: z.string().min(1, "Выберите часовой пояс"),
+  themeColor: z.enum(THEME_VALUES),
 });
 
 export type OnboardingProfileInput = z.infer<typeof onboardingProfileSchema>;

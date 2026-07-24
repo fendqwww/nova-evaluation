@@ -26,6 +26,9 @@ model User {
   updatedAt             DateTime  @updatedAt
 
   profile Profile?
+  goals   Goal[]
+  habits  Habit[]
+  tasks   Task[]
 }
 
 // gender/primaryGoal/occupation are validated against a zod union in
@@ -45,7 +48,40 @@ model Profile {
   primaryGoal String
   occupation  String
   timezone    String
+  // "ocean" | "purple" | "emerald" | "orange" | "rose" | "graphite" — see
+  // THEME_VALUES in src/features/onboarding/schemas.ts. String, not an
+  // enum, for the same SQLite-compatibility reason as the fields above.
+  themeColor  String   @default("ocean")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Minimal, deliberately so: title + completion only. Dates, streaks, and
+// progress tracking are a later stage's concern, added as new columns —
+// never a reshape of this model.
+model Goal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model Habit {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  createdAt DateTime @default(now())
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }

@@ -8,9 +8,11 @@ interface OptionCardProps {
   label: string;
   selected: boolean;
   onSelect: () => void;
+  /** Optional leading color swatch — used by the theme-selection step. */
+  swatchColor?: string;
 }
 
-export function OptionCard({ label, selected, onSelect }: OptionCardProps) {
+export function OptionCard({ label, selected, onSelect, swatchColor }: OptionCardProps) {
   return (
     <motion.button
       type="button"
@@ -19,11 +21,20 @@ export function OptionCard({ label, selected, onSelect }: OptionCardProps) {
       className={cn(
         "flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left text-base font-medium transition-colors duration-200",
         selected
-          ? "border-accent bg-accent/10 text-foreground"
-          : "border-border bg-card text-foreground hover:bg-white/[0.06]",
+          ? "border-accent-border bg-accent-muted text-foreground"
+          : "border-border bg-card text-foreground hover:bg-surface-2",
       )}
     >
-      {label}
+      <span className="flex items-center gap-3">
+        {swatchColor && (
+          <span
+            className="h-4 w-4 shrink-0 rounded-full ring-1 ring-white/15"
+            style={{ backgroundColor: swatchColor }}
+            aria-hidden
+          />
+        )}
+        {label}
+      </span>
       <span
         className={cn(
           "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-200",

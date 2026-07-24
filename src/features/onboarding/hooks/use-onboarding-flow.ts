@@ -14,11 +14,12 @@ import type { ResolvedSession } from "@/features/auth/server/resolve-session.act
 
 export const ONBOARDING_STEP_IDS = [
   "name",
+  "goal",
+  "theme",
   "age",
   "height",
   "weight",
   "gender",
-  "goal",
   "occupation",
   "timezone",
 ] as const;
@@ -47,6 +48,12 @@ function buildDefaultValues(
     timezone:
       session.profile?.timezone ??
       Intl.DateTimeFormat().resolvedOptions().timeZone,
+    // Left undefined on a fresh run so the theme step waits for an explicit
+    // choice instead of auto-advancing on its default (same pattern as the
+    // gender/goal/occupation selection steps).
+    themeColor: session.profile?.themeColor as
+      | OnboardingProfileInput["themeColor"]
+      | undefined,
   };
 }
 

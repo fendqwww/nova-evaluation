@@ -13,8 +13,8 @@ export function NameStep({ defaultValue, onNext, onBack }: OnboardingStepProps<s
 
   return (
     <StepShell
-      eyebrow="Добро пожаловать в Nova"
-      title="Как вас зовут?"
+      eyebrow="👋 Добро пожаловать в Nova"
+      title="Как к вам обращаться?"
       onBack={onBack}
       footer={
         <Button
