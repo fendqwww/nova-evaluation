@@ -1,0 +1,51 @@
+// Prisma 7: the connection URL no longer lives here — it's supplied via a
+// driver adapter (see prisma.config.ts for the CLI, src/server/db.ts for the
+// app). Migrating SQLite -> PostgreSQL means swapping the adapter package
+// (@prisma/adapter-better-sqlite3 -> @prisma/adapter-pg) and this `provider`
+// literal. That stays a small, contained change only if the schema never
+// uses `enum` or scalar list fields, since the SQLite connector supports
+// neither.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                    String    @id @default(cuid())
+  telegramId            String    @unique
+  firstName             String
+  lastName              String?
+  username              String?
+  languageCode          String?
+  photoUrl              String?
+  onboardingCompletedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  profile Profile?
+}
+
+// gender/primaryGoal/occupation are validated against a zod union in
+// src/features/onboarding/schemas.ts, not a Prisma `enum` — SQLite's
+// connector doesn't support enums, and this keeps the Postgres migration a
+// one-line provider change.
+model Profile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name        String
+  age         Int
+  heightCm    Int
+  weightKg    Int
+  gender      String
+  primaryGoal String
+  occupation  String
+  timezone    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

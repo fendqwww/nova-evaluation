@@ -1,0 +1,33 @@
+"use client";
+
+import { useState } from "react";
+import { StepShell } from "@/features/onboarding/components/step-shell";
+import { NumberField } from "@/features/onboarding/components/number-field";
+import { Button } from "@/shared/ui/button";
+import type { OnboardingStepProps } from "@/features/onboarding/types";
+
+export function HeightStep({
+  defaultValue,
+  onNext,
+  onBack,
+}: OnboardingStepProps<number>) {
+  const [value, setValue] = useState(defaultValue);
+
+  return (
+    <StepShell
+      title="Какой у вас рост?"
+      onBack={onBack}
+      footer={
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={() => onNext({ heightCm: value })}
+        >
+          Продолжить
+        </Button>
+      }
+    >
+      <NumberField value={value} onChange={setValue} unit="см" min={80} max={250} />
+    </StepShell>
+  );
+}
