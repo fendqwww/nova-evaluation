@@ -8,6 +8,7 @@ import {
   ModalTitle,
   ModalDescription,
 } from "@/shared/ui/modal";
+import { IconChip } from "@/shared/ui/card";
 import type { Insight } from "@/features/insights/types";
 
 export function AiCoachModal({
@@ -32,14 +33,14 @@ export function AiCoachModal({
           {insights.map((insight) => (
             <div
               key={insight.id}
-              className="flex gap-3 rounded-xl border border-border bg-surface-2 p-4"
+              className="flex gap-3 rounded-xl border border-white/5 bg-black/20 p-3.5"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-muted text-accent">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">{insight.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{insight.body}</p>
+              <IconChip tone="ai" size="sm">
+                <Sparkles className="h-3.5 w-3.5" />
+              </IconChip>
+              <div className="min-w-0">
+                <p className="text-body font-medium text-foreground">{insight.title}</p>
+                <p className="mt-1 text-caption text-muted-foreground">{insight.body}</p>
               </div>
             </div>
           ))}

@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { verifyTelegramInitData } from "@/server/auth/telegram";
+import { resolveIdentity } from "@/server/auth/identity";
 import { calculateLifeScore } from "@/features/life-score/server/calculate-life-score";
 import { generateInsights } from "@/features/insights/server/generate-insights";
 import {
@@ -10,8 +10,8 @@ import {
 } from "@/features/activity/server/activity.repository";
 import type { PrimaryGoalValue } from "@/features/onboarding/schemas";
 
-export async function getDashboardData(rawInitData: string) {
-  const identity = verifyTelegramInitData(rawInitData);
+export async function getDashboardData(rawInitData: string | undefined) {
+  const identity = resolveIdentity(rawInitData);
 
   const user = await db.user.findUniqueOrThrow({
     where: { telegramId: identity.telegramId },

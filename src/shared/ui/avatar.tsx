@@ -13,7 +13,10 @@ export function Avatar({ src, name, size = 44, className }: AvatarProps) {
 
   return (
     <div
-      className={cn("relative shrink-0 overflow-hidden rounded-full ring-1 ring-white/10", className)}
+      className={cn(
+        "relative shrink-0 overflow-hidden rounded-full ring-1 ring-white/12",
+        className,
+      )}
       style={{ width: size, height: size }}
     >
       {src ? (
@@ -23,14 +26,11 @@ export function Avatar({ src, name, size = 44, className }: AvatarProps) {
         // and layout stability without requiring a fixed domain.
         <Image src={src} alt={name} fill unoptimized className="object-cover" />
       ) : (
-        <div
-          className="flex h-full w-full items-center justify-center"
-          style={{
-            background:
-              "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 55%, black))",
-          }}
-        >
-          <span className="font-bold text-white" style={{ fontSize: size * 0.42 }}>
+        <div className="flex h-full w-full items-center justify-center bg-accent">
+          <span
+            className="font-semibold tracking-tight text-accent-foreground"
+            style={{ fontSize: size * 0.4 }}
+          >
             {initial}
           </span>
         </div>

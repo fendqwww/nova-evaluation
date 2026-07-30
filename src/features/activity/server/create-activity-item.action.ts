@@ -2,11 +2,11 @@
 
 import { z } from "zod";
 import { db } from "@/server/db";
-import { verifyTelegramInitData } from "@/server/auth/telegram";
+import { resolveIdentity } from "@/server/auth/identity";
 import { createActivityItem } from "@/features/activity/server/activity.repository";
 
 const createActivityItemInputSchema = z.object({
-  rawInitData: z.string().min(1),
+  rawInitData: z.string().min(1).optional(),
   type: z.enum(["goal", "habit", "task"]),
   title: z.string().trim().min(1, "Введите название").max(120, "Слишком длинное название"),
 });
@@ -15,7 +15,7 @@ export type CreateActivityItemInput = z.infer<typeof createActivityItemInputSche
 
 export async function createActivityItemAction(input: CreateActivityItemInput) {
   const { rawInitData, type, title } = createActivityItemInputSchema.parse(input);
-  const identity = verifyTelegramInitData(rawInitData);
+  const identity = resolveIdentity(rawInitData);
 
   const user = await db.user.findUniqueOrThrow({
     where: { telegramId: identity.telegramId },

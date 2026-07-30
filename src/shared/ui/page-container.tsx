@@ -8,7 +8,7 @@ export const PageContainer = React.forwardRef<HTMLElement, PageContainerProps>(
     <main
       ref={ref}
       className={cn(
-        "mx-auto w-full max-w-lg flex-1 px-5",
+        "mx-auto w-full max-w-lg flex-1 px-4",
         "pt-[max(1.25rem,var(--app-safe-top))]",
         "pb-[calc(var(--bottom-nav-height)+max(1.5rem,var(--app-safe-bottom)))]",
         className,

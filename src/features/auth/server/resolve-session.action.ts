@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/server/db";
-import { verifyTelegramInitData } from "@/server/auth/telegram";
+import { resolveIdentity } from "@/server/auth/identity";
 
 export interface ResolvedProfile {
   name: string;
@@ -27,8 +27,10 @@ export interface ResolvedSession {
   profile: ResolvedProfile | null;
 }
 
-export async function resolveSession(rawInitData: string): Promise<ResolvedSession> {
-  const identity = verifyTelegramInitData(rawInitData);
+export async function resolveSession(
+  rawInitData: string | undefined,
+): Promise<ResolvedSession> {
+  const identity = resolveIdentity(rawInitData);
 
   const user = await db.user.upsert({
     where: { telegramId: identity.telegramId },

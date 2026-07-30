@@ -8,41 +8,29 @@ interface OptionCardProps {
   label: string;
   selected: boolean;
   onSelect: () => void;
-  /** Optional leading color swatch — used by the theme-selection step. */
-  swatchColor?: string;
 }
 
-export function OptionCard({ label, selected, onSelect, swatchColor }: OptionCardProps) {
+/**
+ * A big, single-column pill — the large-touch-target list pattern premium
+ * onboarding flows use for single-choice questions (Typeform, Duolingo,
+ * Headway). Selection is a filled brand-blue background, not a coloured
+ * badge: this is the one place the accent appears on this screen.
+ */
+export function OptionCard({ label, selected, onSelect }: OptionCardProps) {
   return (
     <motion.button
       type="button"
       onClick={onSelect}
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.985 }}
       className={cn(
-        "flex w-full items-center justify-between rounded-xl border px-5 py-4 text-left text-base font-medium transition-colors duration-200",
+        "flex w-full items-center justify-between gap-3 rounded-2xl border px-5 py-5 text-left transition-colors duration-200",
         selected
-          ? "border-accent-border bg-accent-muted text-foreground"
-          : "border-border bg-card text-foreground hover:bg-surface-2",
+          ? "border-accent bg-accent text-accent-foreground"
+          : "border-border bg-transparent text-foreground active:border-border-strong active:bg-white/3",
       )}
     >
-      <span className="flex items-center gap-3">
-        {swatchColor && (
-          <span
-            className="h-4 w-4 shrink-0 rounded-full ring-1 ring-white/15"
-            style={{ backgroundColor: swatchColor }}
-            aria-hidden
-          />
-        )}
-        {label}
-      </span>
-      <span
-        className={cn(
-          "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors duration-200",
-          selected ? "border-accent bg-accent" : "border-border",
-        )}
-      >
-        {selected && <Check className="h-3.5 w-3.5 text-accent-foreground" />}
-      </span>
+      <span className="text-[1.125rem] font-semibold tracking-[-0.018em]">{label}</span>
+      {selected && <Check className="h-5 w-5 shrink-0" strokeWidth={2.5} />}
     </motion.button>
   );
 }

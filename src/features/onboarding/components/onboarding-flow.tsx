@@ -2,98 +2,101 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useOnboardingFlow } from "@/features/onboarding/hooks/use-onboarding-flow";
-import { ProgressBar } from "@/features/onboarding/components/progress-bar";
+import { WelcomeStep } from "@/features/onboarding/components/steps/welcome-step";
+import { ReadyStep } from "@/features/onboarding/components/steps/ready-step";
 import { NameStep } from "@/features/onboarding/components/steps/name-step";
-import { AgeStep } from "@/features/onboarding/components/steps/age-step";
-import { HeightStep } from "@/features/onboarding/components/steps/height-step";
-import { WeightStep } from "@/features/onboarding/components/steps/weight-step";
-import { GenderStep } from "@/features/onboarding/components/steps/gender-step";
-import { GoalStep } from "@/features/onboarding/components/steps/goal-step";
-import { ThemeStep } from "@/features/onboarding/components/steps/theme-step";
+import { GreetingStep } from "@/features/onboarding/components/steps/greeting-step";
 import { OccupationStep } from "@/features/onboarding/components/steps/occupation-step";
-import { TimezoneStep } from "@/features/onboarding/components/steps/timezone-step";
+import { GoalStep } from "@/features/onboarding/components/steps/goal-step";
+import { FocusStep } from "@/features/onboarding/components/steps/focus-step";
+import { AboutStep } from "@/features/onboarding/components/steps/about-step";
 import type { ResolvedSession } from "@/features/auth/server/resolve-session.action";
 
-const stepVariants = {
-  enter: { opacity: 0, y: 12, scale: 0.98 },
-  center: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: -12, scale: 0.98 },
+const sceneVariants = {
+  enter: { opacity: 0, x: 18 },
+  center: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -18 },
 };
+
+const sceneTransition = { type: "spring" as const, stiffness: 380, damping: 38, mass: 0.9 };
 
 export function OnboardingFlow({ session }: { session: ResolvedSession }) {
   const {
-    stepId,
-    stepIndex,
-    totalSteps,
+    phase,
+    start,
+    sceneId,
+    sceneIndex,
     values,
     next,
     back,
+    finish,
     isSubmitting,
     submitError,
   } = useOnboardingFlow(session);
 
-  const onBack = stepIndex > 0 ? back : undefined;
+  if (phase === "welcome") {
+    return <WelcomeStep onStart={start} />;
+  }
+
+  if (phase === "done") {
+    return <ReadyStep values={values} onFinish={finish} />;
+  }
+
+  const onBack = sceneIndex > 0 ? back : undefined;
 
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col px-6 pb-[max(1.5rem,var(--app-safe-bottom))] pt-[max(1.25rem,var(--app-safe-top))]">
-      <ProgressBar current={stepIndex + 1} total={totalSteps} />
-
-      <div className="relative flex flex-1 flex-col">
-        <AnimatePresence mode="wait">
+    <div className="mx-auto flex h-full w-full max-w-lg flex-col px-6 pb-[max(1.5rem,var(--app-safe-bottom))] pt-[max(1.25rem,var(--app-safe-top))]">
+      {/* min-h-0 on both this row and the animated child: without it the
+          flex chain silently stops handing height down, and StepShell's
+          h-full collapses to its content instead of filling the screen. */}
+      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={stepId}
-            variants={stepVariants}
+            key={sceneId}
+            variants={sceneVariants}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.28, ease: "easeOut" }}
-            className="flex flex-1 flex-col"
+            transition={sceneTransition}
+            className="flex min-h-0 flex-1 flex-col"
           >
-            {stepId === "name" && (
+            {sceneId === "name" && (
               <NameStep defaultValue={values.name ?? ""} onNext={next} onBack={onBack} />
             )}
-            {stepId === "age" && (
-              <AgeStep defaultValue={values.age ?? 25} onNext={next} onBack={onBack} />
-            )}
-            {stepId === "height" && (
-              <HeightStep
-                defaultValue={values.heightCm ?? 170}
-                onNext={next}
+            {/* Nova's replies read from what the preceding scene just stored,
+                so the copy is always about this user's own answer. */}
+            {sceneId === "greeting" && (
+              <GreetingStep
+                name={values.name ?? ""}
+                onNext={() => next()}
                 onBack={onBack}
               />
             )}
-            {stepId === "weight" && (
-              <WeightStep
-                defaultValue={values.weightKg ?? 70}
-                onNext={next}
-                onBack={onBack}
-              />
-            )}
-            {stepId === "gender" && (
-              <GenderStep defaultValue={values.gender} onNext={next} onBack={onBack} />
-            )}
-            {stepId === "goal" && (
-              <GoalStep
-                defaultValue={values.primaryGoal}
-                onNext={next}
-                onBack={onBack}
-              />
-            )}
-            {stepId === "theme" && (
-              <ThemeStep defaultValue={values.themeColor} onNext={next} onBack={onBack} />
-            )}
-            {stepId === "occupation" && (
+            {sceneId === "occupation" && (
               <OccupationStep
                 defaultValue={values.occupation}
                 onNext={next}
                 onBack={onBack}
               />
             )}
-            {stepId === "timezone" && (
-              <TimezoneStep
-                defaultValue={
-                  values.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
-                }
+            {sceneId === "goal" && (
+              <GoalStep defaultValue={values.primaryGoal} onNext={next} onBack={onBack} />
+            )}
+            {sceneId === "focus" && values.primaryGoal && (
+              <FocusStep
+                goal={values.primaryGoal}
+                onNext={() => next()}
+                onBack={onBack}
+              />
+            )}
+            {sceneId === "about" && (
+              <AboutStep
+                defaults={{
+                  age: values.age ?? 25,
+                  heightCm: values.heightCm ?? 170,
+                  weightKg: values.weightKg ?? 70,
+                  gender: values.gender,
+                }}
                 onNext={next}
                 onBack={onBack}
                 isSubmitting={isSubmitting}
@@ -104,7 +107,7 @@ export function OnboardingFlow({ session }: { session: ResolvedSession }) {
       </div>
 
       {submitError && (
-        <p className="pb-4 text-center text-sm text-destructive">{submitError}</p>
+        <p className="pt-4 text-center text-caption text-destructive">{submitError}</p>
       )}
     </div>
   );

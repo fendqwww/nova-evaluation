@@ -3,23 +3,21 @@
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
-import { Card, CardContent } from "@/shared/ui/card";
+import { Card, CardContent, IconChip } from "@/shared/ui/card";
 
 export function ActivityOverviewCard({
   icon,
   title,
   count,
   unitLabel,
-  badgeClass,
-  textClass,
+  tone,
   onCreate,
 }: {
   icon: ReactNode;
   title: string;
   count: number;
   unitLabel: (count: number) => string;
-  badgeClass: string;
-  textClass: string;
+  tone: "goal" | "habit" | "task";
   onCreate: () => void;
 }) {
   return (
@@ -27,22 +25,25 @@ export function ActivityOverviewCard({
       type="button"
       onClick={onCreate}
       whileTap={{ scale: 0.97 }}
+      aria-label={`${title}: ${count}. Добавить`}
       className="w-full text-left"
     >
-      <Card className="h-full transition-colors duration-200 hover:border-border-strong hover:bg-surface-2">
-        <CardContent className="flex h-full flex-col gap-3 p-4">
-          <div className="flex items-center justify-between">
-            <span
-              className={`flex h-9 w-9 items-center justify-center rounded-full ${badgeClass} ${textClass}`}
-            >
+      <Card className="h-full transition-colors duration-200 active:border-border-strong">
+        <CardContent className="flex h-full flex-col gap-2.5 p-3">
+          <div className="flex items-center justify-between gap-1">
+            <IconChip tone={tone} size="sm">
               {icon}
-            </span>
-            <Plus className="h-4 w-4 text-muted-foreground" />
+            </IconChip>
+            <Plus className="h-3.5 w-3.5 text-subtle-foreground" />
           </div>
           <div>
-            <p className="text-2xl font-bold tabular-nums text-foreground">{count}</p>
-            <p className="text-xs text-muted-foreground">
-              {title} · {unitLabel(count)}
+            <p className="numeric text-[1.75rem] font-semibold leading-none text-foreground">
+              {count}
+            </p>
+            {/* The chip colour already names the category, so the label
+                carries the declined noun alone — "2 цели", not "Цели · цели". */}
+            <p className="mt-1 text-[0.75rem] leading-tight text-muted-foreground">
+              {unitLabel(count)}
             </p>
           </div>
         </CardContent>

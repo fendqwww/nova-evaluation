@@ -40,8 +40,8 @@ export function DashboardView() {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
         <div>
-          <p className="text-base font-medium text-foreground">Не удалось загрузить дашборд</p>
-          <p className="mt-1 text-sm text-muted-foreground">Проверьте соединение и попробуйте снова.</p>
+          <p className="text-heading text-foreground">Не удалось загрузить дашборд</p>
+          <p className="mt-1 text-caption text-muted-foreground">Проверьте соединение и попробуйте снова.</p>
         </div>
         <Button variant="secondary" onClick={() => refetch()}>
           Повторить
@@ -56,7 +56,7 @@ export function DashboardView() {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        className="flex flex-col gap-6"
+        className="flex flex-col gap-3"
       >
         <motion.div variants={itemVariants}>
           <DashboardHeader
@@ -87,34 +87,31 @@ export function DashboardView() {
           />
         </motion.div>
 
-        <motion.div variants={itemVariants} className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-muted-foreground">Обзор активности</p>
-          <div className="grid grid-cols-3 gap-3">
+        <motion.div variants={itemVariants} className="flex flex-col gap-2.5">
+          <p className="text-section text-muted-foreground">Обзор активности</p>
+          <div className="grid grid-cols-3 gap-2.5">
             <ActivityOverviewCard
-              icon={<Target className="h-4 w-4" />}
+              icon={<Target className="h-3.5 w-3.5" />}
               title="Цели"
               count={data.counts.goals}
               unitLabel={(n) => pluralizeRu(n, ["цель", "цели", "целей"])}
-              badgeClass="bg-tint-purple-muted"
-              textClass="text-tint-purple"
+              tone="goal"
               onCreate={() => setCaptureType("goal")}
             />
             <ActivityOverviewCard
-              icon={<Repeat className="h-4 w-4" />}
+              icon={<Repeat className="h-3.5 w-3.5" />}
               title="Привычки"
               count={data.counts.habits}
               unitLabel={(n) => pluralizeRu(n, ["привычка", "привычки", "привычек"])}
-              badgeClass="bg-tint-orange-muted"
-              textClass="text-tint-orange"
+              tone="habit"
               onCreate={() => setCaptureType("habit")}
             />
             <ActivityOverviewCard
-              icon={<ListTodo className="h-4 w-4" />}
+              icon={<ListTodo className="h-3.5 w-3.5" />}
               title="Задачи"
               count={data.counts.tasks}
               unitLabel={(n) => pluralizeRu(n, ["задача", "задачи", "задач"])}
-              badgeClass="bg-tint-blue-muted"
-              textClass="text-tint-blue"
+              tone="task"
               onCreate={() => setCaptureType("task")}
             />
           </div>

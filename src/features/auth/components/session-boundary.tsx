@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTelegramSession } from "@/features/auth/hooks/use-telegram-session";
 import { TelegramAuthError } from "@/features/auth/components/auth-status-screens";
 import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
+import { applyThemeColor } from "@/shared/lib/apply-theme";
 import type { ResolvedSession } from "@/features/auth/server/resolve-session.action";
 
 interface SessionBoundaryProps {
@@ -32,7 +33,7 @@ export function SessionBoundary({
   const themeColor = data?.profile?.themeColor;
   useEffect(() => {
     if (themeColor) {
-      document.documentElement.dataset.theme = themeColor;
+      applyThemeColor(themeColor);
     }
   }, [themeColor]);
 

@@ -18,7 +18,7 @@ export const ModalContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-border bg-card p-6 pb-[max(1.5rem,var(--app-safe-bottom))] focus:outline-none data-[state=closed]:animate-[modal-content-out_150ms_ease-in] data-[state=open]:animate-[modal-content-in_200ms_ease-out]",
+        "fixed inset-x-0 bottom-0 z-50 rounded-t-2xl border-t border-border-strong surface-raised-2 p-6 pb-[max(1.5rem,var(--app-safe-bottom))] shadow-raised focus:outline-none data-[state=closed]:animate-[modal-content-out_150ms_ease-in] data-[state=open]:animate-[modal-content-in_200ms_ease-out]",
         className,
       )}
       {...props}
@@ -47,7 +47,7 @@ export const ModalTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-base font-semibold text-foreground", className)}
+    className={cn("text-title text-foreground", className)}
     {...props}
   />
 ));
@@ -59,7 +59,7 @@ export const ModalDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-caption text-muted-foreground", className)}
     {...props}
   />
 ));

@@ -1,49 +1,62 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --muted-foreground: #a1a1aa;
+  --background: #08090c;
+  --foreground: #f6f7f9;
+  --muted-foreground: #8b909b;
+  --subtle-foreground: #63676f;
 
-  /* Surface elevation: page -> card -> nested/active. Depth comes from
-     stepping through these, not from shadows alone. */
-  --surface-0: #09090b;
-  --surface-1: #131316;
-  --surface-2: #1c1c21;
+  /* Supporting copy inside an onboarding scene. Deliberately much brighter
+     than --muted-foreground (10.4:1 vs 6:1) and always paired with weight
+     500 — a scene has no room for thin grey text. A separate token rather
+     than a retune of --muted-foreground, which 26 other call sites (all of
+     them Dashboard) currently depend on. */
+  --lead-foreground: #b9bfcb;
 
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --input: rgba(255, 255, 255, 0.06);
+  /* Surface elevation. Each level has a `-top` partner: cards are painted
+     as a short vertical gradient between the two so light reads as falling
+     from above, without tinting anything with the brand colour. */
+  --surface-0: #08090c;
+  --surface-1: #111218;
+  --surface-1-top: #16171e;
+  --surface-2: #1a1c24;
+  --surface-2-top: #20222b;
+  --surface-3: #282a34;
 
-  /* Accent is the only thing a theme changes — overridden per
-     [data-theme] below. Every other accent-* token derives from it via
-     color-mix() so a theme is a single hex value, not four. */
-  --accent: #2a6baf;
-  --accent-foreground: #fafafa;
+  --border: rgba(255, 255, 255, 0.07);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --input: rgba(255, 255, 255, 0.05);
 
-  --destructive: #ef4444;
+  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
+    0 1px 2px 0 rgba(0, 0, 0, 0.45), 0 12px 28px -16px rgba(0, 0, 0, 0.75);
+  --shadow-raised: inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
+    0 2px 6px 0 rgba(0, 0, 0, 0.5), 0 20px 44px -18px rgba(0, 0, 0, 0.85);
+  --shadow-nav: inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
+    0 -1px 3px 0 rgba(0, 0, 0, 0.3), 0 18px 40px -12px rgba(0, 0, 0, 0.9);
+
+  --destructive: #f2555a;
   --destructive-foreground: #fafafa;
+  --positive: #34d399;
 
-  /* Fixed category tints for iconography — deliberately independent of
-     the user's chosen accent theme, so the dashboard reads as
-     color-coded categories (goals/habits/tasks) rather than "everything
-     is the same blue". */
-  --tint-green: #22c55e;
-  --tint-purple: #a78bfa;
-  --tint-orange: #fb923c;
-  --tint-blue: #60a5fa;
+  /* Urgency — a deadline inside three days. Semantic in the same way
+     destructive and positive are, which is precisely why it is not one of the
+     category tints below: those are confined to icon badges, and this one has
+     to colour text and a badge fill. Added rather than reusing --tint-orange
+     so "срочно" never reads as "this is a Habit". */
+  --warning: #f5a524;
 
-  --radius: 0.875rem;
+  /* Category tints — fixed regardless of the user's chosen accent theme.
+     These live *only* inside small icon badges, never as page washes:
+     Goal purple / Habit orange / Task blue / Health green / Nova AI cyan. */
+  --tint-green: #30c48d;
+  --tint-purple: #9d7cf5;
+  --tint-orange: #f5943a;
+  --tint-blue: #4f9dfb;
+  --tint-cyan: #34c3ee;
 
-  /* Fixed height reserved for the floating bottom navigation, including
-     its gap from the screen edge. */
-  --bottom-nav-height: 4.5rem;
+  --radius: 1rem;
+  --bottom-nav-height: 4.75rem;
 
-  /*
-   * Prefer Telegram's own content-safe-area (accounts for its header/bottom
-   * bar chrome, set via viewport.bindCssVars() in TelegramProvider) and fall
-   * back to the plain OS safe-area for regular browsers.
-   */
   --app-safe-top: max(
     env(safe-area-inset-top, 0px),
     var(--tg-viewport-content-safe-area-inset-top, 0px)
@@ -52,38 +65,51 @@
     env(safe-area-inset-bottom, 0px),
     var(--tg-viewport-content-safe-area-inset-bottom, 0px)
   );
+
+  /* Nova Blue — the one brand colour, the default for every new user.
+     Declared before the [data-theme] blocks: both selectors share
+     specificity, so this must come first or a later :root would win and
+     pin every theme to itself. */
+  --accent: #2f6feb;
+  --accent-foreground: #ffffff;
 }
 
-/* Theme palettes — chosen at onboarding, stored on Profile.themeColor,
-   applied as a data-theme attribute on <html>. Adding a theme later is a
-   one-line addition here, nothing else in the app references a raw hex. */
+/*
+ * A theme is a SINGLE hue swap — nothing else about the app changes. Every
+ * other accent-* token (hover, soft fill, border, ring) is derived from this
+ * one value via color-mix() in @theme below. Adding a palette is a one-line
+ * change; it must never grow a second property here.
+ */
 [data-theme="ocean"] {
-  --accent: #2a6baf;
-}
-[data-theme="purple"] {
-  --accent: #7c6aef;
+  --accent: #2f6feb;
 }
 [data-theme="emerald"] {
-  --accent: #22b573;
+  --accent: #1fa971;
 }
-[data-theme="orange"] {
-  --accent: #e8823d;
+[data-theme="purple"] {
+  --accent: #7c5cfc;
 }
 [data-theme="rose"] {
-  --accent: #e1547a;
+  --accent: #e8436a;
+}
+[data-theme="orange"] {
+  --accent: #ea7c1f;
 }
 [data-theme="graphite"] {
-  --accent: #9ca3af;
+  --accent: #838a9c;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-lead-foreground: var(--lead-foreground);
 
   --color-surface-0: var(--surface-0);
   --color-surface-1: var(--surface-1);
   --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-card: var(--surface-1);
   --color-card-foreground: var(--foreground);
 
@@ -92,37 +118,143 @@
   --color-input: var(--input);
   --color-ring: var(--accent);
 
+  /* Everything below derives from the single --accent value above. A theme
+     switch never touches any other token in this file. */
   --color-accent: var(--accent);
-  --color-accent-hover: color-mix(in srgb, var(--accent) 82%, white 18%);
-  --color-accent-muted: color-mix(in srgb, var(--accent) 16%, transparent);
-  --color-accent-border: color-mix(in srgb, var(--accent) 40%, transparent);
+  --color-accent-light: color-mix(in oklab, var(--accent) 72%, white 28%);
+  --color-accent-hover: color-mix(in oklab, var(--accent) 88%, white 12%);
+  --color-accent-soft: color-mix(in oklab, var(--accent) 11%, transparent);
+  --color-accent-muted: color-mix(in oklab, var(--accent) 17%, transparent);
+  --color-accent-border: color-mix(in oklab, var(--accent) 36%, transparent);
   --color-accent-foreground: var(--accent-foreground);
 
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-positive: var(--positive);
+  --color-warning: var(--warning);
+
+  /* Badge fills. Same 15% recipe as the category tints, so a status chip sits
+     at the same visual weight as an icon chip next to it. */
+  --color-destructive-muted: color-mix(in oklab, var(--destructive) 16%, transparent);
+  --color-positive-muted: color-mix(in oklab, var(--positive) 15%, transparent);
+  --color-warning-muted: color-mix(in oklab, var(--warning) 16%, transparent);
 
   --color-tint-green: var(--tint-green);
-  --color-tint-green-muted: color-mix(in srgb, var(--tint-green) 16%, transparent);
+  --color-tint-green-muted: color-mix(in oklab, var(--tint-green) 15%, transparent);
   --color-tint-purple: var(--tint-purple);
-  --color-tint-purple-muted: color-mix(in srgb, var(--tint-purple) 16%, transparent);
+  --color-tint-purple-muted: color-mix(in oklab, var(--tint-purple) 15%, transparent);
   --color-tint-orange: var(--tint-orange);
-  --color-tint-orange-muted: color-mix(in srgb, var(--tint-orange) 16%, transparent);
+  --color-tint-orange-muted: color-mix(in oklab, var(--tint-orange) 15%, transparent);
   --color-tint-blue: var(--tint-blue);
-  --color-tint-blue-muted: color-mix(in srgb, var(--tint-blue) 16%, transparent);
+  --color-tint-blue-muted: color-mix(in oklab, var(--tint-blue) 15%, transparent);
+  --color-tint-cyan: var(--tint-cyan);
+  --color-tint-cyan-muted: color-mix(in oklab, var(--tint-cyan) 15%, transparent);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 6px);
-  --radius-xl: calc(var(--radius) + 10px);
+  --shadow-card: var(--shadow-card);
+  --shadow-raised: var(--shadow-raised);
+  --shadow-nav: var(--shadow-nav);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: var(--radius);
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /*
+   * Type scale with real hierarchy: weight is a deliberate choice per role,
+   * not a blanket font-semibold. display/headline are the only bold-weight
+   * text on screen; card titles sit at medium; body copy is regular.
+   */
+  --text-display: 2.25rem; /* the user's name — the one place accent-coloured text is allowed */
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.04em;
+  --text-display--font-weight: 700;
+
+  /*
+   * Onboarding scenes. A scene has exactly one headline and it is the largest
+   * thing on screen by a wide margin — 36px against the 15px body the rest of
+   * the app uses. That size gap is what makes a screen read as a moment rather
+   * than as the next field in a form, so scene/lead are only ever used inside
+   * the onboarding flow.
+   */
+  --text-scene: 2.25rem;
+  --text-scene--line-height: 1.08;
+  --text-scene--letter-spacing: -0.038em;
+  --text-scene--font-weight: 700;
+
+  --text-lead: 1.0625rem; /* the one supporting line under a scene headline */
+  --text-lead--line-height: 1.45;
+  --text-lead--letter-spacing: -0.012em;
+  --text-lead--font-weight: 500;
+
+  --text-title: 1.0625rem; /* hero status line, insight title, focus item name */
+  --text-title--line-height: 1.28;
+  --text-title--letter-spacing: -0.018em;
+  --text-title--font-weight: 600;
+
+  --text-heading: 0.9375rem; /* modal titles, medium-emphasis inline text */
+  --text-heading--line-height: 1.3;
+  --text-heading--letter-spacing: -0.013em;
+  --text-heading--font-weight: 600;
+
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5;
+  --text-body--letter-spacing: -0.011em;
+  --text-body--font-weight: 400;
+
+  --text-caption: 0.8125rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: -0.005em;
+  --text-caption--font-weight: 400;
+
+  /* Section eyebrow above a card group ("Быстрые действия") — sentence
+     case, medium weight, quiet. */
+  --text-section: 0.8125rem;
+  --text-section--line-height: 1.3;
+  --text-section--letter-spacing: -0.003em;
+  --text-section--font-weight: 510;
+
+  /* All-caps micro label inside a card ("СОВЕТ ОТ NOVA"). */
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.065em;
+  --text-label--font-weight: 600;
+
+  --text-metric: 2.75rem; /* the Life Score number */
+  --text-metric--line-height: 1;
+  --text-metric--letter-spacing: -0.045em;
+  --text-metric--font-weight: 700;
+}
+
+@utility numeric {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.025em;
+}
+
+@utility surface-raised {
+  background-image: linear-gradient(180deg, var(--surface-1-top) 0%, var(--surface-1) 60%);
+}
+
+@utility surface-raised-2 {
+  background-image: linear-gradient(180deg, var(--surface-2-top) 0%, var(--surface-2) 62%);
+}
+
+@utility glass-panel {
+  background-color: color-mix(in oklab, var(--surface-2) 74%, transparent);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
 }
 
 html {
   color-scheme: dark;
 }
 
+/* Plain, near-black — no ambient brand-colour wash behind the whole app.
+   The accent shows up exactly twice on any given screen: the Life Score
+   ring and the primary button. Everywhere else stays neutral. */
 body {
   background: var(--background);
   color: var(--foreground);
@@ -165,5 +297,16 @@ body {
   to {
     opacity: 0;
     transform: translateY(100%);
+  }
+}
+
+@keyframes scale-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
   }
 }

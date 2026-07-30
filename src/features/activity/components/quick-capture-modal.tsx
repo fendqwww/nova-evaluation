@@ -58,7 +58,7 @@ export function QuickCaptureModal({
 
   function handleSubmit() {
     const trimmed = title.trim();
-    if (!trimmed || !rawInitData) return;
+    if (!trimmed) return;
     mutation.mutate({ rawInitData, type, title: trimmed });
   }
 
@@ -85,7 +85,7 @@ export function QuickCaptureModal({
             }}
           />
           {mutation.isError && (
-            <p className="text-sm text-destructive">Не удалось сохранить. Попробуйте ещё раз.</p>
+            <p className="text-caption text-destructive">Не удалось сохранить. Попробуйте ещё раз.</p>
           )}
           <Button
             className="w-full"

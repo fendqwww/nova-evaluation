@@ -57,16 +57,41 @@ model Profile {
   updatedAt DateTime @updatedAt
 }
 
-// Minimal, deliberately so: title + completion only. Dates, streaks, and
-// progress tracking are a later stage's concern, added as new columns —
-// never a reshape of this model.
+// Grown exactly the way the original note here anticipated: new nullable
+// columns bolted on, never a reshape. Habit and Task stay minimal until they
+// get their own section.
+//
+// targetDate is stored at UTC midnight and always formatted with
+// timeZone: "UTC" (see formatTargetDate in src/features/goals/lib/format.ts).
+// A goal's deadline is a calendar day, not an instant, so letting the local
+// zone shift it would show the user a different day than the one they picked.
 model Goal {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
-  isCompleted Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  isCompleted Boolean   @default(false)
+  targetDate  DateTime?
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  steps GoalStep[]
+}
+
+// A goal's checklist. Progress is derived from these rows rather than stored
+// on Goal: a cached percentage is a second source of truth that drifts the
+// first time a step is added or deleted.
+//
+// Deliberately no explicit order column — steps read in createdAt order, the
+// same convention Goal itself uses. Reordering would need one; nothing else
+// would.
+model GoalStep {
+  id        String   @id @default(cuid())
+  goalId    String
+  goal      Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title     String
+  isDone    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
 
 model Habit {

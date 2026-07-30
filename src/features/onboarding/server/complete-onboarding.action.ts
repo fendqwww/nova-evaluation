@@ -2,11 +2,11 @@
 
 import { z } from "zod";
 import { db } from "@/server/db";
-import { verifyTelegramInitData } from "@/server/auth/telegram";
+import { resolveIdentity } from "@/server/auth/identity";
 import { onboardingProfileSchema } from "@/features/onboarding/schemas";
 
 const completeOnboardingInputSchema = z.object({
-  rawInitData: z.string().min(1),
+  rawInitData: z.string().min(1).optional(),
   profile: onboardingProfileSchema,
 });
 
@@ -19,7 +19,7 @@ export async function completeOnboarding(input: CompleteOnboardingInput) {
 
   // Never trust a client-supplied user id for a write — re-derive identity
   // from a freshly verified initData, same as resolveSession.
-  const identity = verifyTelegramInitData(rawInitData);
+  const identity = resolveIdentity(rawInitData);
 
   await db.user.update({
     where: { telegramId: identity.telegramId },

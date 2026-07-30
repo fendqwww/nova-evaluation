@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
 
@@ -10,7 +11,6 @@ export interface BottomNavigationItem {
   label: string;
   icon: ReactNode;
   href: string;
-  isActive?: boolean;
 }
 
 export interface BottomNavigationProps {
@@ -18,39 +18,61 @@ export interface BottomNavigationProps {
   className?: string;
 }
 
+function isRouteActive(pathname: string, href: string): boolean {
+  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+}
+
 export function BottomNavigation({ items, className }: BottomNavigationProps) {
+  // Active state is derived here rather than passed in, so the server layout
+  // that declares the tabs never has to know the current route.
+  const pathname = usePathname();
+
   return (
     <nav
       className={cn(
-        "fixed inset-x-4 z-40 mx-auto max-w-lg rounded-2xl border border-border bg-surface-1/75 backdrop-blur-xl",
-        "shadow-[0_16px_40px_-12px_rgba(0,0,0,0.6)]",
+        "fixed inset-x-3 z-40 mx-auto max-w-lg rounded-2xl border border-white/9 glass-panel shadow-nav",
         className,
       )}
-      style={{ bottom: "calc(var(--app-safe-bottom) + 0.75rem)" }}
+      style={{ bottom: "calc(var(--app-safe-bottom) + 0.625rem)" }}
     >
-      <ul className="flex items-center justify-around px-1.5 py-2">
-        {items.map((item) => (
-          <li key={item.key} className="relative flex-1">
-            <Link
-              href={item.href}
-              aria-current={item.isActive ? "page" : undefined}
-              className={cn(
-                "relative z-10 flex flex-col items-center gap-1 rounded-xl px-2 py-2 text-xs font-medium transition-colors duration-200",
-                item.isActive ? "text-accent" : "text-muted-foreground hover:text-foreground",
-              )}
-            >
-              {item.isActive && (
-                <motion.span
-                  layoutId="bottom-nav-active"
-                  className="absolute inset-0 -z-10 rounded-xl bg-accent-muted"
-                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                />
-              )}
-              {item.icon}
-              {item.label}
-            </Link>
-          </li>
-        ))}
+      <ul className="flex items-stretch justify-around px-1.5 py-1.5">
+        {items.map((item) => {
+          const active = isRouteActive(pathname, item.href);
+
+          return (
+            <li key={item.key} className="relative flex-1">
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "relative flex flex-col items-center gap-1 rounded-xl px-1 pb-1.5 pt-2 transition-colors duration-200",
+                  active ? "text-accent" : "text-subtle-foreground active:text-foreground",
+                )}
+              >
+                {active && (
+                  // One shared layoutId means the pill physically slides
+                  // between tabs instead of cross-fading.
+                  <motion.span
+                    layoutId="bottom-nav-active"
+                    className="absolute inset-0 -z-10 rounded-xl bg-accent-soft ring-1 ring-inset ring-accent-border"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+                <span className="flex h-5 items-center justify-center">{item.icon}</span>
+                <span className="text-[0.625rem] font-medium leading-none tracking-[-0.005em]">
+                  {item.label}
+                </span>
+                {active && (
+                  <motion.span
+                    layoutId="bottom-nav-dot"
+                    className="absolute -bottom-0.5 h-[2.5px] w-5 rounded-full bg-accent"
+                    transition={{ type: "spring", stiffness: 420, damping: 34 }}
+                  />
+                )}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

@@ -1,0 +1,13 @@
+-- AlterTable
+ALTER TABLE "Goal" ADD COLUMN "note" TEXT;
+ALTER TABLE "Goal" ADD COLUMN "targetDate" DATETIME;
+
+-- CreateTable
+CREATE TABLE "GoalStep" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "goalId" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "isDone" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "GoalStep_goalId_fkey" FOREIGN KEY ("goalId") REFERENCES "Goal" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);

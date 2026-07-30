@@ -1,5 +1,5 @@
-import { Target, ListTodo } from "lucide-react";
-import { Card, CardContent } from "@/shared/ui/card";
+import { Target, ListTodo, ChevronRight } from "lucide-react";
+import { Card, CardContent, IconChip } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { Button } from "@/shared/ui/button";
 import type { ActiveItem } from "@/features/activity/types";
@@ -14,8 +14,8 @@ export function FocusOfDayCard({
   if (!focus) {
     return (
       <Card>
-        <CardContent className="p-5">
-          <p className="mb-3 text-sm font-medium text-muted-foreground">Фокус дня</p>
+        <CardContent className="p-4">
+          <p className="mb-2 text-label uppercase text-muted-foreground">Фокус дня</p>
           <EmptyState
             icon={<Target className="h-5 w-5" />}
             title="Пока нет фокуса на сегодня"
@@ -32,27 +32,24 @@ export function FocusOfDayCard({
   }
 
   return (
-    <Card
-      className="relative overflow-hidden border-accent-border"
-      style={{
-        background:
-          "linear-gradient(135deg, var(--color-accent-muted), var(--surface-1) 60%)",
-      }}
-    >
-      <CardContent className="flex items-center gap-4 p-5">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent text-accent-foreground shadow-[0_8px_20px_-8px_var(--accent)]">
+    <Card>
+      <CardContent className="flex items-center gap-3 p-3.5">
+        <IconChip tone={focus.type === "goal" ? "goal" : "task"} size="md">
           {focus.type === "goal" ? (
-            <Target className="h-6 w-6" />
+            <Target className="h-4 w-4" />
           ) : (
-            <ListTodo className="h-6 w-6" />
+            <ListTodo className="h-4 w-4" />
           )}
-        </span>
-        <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-accent">
+        </IconChip>
+
+        <div className="min-w-0 flex-1">
+          <p className="text-label uppercase text-muted-foreground">
             Фокус дня · {focus.type === "goal" ? "цель" : "задача"}
           </p>
-          <p className="mt-1 truncate text-lg font-semibold text-foreground">{focus.title}</p>
+          <p className="mt-0.5 truncate text-title text-foreground">{focus.title}</p>
         </div>
+
+        <ChevronRight className="h-4 w-4 shrink-0 text-subtle-foreground" />
       </CardContent>
     </Card>
   );

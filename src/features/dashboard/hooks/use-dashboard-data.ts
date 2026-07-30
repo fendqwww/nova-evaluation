@@ -14,14 +14,11 @@ export function useDashboardData() {
 
   const query = useQuery({
     queryKey: dashboardQueryKey(rawInitData),
-    queryFn: () => getDashboardData(rawInitData!),
-    enabled: !!rawInitData,
+    queryFn: () => getDashboardData(rawInitData),
   });
 
   function refresh() {
-    if (rawInitData) {
-      void queryClient.invalidateQueries({ queryKey: dashboardQueryKey(rawInitData) });
-    }
+    void queryClient.invalidateQueries({ queryKey: dashboardQueryKey(rawInitData) });
   }
 
   return { ...query, refresh };
