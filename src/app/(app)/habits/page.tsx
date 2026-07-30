@@ -1,12 +1,27 @@
-import { Repeat } from "lucide-react";
-import { SectionPlaceholder } from "@/shared/ui/section-placeholder";
+"use client";
+
+import dynamic from "next/dynamic";
+import { HabitsView } from "@/features/habits/components/habits-view";
+import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
+
+// useRawInitData() reads window/sessionStorage synchronously on first
+// render — it can never run during Next's server-side prerender pass, so
+// this whole subtree is loaded client-only.
+const SessionBoundary = dynamic(
+  () =>
+    import("@/features/auth/components/session-boundary").then(
+      (mod) => mod.SessionBoundary,
+    ),
+  { ssr: false, loading: () => <AppLoadingScreen /> },
+);
 
 export default function HabitsPage() {
   return (
-    <SectionPlaceholder
-      icon={<Repeat className="h-6 w-6" />}
-      title="Привычки"
-      description="Здесь появятся серии выполнения и отметки по дням. Пока создавайте привычки с главного экрана."
-    />
+    <SessionBoundary
+      redirectWhen={(session) => !session.onboardingCompleted}
+      redirectTo="/onboarding"
+    >
+      {() => <HabitsView />}
+    </SessionBoundary>
   );
 }

@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { DashboardView } from "@/features/dashboard/components/dashboard-view";
 import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
+import { PageContainer } from "@/shared/ui/page-container";
 
 // useRawInitData() reads window/sessionStorage synchronously on first
 // render — it can never run during Next's server-side prerender pass, so
@@ -21,7 +22,11 @@ export default function DashboardPage() {
       redirectWhen={(session) => !session.onboardingCompleted}
       redirectTo="/onboarding"
     >
-      {() => <DashboardView />}
+      {() => (
+        <PageContainer>
+          <DashboardView />
+        </PageContainer>
+      )}
     </SessionBoundary>
   );
 }

@@ -1,12 +1,27 @@
-import { ListTodo } from "lucide-react";
-import { SectionPlaceholder } from "@/shared/ui/section-placeholder";
+"use client";
+
+import dynamic from "next/dynamic";
+import { TasksView } from "@/features/tasks/components/tasks-view";
+import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
+
+// useRawInitData() reads window/sessionStorage synchronously on first
+// render — it can never run during Next's server-side prerender pass, so
+// this whole subtree is loaded client-only.
+const SessionBoundary = dynamic(
+  () =>
+    import("@/features/auth/components/session-boundary").then(
+      (mod) => mod.SessionBoundary,
+    ),
+  { ssr: false, loading: () => <AppLoadingScreen /> },
+);
 
 export default function TasksPage() {
   return (
-    <SectionPlaceholder
-      icon={<ListTodo className="h-6 w-6" />}
-      title="Задачи"
-      description="Здесь появится список задач на день с отметками выполнения. Пока создавайте их с главного экрана."
-    />
+    <SessionBoundary
+      redirectWhen={(session) => !session.onboardingCompleted}
+      redirectTo="/onboarding"
+    >
+      {() => <TasksView />}
+    </SessionBoundary>
   );
 }

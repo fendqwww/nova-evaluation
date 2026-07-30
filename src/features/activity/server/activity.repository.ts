@@ -17,10 +17,14 @@ export async function createActivityItem(
   }
 }
 
+// Archived habits are excluded: the Dashboard tile reads as "how many habits
+// do you have", and a habit the user has explicitly stopped tracking is not
+// one of them. It also keeps the AI Coach honest — a user whose only habits
+// are archived should still be told the habits block of their index is empty.
 export async function getActivityCounts(userId: string): Promise<ActivityCounts> {
   const [goals, habits, tasks] = await Promise.all([
     db.goal.count({ where: { userId } }),
-    db.habit.count({ where: { userId } }),
+    db.habit.count({ where: { userId, archivedAt: null } }),
     db.task.count({ where: { userId } }),
   ]);
 

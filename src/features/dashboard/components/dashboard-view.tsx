@@ -9,8 +9,7 @@ import { DashboardHeader } from "@/features/dashboard/components/dashboard-heade
 import { LifeScoreCard } from "@/features/dashboard/components/life-score-card";
 import { FocusOfDayCard } from "@/features/dashboard/components/focus-of-day-card";
 import { QuickActions } from "@/features/dashboard/components/quick-actions";
-import { AiInsightCard } from "@/features/insights/components/ai-insight-card";
-import { AiCoachModal } from "@/features/insights/components/ai-coach-modal";
+import { CoachPreviewCard } from "@/features/dashboard/components/coach-preview-card";
 import { ActivityOverviewCard } from "@/features/activity/components/activity-overview-card";
 import { QuickCaptureModal } from "@/features/activity/components/quick-capture-modal";
 import { Button } from "@/shared/ui/button";
@@ -30,7 +29,6 @@ const itemVariants: Variants = {
 export function DashboardView() {
   const { data, isPending, isError, refresh, refetch } = useDashboardData();
   const [captureType, setCaptureType] = useState<ActivityItemType | null>(null);
-  const [isCoachOpen, setIsCoachOpen] = useState(false);
 
   if (isPending) {
     return <DashboardSkeleton />;
@@ -71,7 +69,7 @@ export function DashboardView() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <AiInsightCard insight={data.insights[0]} onOpenCoach={() => setIsCoachOpen(true)} />
+          <CoachPreviewCard coach={data.coach} />
         </motion.div>
 
         <motion.div variants={itemVariants}>
@@ -83,7 +81,6 @@ export function DashboardView() {
             onGoal={() => setCaptureType("goal")}
             onHabit={() => setCaptureType("habit")}
             onTask={() => setCaptureType("task")}
-            onCoach={() => setIsCoachOpen(true)}
           />
         </motion.div>
 
@@ -124,8 +121,6 @@ export function DashboardView() {
         onOpenChange={(open) => !open && setCaptureType(null)}
         onCreated={refresh}
       />
-
-      <AiCoachModal open={isCoachOpen} onOpenChange={setIsCoachOpen} insights={data.insights} />
     </>
   );
 }

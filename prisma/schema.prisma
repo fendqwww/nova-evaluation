@@ -25,10 +25,11 @@ model User {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  profile Profile?
-  goals   Goal[]
-  habits  Habit[]
-  tasks   Task[]
+  profile       Profile?
+  goals         Goal[]
+  habits        Habit[]
+  tasks         Task[]
+  coachMessages CoachMessage[]
 }
 
 // gender/primaryGoal/occupation are validated against a zod union in
@@ -58,8 +59,8 @@ model Profile {
 }
 
 // Grown exactly the way the original note here anticipated: new nullable
-// columns bolted on, never a reshape. Habit and Task stay minimal until they
-// get their own section.
+// columns bolted on, never a reshape. Habit and Task have since grown the same
+// way, each when it got its own section.
 //
 // targetDate is stored at UTC midnight and always formatted with
 // timeZone: "UTC" (see formatTargetDate in src/features/goals/lib/format.ts).
@@ -71,6 +72,12 @@ model Goal {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   title       String
   isCompleted Boolean   @default(false)
+  // When, not whether — the same pair Task carries, and for the same reason:
+  // "какие цели ты закрыл вчера" is a question isCompleted alone cannot answer,
+  // and the AI Coach's daily report is built entirely out of questions like it.
+  // Null on a goal completed before this column existed; readers treat that as
+  // "closed at some point before the window" rather than as still open.
+  completedAt DateTime?
   targetDate  DateTime?
   note        String?
   createdAt   DateTime  @default(now())
@@ -94,19 +101,123 @@ model GoalStep {
   createdAt DateTime @default(now())
 }
 
+// A habit is a schedule plus a history of days it was kept. Nothing about its
+// progress is stored: streaks, adherence and "done this week" are all derived
+// from HabitLog rows at the point of display, for the same reason Goal has no
+// `progress` column — a cached number is a second source of truth that drifts
+// the moment a day is un-ticked.
+//
+// frequency/weekdayMask/timesPerWeek together form what the client sees as a
+// discriminated HabitSchedule union (src/features/habits/types.ts). They are
+// three flat columns rather than one JSON blob because SQLite has neither
+// enums nor scalar lists, and because a flat Int is queryable if scheduling
+// ever needs to move server-side.
 model Habit {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title     String
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String
+  note  String?
+
+  // "daily" | "weekdays" | "weekly" — validated by a zod discriminated union
+  // in src/features/habits/schemas.ts, not a Prisma enum (SQLite connector).
+  frequency String @default("daily")
+  // "weekdays" only: bitmask, bit 0 = Monday … bit 6 = Sunday. 127 = every day.
+  weekdayMask Int @default(127)
+  // "weekly" only: how many days in a week count as keeping the habit.
+  timesPerWeek Int @default(3)
+
+  // Archiving, not deleting, is the honest way to stop a habit: the history
+  // stays intact and the streak it earned is still true.
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  logs HabitLog[]
+}
+
+// One row per day the habit was kept. Absence is the "not done" state, so
+// un-ticking a day deletes the row rather than storing a false — a table of
+// mostly-false rows would be the same information at several times the size.
+//
+// `date` is UTC midnight of the user's *local* calendar day, resolved from
+// Profile.timezone server-side (see requireUserContext). Same convention as
+// Goal.targetDate: a day is a day, not an instant.
+//
+// The compound unique is what makes ticking idempotent — a double-tap or a
+// retried request can only ever produce the one row.
+model HabitLog {
+  id      String @id @default(cuid())
+  habitId String
+  habit   Habit  @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+}
+
+// Grown the same way Goal was: nullable columns added around the original
+// title/isCompleted pair, never a reshape.
+//
+// Deliberately no TaskStep. A checklist under a title is exactly what GoalStep
+// already models, and in this product a task that needs sub-items is a goal —
+// duplicating the table would give two subtly different checklists to maintain
+// and two places for progress semantics to diverge.
+model Task {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String
+  note  String?
+
+  isCompleted Boolean   @default(false)
+  // When, not whether — Life Score scores tasks finished in the last 7 days,
+  // which isCompleted alone cannot answer.
+  completedAt DateTime?
+
+  // UTC midnight, formatted with timeZone: "UTC". A due date is a calendar day.
+  dueDate DateTime?
+  // "low" | "normal" | "high" — zod union, not an enum (SQLite).
+  priority String @default("normal")
+
   createdAt DateTime @default(now())
 }
 
-model Task {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title       String
-  isCompleted Boolean  @default(false)
-  createdAt   DateTime @default(now())
+// The AI Coach conversation — one row per turn, never overwritten.
+//
+// Nothing about the coach's *analysis* is stored: every number it quotes is
+// derived from Goal/Habit/Task/Profile at the moment it answers, and the daily
+// report reconstructs a past day from the same tables (HabitLog.date,
+// Task.completedAt, createdAt). A stored metrics snapshot would be a second
+// source of truth that goes stale the moment a day is un-ticked — the same
+// reason Goal has no `progress` column. What *is* stored is the conversation,
+// because a past answer is a record of what was said, not a derivable fact.
+//
+// `content` is always plain text and always renderable on its own. `payload`
+// carries the structured card (bullets, actions) as JSON — a String, not a Json
+// column, because the SQLite connector has no Json type and the shape is
+// validated by zod on read anyway (see coachAnswerSchema). A payload that fails
+// to parse degrades to `content`, so a schema change can never make old history
+// unreadable.
+model CoachMessage {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // "user" | "coach" — a zod union in src/features/coach/schemas.ts, not a
+  // Prisma enum, for the same SQLite-compatibility reason as everything else.
+  role    String
+  content String
+  payload String?
+
+  // UTC midnight of the user's local calendar day, same convention as
+  // HabitLog.date — history is grouped into days, and a day is a day.
+  day       DateTime
+  createdAt DateTime @default(now())
+
+  // History reads newest-first, scoped to one user, and that is the only
+  // access pattern there is.
+  @@index([userId, createdAt])
 }

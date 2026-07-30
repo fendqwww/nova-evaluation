@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/server/db";
+import { addDays, endOfDayInZone, type CalendarDay } from "@/shared/lib/calendar-day";
 import type { GoalItem } from "@/features/goals/types";
 
 /**
@@ -66,6 +67,12 @@ export async function updateGoal(
   return count > 0;
 }
 
+/**
+ * completedAt moves with isCompleted, always — the same rule setTaskCompleted
+ * follows. The pair is the record of *when* a goal was closed, which is what
+ * the AI Coach's day-over-day report reads; letting a re-opened goal keep its
+ * old timestamp would leave it counted as yesterday's win forever.
+ */
 export async function setGoalCompleted(
   userId: string,
   goalId: string,
@@ -73,7 +80,7 @@ export async function setGoalCompleted(
 ): Promise<boolean> {
   const { count } = await db.goal.updateMany({
     where: { id: goalId, userId },
-    data: { isCompleted },
+    data: { isCompleted, completedAt: isCompleted ? new Date() : null },
   });
   return count > 0;
 }
@@ -118,4 +125,55 @@ export async function deleteGoalStep(userId: string, stepId: string): Promise<bo
     where: { id: stepId, goal: { userId } },
   });
   return count > 0;
+}
+
+// ---------------------------------------------------------------------------
+// Aggregates
+// ---------------------------------------------------------------------------
+
+export interface GoalStanding {
+  /** Goals that existed and were still open at the end of the day. */
+  active: number;
+  /** Goals closed on that day. */
+  completedOnDay: number;
+  /** Every goal that existed by then — what the Life Score counts. */
+  total: number;
+}
+
+/**
+ * Where the goals stood at the end of a given day, for the AI Coach's
+ * day-over-day report. Passing today gives today; passing yesterday genuinely
+ * reconstructs yesterday, the same way getTaskThroughput does.
+ *
+ * A goal completed before Goal.completedAt existed has a null timestamp. Those
+ * count as closed *before* any window rather than as still open — the opposite
+ * reading would resurrect every historically finished goal into today's active
+ * list, which is both wrong and loud.
+ */
+export async function getGoalStanding(
+  userId: string,
+  day: CalendarDay,
+  timezone: string,
+): Promise<GoalStanding> {
+  const end = endOfDayInZone(day, timezone);
+  // The previous day's end is this day's start — subtracting 24h would be
+  // wrong by an hour on both DST changeovers.
+  const start = endOfDayInZone(addDays(day, -1), timezone);
+
+  const [total, closedByThen, completedOnDay] = await Promise.all([
+    db.goal.count({ where: { userId, createdAt: { lte: end } } }),
+    db.goal.count({
+      where: {
+        userId,
+        createdAt: { lte: end },
+        isCompleted: true,
+        OR: [{ completedAt: null }, { completedAt: { lte: end } }],
+      },
+    }),
+    db.goal.count({
+      where: { userId, isCompleted: true, completedAt: { gt: start, lte: end } },
+    }),
+  ]);
+
+  return { active: total - closedByThen, completedOnDay, total };
 }
