@@ -29,6 +29,40 @@ export interface LifeScoreTasks {
 }
 
 /**
+ * Training over the trailing window — see getWorkoutAdherence.
+ *
+ * Deliberately the same shape as LifeScoreHabits, because it answers the same
+ * question: how much of what was owed actually happened. A workout with no
+ * declared plan still contributes an expected figure (a prorated baseline), so
+ * "тренируюсь когда получится" is measured rather than exempt.
+ */
+export interface LifeScoreWorkouts {
+  /** Workouts currently tracked. Archived ones owe nothing and are excluded. */
+  activeCount: number;
+  /** Sessions the plans asked for, clipped to each workout's creation day. */
+  expected: number;
+  /** Sessions actually completed. */
+  done: number;
+}
+
+/**
+ * Nutrition logging over the trailing window — see getNutritionAdherence.
+ *
+ * Shaped like LifeScoreHabits/LifeScoreWorkouts but answers a narrower
+ * question: not whether the calorie target was hit, but whether the diary was
+ * kept at all. `hasGoal` is what tells scoreNutrition a user with no goal set
+ * owes nothing, the same way an empty habit list owes nothing rather than
+ * scoring a vacuous 100%.
+ */
+export interface LifeScoreNutrition {
+  hasGoal: boolean;
+  /** Days in the trailing window the goal existed for. */
+  expected: number;
+  /** Days at least one entry was logged. */
+  daysLogged: number;
+}
+
+/**
  * Goals are still counted rather than measured, and that is deliberate: a goal
  * is a months-long thing, so "how many are in flight" is a fair read of
  * engagement in a way it is not for a habit or a task. Habits and tasks now
@@ -41,4 +75,6 @@ export interface LifeScoreInput {
   goalsCount: number;
   habits: LifeScoreHabits;
   tasks: LifeScoreTasks;
+  workouts: LifeScoreWorkouts;
+  nutrition: LifeScoreNutrition;
 }

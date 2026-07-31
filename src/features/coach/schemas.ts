@@ -23,7 +23,13 @@ export const coachBulletToneSchema = z.enum([
   "neutral",
 ]);
 
-export const coachActionTargetSchema = z.enum(["goals", "habits", "tasks"]);
+export const coachActionTargetSchema = z.enum([
+  "goals",
+  "habits",
+  "tasks",
+  "workouts",
+  "nutrition",
+]);
 
 /**
  * The one shape both producers must hit.
@@ -126,7 +132,7 @@ export const COACH_ANSWER_JSON_SCHEMA = {
           label: { type: "string" },
           target: {
             anyOf: [
-              { type: "string", enum: ["goals", "habits", "tasks"] },
+              { type: "string", enum: ["goals", "habits", "tasks", "workouts", "nutrition"] },
               { type: "null" },
             ],
           },

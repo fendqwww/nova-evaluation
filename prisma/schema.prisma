@@ -25,11 +25,17 @@ model User {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  profile       Profile?
-  goals         Goal[]
-  habits        Habit[]
-  tasks         Task[]
-  coachMessages CoachMessage[]
+  profile            Profile?
+  goals              Goal[]
+  habits             Habit[]
+  tasks              Task[]
+  workouts           Workout[]
+  coachMessages      CoachMessage[]
+  nutritionFoods     NutritionFood[]
+  nutritionEntries   NutritionEntry[]
+  nutritionMeals     NutritionMealTemplate[]
+  nutritionWaterLogs NutritionWaterLog[]
+  nutritionGoal      NutritionGoal?
 }
 
 // gender/primaryGoal/occupation are validated against a zod union in
@@ -52,7 +58,7 @@ model Profile {
   // "ocean" | "purple" | "emerald" | "orange" | "rose" | "graphite" — see
   // THEME_VALUES in src/features/onboarding/schemas.ts. String, not an
   // enum, for the same SQLite-compatibility reason as the fields above.
-  themeColor  String   @default("ocean")
+  themeColor  String @default("ocean")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -122,11 +128,11 @@ model Habit {
 
   // "daily" | "weekdays" | "weekly" — validated by a zod discriminated union
   // in src/features/habits/schemas.ts, not a Prisma enum (SQLite connector).
-  frequency String @default("daily")
+  frequency    String @default("daily")
   // "weekdays" only: bitmask, bit 0 = Monday … bit 6 = Sunday. 127 = every day.
-  weekdayMask Int @default(127)
+  weekdayMask  Int    @default(127)
   // "weekly" only: how many days in a week count as keeping the habit.
-  timesPerWeek Int @default(3)
+  timesPerWeek Int    @default(3)
 
   // Archiving, not deleting, is the honest way to stop a habit: the history
   // stays intact and the streak it earned is still true.
@@ -178,11 +184,145 @@ model Task {
   completedAt DateTime?
 
   // UTC midnight, formatted with timeZone: "UTC". A due date is a calendar day.
-  dueDate DateTime?
+  dueDate  DateTime?
   // "low" | "normal" | "high" — zod union, not an enum (SQLite).
-  priority String @default("normal")
+  priority String    @default("normal")
 
   createdAt DateTime @default(now())
+}
+
+// A workout is a *template*: what you intend to do, and on which days. It is
+// never a record of a session — that is WorkoutSession, and the separation is
+// the whole reason this section can answer both "какой у меня план" and
+// "сколько я жал в марте" without either answer being a guess.
+//
+// weekdayMask is the plan, and it is the same bit convention Habit uses (bit 0
+// = Monday … bit 6 = Sunday) so the two sections agree about what "Пн, Ср, Пт"
+// means. 0 is a legal value here where it would not be on a Habit: training
+// without a fixed schedule is a normal way to train, and the difference between
+// "нет плана" and "план на нули" is exactly the difference between a workout
+// that owes nothing on any given day and one that is broken.
+//
+// category is a plain String validated by a zod union in
+// src/features/workouts/schemas.ts, not a Prisma enum — SQLite's connector has
+// none, the same reason Task.priority and Habit.frequency are strings.
+model Workout {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title    String
+  note     String?
+  // "strength" | "cardio" | "hiit" | "mobility" | "sport" | "other"
+  category String  @default("strength")
+
+  // The plan. 0 = no fixed days.
+  weekdayMask Int @default(0)
+
+  // Archiving, not deleting, for the same reason Habit archives: a programme
+  // you have finished still happened, and its sessions are still true.
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  exercises WorkoutExercise[]
+  sessions  WorkoutSession[]
+}
+
+// One planned exercise inside a workout: the target, never the result.
+//
+// Unlike GoalStep this carries an explicit `position`, because the order of
+// exercises is part of the plan itself — squats before leg press is a training
+// decision, not a display preference.
+//
+// archivedAt is what makes history survive editing. A logged WorkoutSet points
+// at the exercise it was performed on, so deleting an exercise the user has
+// already trained would take months of load history with it. Removing an
+// exercise from the plan therefore archives it when it has sets behind it and
+// only hard-deletes it when it has none — a typo leaves no ghost, a real
+// exercise leaves its record.
+model WorkoutExercise {
+  id        String  @id @default(cuid())
+  workoutId String
+  workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  name           String
+  // The target. What actually happened lives in WorkoutSet.
+  targetSets     Int     @default(3)
+  targetReps     Int     @default(10)
+  // Null means bodyweight / not prescribed — 0 would claim a barbell with
+  // nothing on it, which is a different statement.
+  targetWeightKg Float?
+  restSeconds    Int     @default(90)
+  note           String?
+
+  position Int @default(0)
+
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  sets WorkoutSet[]
+}
+
+// One performance of a workout on one calendar day.
+//
+// `day` is UTC midnight of the user's *local* day, resolved from
+// Profile.timezone server-side — the same convention HabitLog.date and
+// Goal.targetDate use. A training day is a day, not an instant.
+//
+// completedAt is when, not whether: the Life Score scores sessions finished in
+// the last 7 days, and "какие тренировки ты закрыл вчера" is a question a
+// boolean cannot answer. Null means the session is open — started and still
+// being logged, which is exactly the state the runner needs to survive the app
+// being closed mid-set.
+//
+// The compound unique makes starting idempotent: a double-tap or a retried
+// request can only ever produce the one session for that day.
+//
+// Nothing derived is stored here. Volume, tonnage, completion percentage and
+// duration are all computed from the sets below, for the same reason Goal has
+// no `progress` column.
+model WorkoutSession {
+  id        String  @id @default(cuid())
+  workoutId String
+  workout   Workout @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  day         DateTime
+  completedAt DateTime?
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  sets WorkoutSet[]
+
+  @@unique([workoutId, day])
+  @@index([day])
+}
+
+// One set actually performed. Absence is the "not done" state, so un-logging a
+// set deletes the row rather than storing a flag — the same choice HabitLog
+// makes, and for the same reason: a table of mostly-empty rows would be the
+// same information at several times the size.
+//
+// weightKg is 0 for bodyweight work, which is a real answer rather than a
+// missing one: volume for a set of pull-ups is genuinely zero kilograms moved
+// by the bar, and the rep count is what carries the effort.
+//
+// The compound unique is what makes logging idempotent — tapping a set twice
+// settles on one row instead of failing on the second attempt.
+model WorkoutSet {
+  id         String          @id @default(cuid())
+  sessionId  String
+  session    WorkoutSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   WorkoutExercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  /// 0-based index of this set within its exercise, for this session.
+  position Int
+  reps     Int
+  weightKg Float @default(0)
+
+  createdAt DateTime @default(now())
+
+  @@unique([sessionId, exerciseId, position])
 }
 
 // The AI Coach conversation — one row per turn, never overwritten.
@@ -220,4 +360,170 @@ model CoachMessage {
   // History reads newest-first, scoped to one user, and that is the only
   // access pattern there is.
   @@index([userId, createdAt])
+}
+
+// A food in the user's own catalogue: something they created, or a favourite
+// they starred. There is no shared/global catalogue — see the note on
+// WorkoutsView about the exercise library for the same reasoning: a database
+// of foods with correct macros in Russian is a maintenance burden this app
+// does not take on, and a user's own kitchen is a short list, not one that
+// needs a search index over a universal one.
+//
+// Macros are stored per 100 g / 100 ml, the units on every packaging label, so
+// a logged entry's grams multiply directly into a real amount rather than
+// needing a serving-size lookup first.
+//
+// isFavorite is a plain flag rather than a separate join table: a favourite is
+// a property of the food itself here, not a many-to-many relationship to model,
+// since every food already belongs to exactly one user.
+model NutritionFood {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name           String
+  // Per 100 g solids / 100 ml liquids — see the note above.
+  caloriesPer100 Float
+  proteinPer100  Float  @default(0)
+  fatPer100      Float  @default(0)
+  carbsPer100    Float  @default(0)
+
+  isFavorite Boolean @default(false)
+
+  // Archiving, not deleting, for the same reason Workout archives: an entry
+  // already logged against this food still names it correctly on the day it
+  // happened, even after the food itself is retired from the picker.
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  entries NutritionEntry[]
+
+  @@index([userId, isFavorite])
+}
+
+// One thing eaten: a food, an amount, a meal, a day. This is the atomic fact
+// the whole section is built on — calories, macros, meal totals and the week's
+// statistics are all sums over these rows, never a stored aggregate, for the
+// same reason Goal has no `progress` column.
+//
+// `food` is a required relation rather than a copy of its macros at the time of
+// logging: NutritionFood carries the one true set of macros for that name, and
+// duplicating them onto every entry would let a corrected typo in a food's
+// calorie count silently leave every past day wrong while the food itself now
+// reads right. Deleting a food a user has already logged is therefore blocked
+// at the repository layer the same way an in-use WorkoutExercise is — archive
+// it instead — so a diary day can never lose the food it names.
+//
+// `mealSlot` is a plain String validated by a zod union in
+// src/features/nutrition/schemas.ts, not a Prisma enum — the same
+// SQLite-compatibility reason as every other categorical column in this file.
+//
+// `day` is UTC midnight of the user's local calendar day, resolved from
+// Profile.timezone server-side — the same convention HabitLog.date and
+// WorkoutSession.day use. A meal belongs to a day, not an instant.
+model NutritionEntry {
+  id     String        @id @default(cuid())
+  userId String
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  foodId String
+  food   NutritionFood @relation(fields: [foodId], references: [id], onDelete: Restrict)
+
+  // "breakfast" | "lunch" | "dinner" | "snack"
+  mealSlot String
+
+  day     DateTime
+  // What was actually eaten, in grams (or millilitres for a drink logged the
+  // same way) — multiplied against the food's per-100 macros at read time.
+  amountG Float
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, day])
+}
+
+// A running total of water for one day. Modelled as one upsertable row per
+// day rather than one row per glass — HabitLog and WorkoutSet are absence-is-
+// false because a set either happened or it did not, but water is a quantity
+// added to gradually through the day, and a "grew by 250 ml" event carries no
+// information once summed that the running total does not already have.
+//
+// `day` is UTC midnight of the user's local calendar day, the same convention
+// every other day-scoped table in this file uses.
+model NutritionWaterLog {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  day      DateTime
+  amountMl Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, day])
+}
+
+// A reusable set of foods and amounts a user logs together often — "мой
+// завтрак", "протеиновый перекус" — so filling in a recurring meal is one tap
+// against the template rather than re-adding each food. Applying a template
+// writes ordinary NutritionEntry rows; nothing about a day's diary points back
+// at the template that seeded it, so editing or deleting a template later
+// never rewrites history.
+model NutritionMealTemplate {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name     String
+  // Suggested slot to pre-select when applying the template — a default, not
+  // a constraint, since the same template can be logged at any time of day.
+  mealSlot String
+
+  createdAt DateTime @default(now())
+
+  items NutritionMealTemplateItem[]
+}
+
+// One food-and-amount line inside a template. Kept as its own table rather
+// than a JSON column for the same reason WorkoutExercise is its own table: the
+// SQLite connector has no JSON type worth querying, and a template line is a
+// small, well-typed row.
+//
+// foodId has no relation to NutritionFood and is validated for ownership at
+// the repository layer instead: a template line survives its food being
+// archived (the picker just skips it), and onDelete: Restrict on the relation
+// would otherwise block deleting a food the moment any template mentioned it,
+// which is a stronger promise than a quick-add list needs to make.
+model NutritionMealTemplateItem {
+  id         String                @id @default(cuid())
+  templateId String
+  template   NutritionMealTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  foodId  String
+  amountG Float
+
+  position Int @default(0)
+}
+
+// The user's daily target. One row per user, mutable in place, the same shape
+// as Profile: a goal is a current setting to score today's intake against, not
+// a history of settings, so there is nothing here for a past day's diary to
+// point back at and nothing for the Life Score to misread once it changes.
+//
+// Zero means "not set" for each macro independently rather than the row being
+// wholly absent, because a user who only cares about a calorie ceiling should
+// not have to invent protein/fat/carb targets they have no opinion on.
+model NutritionGoal {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  calories Int @default(0)
+  proteinG Int @default(0)
+  fatG     Int @default(0)
+  carbsG   Int @default(0)
+  waterMl  Int @default(2000)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

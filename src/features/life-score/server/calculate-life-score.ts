@@ -1,17 +1,41 @@
 import type {
   LifeScoreHabits,
   LifeScoreInput,
+  LifeScoreNutrition,
   LifeScoreResult,
   LifeScoreTasks,
+  LifeScoreWorkouts,
 } from "@/features/life-score/types";
 
 // Weights are the only thing likely to change as this gets smarter later —
 // callers only ever see { score, breakdown }, never these constants.
-const MAX_PROFILE = 15;
-const MAX_WELLNESS = 25;
-const MAX_GOALS = 20;
+//
+// Training took its 15 points out of profile (−5), wellness (−5) and goals (−5)
+// rather than out of habits or tasks, and the split is deliberate. Profile and
+// wellness are the two blocks that measure a *declaration* rather than a
+// behaviour: filling in a form once and a BMI derived from that same form. A
+// week of real sessions is stronger evidence about the same subject — the body —
+// than the number the user typed during onboarding, so moving weight from those
+// two towards observed training makes the index describe more of what actually
+// happened. Goals gave up its five for the same reason it is still counted
+// rather than measured: it is the softest signal left. Habits and tasks were
+// left alone at 20 each; they already measure behaviour, and the AI Coach quotes
+// both figures out loud.
+//
+// Nutrition's 5 points came out of profile (−2) and wellness (−3) for the same
+// reason training's did: keeping a food diary for a week is stronger evidence
+// about the body than the height/weight typed once at onboarding. It is
+// deliberately the smallest block — logging a diary is a lighter signal than
+// completing a training session, since a day can be logged in seconds without
+// the diary being honest, and the block only rewards keeping it at all (see
+// scoreNutrition), never hitting the calorie target on the nose.
+const MAX_PROFILE = 8;
+const MAX_WELLNESS = 17;
+const MAX_GOALS = 15;
 const MAX_HABITS = 20;
 const MAX_TASKS = 20;
+const MAX_WORKOUTS = 15;
+const MAX_NUTRITION = 5;
 
 /** Finishing this many tasks in the window is full marks. */
 const TASKS_FOR_FULL_MARKS = 7;
@@ -23,12 +47,20 @@ const MAX_OVERDUE_PENALTY = 0.5;
 /** The trailing window habits and tasks are judged over. */
 export const SCORING_WINDOW_DAYS = 7;
 
+/**
+ * The falloff is 1.44 per BMI point rather than the 1.8 it was when this block
+ * was worth 25: the coefficient is scaled with the block so the *shape* of the
+ * curve is unchanged and a given body still scores the same share of whatever
+ * wellness is currently worth. Keeping 1.8 against a 20-point block would have
+ * quietly made the penalty a third harsher, which is not a decision the
+ * reweighting was meant to make.
+ */
 function scoreWellness(heightCm: number | null, weightKg: number | null): number {
   if (!heightCm || !weightKg) return 0;
   const heightM = heightCm / 100;
   const bmi = weightKg / (heightM * heightM);
   const distanceFromIdeal = Math.abs(bmi - 22);
-  return Math.max(0, Math.min(MAX_WELLNESS, Math.round(MAX_WELLNESS - distanceFromIdeal * 1.8)));
+  return Math.max(0, Math.min(MAX_WELLNESS, Math.round(MAX_WELLNESS - distanceFromIdeal * 1.44)));
 }
 
 function scoreCount(count: number, max: number, perItem: number): number {
@@ -54,6 +86,24 @@ function scoreHabits(habits: LifeScoreHabits): number {
 }
 
 /**
+ * Training scores on adherence, exactly like habits.
+ *
+ * Counting programmes would reward the wrong thing in the same way counting
+ * habits did: a plan written once and never followed would score as well as one
+ * trained three times a week. The ratio of sessions completed to sessions owed
+ * is the honest version, and it is why WorkoutSession carries completedAt.
+ *
+ * A user with no workouts scores zero rather than full marks — the ratio would
+ * otherwise be vacuously perfect (0 owed, 0 done), handing out points for
+ * having nothing to train.
+ */
+function scoreWorkouts(workouts: LifeScoreWorkouts): number {
+  if (workouts.activeCount === 0 || workouts.expected === 0) return 0;
+  const ratio = Math.min(1, workouts.done / workouts.expected);
+  return Math.round(MAX_WORKOUTS * ratio);
+}
+
+/**
  * Tasks score on throughput, with a penalty for rot.
  *
  * Completion within the window is the positive signal; open tasks that are
@@ -75,14 +125,29 @@ function scoreTasks(tasks: LifeScoreTasks): number {
 }
 
 /**
+ * Nutrition scores on whether the diary is kept, not on hitting the target.
+ *
+ * Unlike habits and workouts, there is no "owed vs done" count to compare —
+ * a day either has an entry or it does not, and the target is a number to aim
+ * at rather than a pass/fail gate (see the note on NutritionEntry). A user
+ * with no goal set scores zero rather than full marks, the same
+ * vacuous-ratio guard scoreHabits and scoreWorkouts apply.
+ */
+function scoreNutrition(nutrition: LifeScoreNutrition): number {
+  if (!nutrition.hasGoal || nutrition.expected === 0) return 0;
+  const ratio = Math.min(1, nutrition.daysLogged / nutrition.expected);
+  return Math.round(MAX_NUTRITION * ratio);
+}
+
+/**
  * Profile completeness + a BMI-derived wellness signal + evidence of follow
  * through.
  *
  * The engagement half used to be "how many things did you create", which is a
  * proxy that stops tracking reality the moment the app can observe the real
- * thing. Habits and tasks now report what actually happened over the trailing
- * week; goals stay count-based because a goal is a months-long commitment and
- * having several in flight genuinely is the signal there.
+ * thing. Habits, tasks and workouts now report what actually happened over the
+ * trailing week; goals stay count-based because a goal is a months-long
+ * commitment and having several in flight genuinely is the signal there.
  *
  * Deliberately swappable — this is the only place the formula lives, and the UI
  * never sees these internals. The breakdown keys are unchanged, so the Dashboard
@@ -104,8 +169,10 @@ export function calculateLifeScore(input: LifeScoreInput): LifeScoreResult {
     },
     {
       key: "goals",
+      // 5 per goal against a 15-point block: three goals in flight is full
+      // marks, the same point the old 7-against-20 curve reached.
       label: "Цели",
-      score: scoreCount(input.goalsCount, MAX_GOALS, 7),
+      score: scoreCount(input.goalsCount, MAX_GOALS, 5),
       maxScore: MAX_GOALS,
     },
     {
@@ -119,6 +186,18 @@ export function calculateLifeScore(input: LifeScoreInput): LifeScoreResult {
       label: "Задачи за неделю",
       score: scoreTasks(input.tasks),
       maxScore: MAX_TASKS,
+    },
+    {
+      key: "workouts",
+      label: "Тренировки за неделю",
+      score: scoreWorkouts(input.workouts),
+      maxScore: MAX_WORKOUTS,
+    },
+    {
+      key: "nutrition",
+      label: "Питание за неделю",
+      score: scoreNutrition(input.nutrition),
+      maxScore: MAX_NUTRITION,
     },
   ];
 

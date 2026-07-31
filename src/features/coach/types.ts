@@ -27,7 +27,7 @@ export interface CoachBullet {
 }
 
 /** Where an action sends the user. `null` is advice with nowhere to tap. */
-export type CoachActionTarget = "goals" | "habits" | "tasks";
+export type CoachActionTarget = "goals" | "habits" | "tasks" | "workouts" | "nutrition";
 
 export interface CoachAction {
   id: string;
@@ -106,6 +106,53 @@ export interface CoachTaskFact {
   isDueToday: boolean;
 }
 
+export interface CoachWorkoutFact {
+  id: string;
+  title: string;
+  /** "Силовая", "Кардио" — the category label, not the id. */
+  category: string;
+  /** "Пн, Ср, Пт", "Каждый день", "Без плана". */
+  plan: string;
+  hasPlan: boolean;
+  isPlannedToday: boolean;
+  isDoneToday: boolean;
+  /** A session started today and not finished. */
+  isOpenToday: boolean;
+  currentStreak: number;
+  streakUnit: "day" | "week";
+  /** 0–1 over the trailing 30 days. Null when the workout has no plan. */
+  adherence: number | null;
+  weekDone: number;
+  weekTarget: number;
+  /** Last day it was completed, inside the loaded window. */
+  lastDay: CalendarDay | null;
+  /** Σ reps × weight across the window, in kilograms. */
+  volumeKg: number;
+}
+
+/**
+ * What today's diary looks like, for the Coach.
+ *
+ * Deliberately thin next to CoachWorkoutFact: there is no per-food breakdown
+ * here, since the Coach reasons about whether the diary is being kept and
+ * roughly how today compares to the target, not about a specific meal.
+ */
+export interface CoachNutritionFact {
+  hasGoal: boolean;
+  caloriesGoal: number;
+  caloriesToday: number;
+  proteinTodayG: number;
+  fatTodayG: number;
+  carbsTodayG: number;
+  waterTodayMl: number;
+  waterGoalMl: number;
+  isLoggedToday: boolean;
+  /** Consecutive days up to and including today with at least one entry. */
+  loggingStreak: number;
+  /** Days logged / days owed over the trailing scoring window, 0–1. Null without a goal. */
+  adherence: number | null;
+}
+
 export interface CoachGoalFact {
   id: string;
   title: string;
@@ -139,6 +186,20 @@ export interface CoachMetrics {
   tasksCompletedWeek: number;
   goalsActive: number;
   goalsCompleted: number;
+  /** Workouts the plan asks for today. */
+  workoutsPlannedToday: number;
+  workoutsDoneToday: number;
+  workoutsRemaining: number;
+  /** Completed / owed over the trailing scoring window, 0–1. */
+  workoutAdherence: number;
+  /** Sessions completed within the trailing scoring window. */
+  workoutsWeek: number;
+  /** Σ volume of those sessions, in kilograms. */
+  workoutVolumeWeek: number;
+  /** Days logged / owed over the trailing scoring window, 0–1. */
+  nutritionAdherence: number;
+  /** Days logged within the trailing scoring window. */
+  nutritionDaysWeek: number;
 }
 
 /**
@@ -156,6 +217,10 @@ export interface CoachPotential {
   fromOverdueTasks: number;
   /** Finishing one more task, whichever it is. */
   fromOneTask: number;
+  /** Completing every workout the plan still owes today. */
+  fromWorkouts: number;
+  /** Logging at least one entry today, when it has not happened yet. */
+  fromNutrition: number;
   /** All of the above together — the honest ceiling for today. */
   total: number;
 }
@@ -169,6 +234,8 @@ export interface CoachAnalysis {
   habits: CoachHabitFact[];
   tasks: CoachTaskFact[];
   goals: CoachGoalFact[];
+  workouts: CoachWorkoutFact[];
+  nutrition: CoachNutritionFact;
   potential: CoachPotential;
 }
 

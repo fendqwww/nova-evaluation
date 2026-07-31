@@ -1,7 +1,11 @@
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
 import { formatStreak } from "@/features/habits/lib/stats";
+import { formatStreak as formatWorkoutStreak } from "@/features/workouts/lib/stats";
+import { formatVolume } from "@/features/workouts/lib/format";
+import { caloriesWord, daysWord } from "@/features/nutrition/lib/format";
 import { PRIMARY_GOAL_LABELS } from "@/features/onboarding/schemas";
 import {
+  focusWorkout,
   scoreVerdict,
   strongestHabit,
   urgentTasks,
@@ -44,6 +48,10 @@ export function composeAnswer(intent: CoachIntent, analysis: CoachAnalysis): Coa
       return nowAnswer(analysis);
     case "weak_habits":
       return habitsAnswer(analysis);
+    case "workouts":
+      return workoutsAnswer(analysis);
+    case "nutrition":
+      return nutritionAnswer(analysis);
     case "overdue":
       return overdueAnswer(analysis);
     case "evening":
@@ -91,6 +99,62 @@ function composeRecommendations(analysis: CoachAnalysis): CoachBullet[] {
         "warning",
         `Осталось отметить ${metrics.habitsRemaining} ${habitsAccusative(metrics.habitsRemaining)} из ${metrics.habitsDue} на сегодня`,
       ),
+    );
+  }
+
+  const openWorkout = analysis.workouts.find((workout) => workout.isOpenToday);
+  if (openWorkout) {
+    items.push(
+      bullet(
+        "rec-workout-open",
+        "warning",
+        `Тренировка «${openWorkout.title}» начата, но не завершена — закрой её, иначе день не засчитается`,
+      ),
+    );
+  } else if (metrics.workoutsRemaining > 0) {
+    const owed = analysis.workouts.find(
+      (workout) => workout.isPlannedToday && !workout.isDoneToday,
+    );
+    items.push(
+      bullet(
+        "rec-workout",
+        "warning",
+        owed
+          ? `Сегодня по плану «${owed.title}»${
+              potential.fromWorkouts > 0
+                ? ` — это ${potential.fromWorkouts} ${pointsWord(potential.fromWorkouts)} к индексу`
+                : ""
+            }`
+          : `На сегодня запланировано тренировок: ${metrics.workoutsRemaining}`,
+      ),
+    );
+  }
+
+  if (analysis.workouts.length === 0) {
+    items.push(
+      bullet(
+        "rec-first-workout",
+        "neutral",
+        "Заведи одну тренировку — сейчас блок тренировок в индексе пуст",
+      ),
+    );
+  }
+
+  if (analysis.nutrition.hasGoal && !analysis.nutrition.isLoggedToday) {
+    items.push(
+      bullet(
+        "rec-nutrition",
+        "warning",
+        `Сегодня ещё нет ни одной записи в дневнике питания${
+          potential.fromNutrition > 0
+            ? ` — это ${potential.fromNutrition} ${pointsWord(potential.fromNutrition)} к индексу`
+            : ""
+        }`,
+      ),
+    );
+  } else if (!analysis.nutrition.hasGoal) {
+    items.push(
+      bullet("rec-nutrition-goal", "neutral", "Задай дневную цель по калориям — сейчас блок питания в индексе пуст"),
     );
   }
 
@@ -173,6 +237,41 @@ function composeWarnings(analysis: CoachAnalysis): CoachBullet[] {
     items.push(bullet("warn-throughput", "warning", "За неделю не закрыто ни одной задачи"));
   }
 
+  // Only workouts that actually owe something can be "abandoned" — a programme
+  // with no plan owes nothing, so its adherence is null and it is skipped here
+  // rather than reported as 0%.
+  const slippingWorkouts = analysis.workouts.filter(
+    (workout) => workout.adherence !== null && workout.adherence < 0.5,
+  );
+  if (slippingWorkouts.length > 0) {
+    items.push(
+      bullet(
+        "warn-workouts",
+        "critical",
+        `План по тренировкам выполняется меньше чем наполовину: ${slippingWorkouts
+          .slice(0, 2)
+          .map((workout) => `«${workout.title}» ${Math.round((workout.adherence ?? 0) * 100)}%`)
+          .join(", ")}`,
+      ),
+    );
+  }
+
+  if (analysis.workouts.length > 0 && metrics.workoutsWeek === 0) {
+    items.push(
+      bullet("warn-no-training", "warning", "За неделю не было ни одной тренировки"),
+    );
+  }
+
+  if (analysis.nutrition.hasGoal && (analysis.nutrition.adherence ?? 1) < 0.5) {
+    items.push(
+      bullet(
+        "warn-nutrition",
+        "warning",
+        `Дневник питания ведётся меньше чем в половине дней недели: ${metrics.nutritionDaysWeek} из 7`,
+      ),
+    );
+  }
+
   if (yesterday && metrics.lifeScore.score - yesterday.lifeScore.score <= -5) {
     const drop = yesterday.lifeScore.score - metrics.lifeScore.score;
     items.push(bullet("warn-drop", "warning", `Индекс упал на ${drop} ${pointsWord(drop)} за сутки`));
@@ -194,6 +293,10 @@ function composeMotivation(analysis: CoachAnalysis): string {
 
   if (best && best.currentStreak >= 3) {
     return `«${best.title}» держится ${formatStreak(best.currentStreak, best.streakUnit)} подряд. Такую серию проще продлить, чем начать заново — сегодняшняя отметка стоит дешевле, чем завтрашний рестарт.`;
+  }
+
+  if (metrics.workoutVolumeWeek > 0) {
+    return `За неделю ты поднял ${formatVolume(metrics.workoutVolumeWeek)} суммарного объёма за ${metrics.workoutsWeek} ${pluralizeRu(metrics.workoutsWeek, ["тренировку", "тренировки", "тренировок"])}. Это не ощущение прогресса, а измеренный факт — и он растёт только повторением.`;
   }
 
   if (metrics.tasksCompletedToday > 0) {
@@ -227,9 +330,23 @@ function bullet(id: string, tone: CoachBulletTone, text: string): CoachBullet {
 const OPEN_TASKS: CoachAction = { id: "open-tasks", label: "Открыть задачи", target: "tasks" };
 const OPEN_HABITS: CoachAction = { id: "open-habits", label: "Открыть привычки", target: "habits" };
 const OPEN_GOALS: CoachAction = { id: "open-goals", label: "Открыть цели", target: "goals" };
+const OPEN_WORKOUTS: CoachAction = {
+  id: "open-workouts",
+  label: "Открыть тренировки",
+  target: "workouts",
+};
+const OPEN_NUTRITION: CoachAction = {
+  id: "open-nutrition",
+  label: "Открыть питание",
+  target: "nutrition",
+};
 
 function tasksWord(count: number): string {
   return pluralizeRu(count, ["задача", "задачи", "задач"]);
+}
+
+function workoutsWord(count: number): string {
+  return pluralizeRu(count, ["тренировка", "тренировки", "тренировок"]);
 }
 
 function habitsWord(count: number): string {
@@ -316,7 +433,7 @@ function emptyAnswer(analysis: CoachAnalysis): CoachAnswer {
     actions: [
       { id: "first-goal", label: "Поставить цель", target: "goals" },
       { id: "first-habit", label: "Завести привычку", target: "habits" },
-      { id: "first-task", label: "Добавить задачу", target: "tasks" },
+      { id: "first-workout", label: "Создать тренировку", target: "workouts" },
     ],
   };
 }
@@ -326,6 +443,7 @@ function isEmptyAccount(analysis: CoachAnalysis): boolean {
     analysis.goals.length === 0 &&
     analysis.habits.length === 0 &&
     analysis.tasks.length === 0 &&
+    analysis.workouts.length === 0 &&
     analysis.metrics.tasksCompletedWeek === 0
   );
 }
@@ -362,6 +480,38 @@ function briefAnswer(analysis: CoachAnalysis): CoachAnswer {
         `${agree(metrics.tasksOverdue, ["Просрочена", "Просрочено", "Просрочено"])} ${metrics.tasksOverdue} ${tasksWord(metrics.tasksOverdue)}${
           potential.fromOverdueTasks > 0
             ? ` — закрытие вернёт ${potential.fromOverdueTasks} ${pointsWord(potential.fromOverdueTasks)}`
+            : ""
+        }`,
+      ),
+    );
+  }
+
+  const openWorkout = analysis.workouts.find((workout) => workout.isOpenToday);
+  if (openWorkout) {
+    bullets.push(
+      bullet("workout-open", "warning", `«${openWorkout.title}» начата и не завершена`),
+    );
+  } else if (metrics.workoutsRemaining > 0) {
+    const owed = analysis.workouts.find(
+      (workout) => workout.isPlannedToday && !workout.isDoneToday,
+    );
+    bullets.push(
+      bullet(
+        "workout-due",
+        "warning",
+        owed
+          ? `Тренировка по плану: «${owed.title}»`
+          : `На сегодня ${metrics.workoutsRemaining} ${workoutsWord(metrics.workoutsRemaining)}`,
+      ),
+    );
+  } else if (metrics.workoutsDoneToday > 0) {
+    bullets.push(
+      bullet(
+        "workout-done",
+        "positive",
+        `Тренировка на сегодня выполнена${
+          metrics.workoutVolumeWeek > 0
+            ? ` — за неделю ${formatVolume(metrics.workoutVolumeWeek)}`
             : ""
         }`,
       ),
@@ -415,11 +565,13 @@ function briefAnswer(analysis: CoachAnalysis): CoachAnswer {
   const headline =
     metrics.tasksOverdue > 0
       ? "День требует разгрузки"
-      : metrics.habitsRemaining > 0
-        ? "День ещё можно закрыть в плюс"
-        : goal && goal.daysLeft !== null && goal.daysLeft <= 3
-          ? "Отличный день, чтобы закрыть главную цель"
-          : "Ты идёшь ровно";
+      : metrics.workoutsRemaining > 0
+        ? "Сегодня тренировочный день"
+        : metrics.habitsRemaining > 0
+          ? "День ещё можно закрыть в плюс"
+          : goal && goal.daysLeft !== null && goal.daysLeft <= 3
+            ? "Отличный день, чтобы закрыть главную цель"
+            : "Ты идёшь ровно";
 
   const body = [
     `Индекс ${metrics.lifeScore.score} из 100 — ${scoreVerdict(metrics.lifeScore.score)}.`,
@@ -435,6 +587,15 @@ function briefActions(analysis: CoachAnalysis): CoachAction[] {
   const actions: CoachAction[] = [];
   if (analysis.metrics.tasksOverdue > 0) {
     actions.push({ id: "fix-overdue", label: "Разобрать просроченное", target: "tasks" });
+  }
+  if (analysis.metrics.workoutsRemaining > 0) {
+    actions.push({
+      id: "do-workout",
+      label: analysis.workouts.some((workout) => workout.isOpenToday)
+        ? "Завершить тренировку"
+        : "Начать тренировку",
+      target: "workouts",
+    });
   }
   if (analysis.metrics.habitsRemaining > 0) {
     actions.push({ id: "close-habits", label: "Отметить привычки", target: "habits" });
@@ -519,6 +680,15 @@ function improveAnswer(analysis: CoachAnalysis): CoachAnswer {
       bullet("gain-overdue", "critical", `Закрыть просроченное: +${potential.fromOverdueTasks} ${pointsWord(potential.fromOverdueTasks)}`),
     );
   }
+  if (potential.fromWorkouts > 0) {
+    bullets.push(
+      bullet(
+        "gain-workouts",
+        "warning",
+        `Закрыть тренировку по плану: +${potential.fromWorkouts} ${pointsWord(potential.fromWorkouts)}`,
+      ),
+    );
+  }
   if (potential.fromHabits > 0) {
     bullets.push(
       bullet("gain-habits", "warning", `Отметить оставшиеся привычки: +${potential.fromHabits} ${pointsWord(potential.fromHabits)}`),
@@ -555,6 +725,29 @@ function nowAnswer(analysis: CoachAnalysis): CoachAnswer {
   const urgent = urgentTasks(analysis.tasks, 3);
   const owed = analysis.habits.filter((habit) => habit.isDueToday && !habit.isDoneToday);
 
+  // An unfinished workout outranks everything: it is already started, the
+  // fastest thing on the list to close, and the only item that goes stale by
+  // the end of the day whatever else happens.
+  const openWorkout = analysis.workouts.find((workout) => workout.isOpenToday);
+  if (openWorkout) {
+    return {
+      headline: `Сейчас: закончить «${openWorkout.title}»`,
+      body: `Тренировка начата сегодня и не завершена. Пока она открыта, день по тренировкам не засчитан${
+        analysis.potential.fromWorkouts > 0
+          ? `, а это ${analysis.potential.fromWorkouts} ${pointsWord(analysis.potential.fromWorkouts)} индекса`
+          : ""
+      }.`,
+      bullets: [
+        bullet(
+          `open-${openWorkout.id}`,
+          "warning",
+          `«${openWorkout.title}» — ${openWorkout.category.toLocaleLowerCase("ru")}, ${openWorkout.plan.toLocaleLowerCase("ru")}`,
+        ),
+      ],
+      actions: [OPEN_WORKOUTS],
+    };
+  }
+
   if (urgent.length > 0 && urgent[0].daysOverdue > 0) {
     const task = urgent[0];
     return {
@@ -570,6 +763,31 @@ function nowAnswer(analysis: CoachAnalysis): CoachAnswer {
         ),
       ),
       actions: [OPEN_TASKS],
+    };
+  }
+
+  const plannedWorkout = analysis.workouts.find(
+    (workout) => workout.isPlannedToday && !workout.isDoneToday,
+  );
+  if (plannedWorkout) {
+    return {
+      headline: `Сейчас: «${plannedWorkout.title}»`,
+      body: `Сегодня тренировочный день по плану «${plannedWorkout.plan.toLocaleLowerCase("ru")}». ${
+        plannedWorkout.currentStreak > 0
+          ? `На кону серия в ${formatWorkoutStreak(plannedWorkout.currentStreak, plannedWorkout.streakUnit)}.`
+          : "С неё же начнётся новая серия."
+      }`,
+      bullets: analysis.workouts
+        .filter((workout) => workout.isPlannedToday && !workout.isDoneToday)
+        .slice(0, 3)
+        .map((workout) =>
+          bullet(
+            `plan-${workout.id}`,
+            "warning",
+            `«${workout.title}» — ${workout.category.toLocaleLowerCase("ru")}, на неделе ${workout.weekDone} из ${workout.weekTarget}`,
+          ),
+        ),
+      actions: [OPEN_WORKOUTS],
     };
   }
 
@@ -643,6 +861,173 @@ function habitsAnswer(analysis: CoachAnalysis): CoachAnswer {
   };
 }
 
+/**
+ * How training is actually going.
+ *
+ * Leads with what is owed today when something is, because that is the only
+ * part of the answer the user can still act on; otherwise it reports the week
+ * against the plan. Volume is quoted rather than "молодец" — tonnage is the one
+ * number that separates a real training week from a logged one.
+ */
+function workoutsAnswer(analysis: CoachAnalysis): CoachAnswer {
+  const { metrics } = analysis;
+
+  if (analysis.workouts.length === 0) {
+    return {
+      headline: "Тренировок пока нет",
+      body: "Блок «Тренировки за неделю» даёт до 15 баллов индекса и сейчас пуст. Одна программа, которую реально повторять, поднимет его быстрее, чем что-либо ещё в этом разделе.",
+      bullets: [],
+      actions: [{ id: "add-workout", label: "Создать тренировку", target: "workouts" }],
+    };
+  }
+
+  const bullets: CoachBullet[] = analysis.workouts.slice(0, 4).map((workout) =>
+    bullet(
+      `w-${workout.id}`,
+      workout.isOpenToday
+        ? "warning"
+        : workout.adherence === null
+          ? "neutral"
+          : workout.adherence < 0.5
+            ? "critical"
+            : workout.adherence < 0.8
+              ? "warning"
+              : "positive",
+      `«${workout.title}» — ${
+        workout.adherence === null
+          ? `без плана, на неделе ${workout.weekDone} из ${workout.weekTarget}`
+          : `${Math.round(workout.adherence * 100)}% плана за месяц, серия ${formatWorkoutStreak(workout.currentStreak, workout.streakUnit)}`
+      }`,
+    ),
+  );
+
+  const openWorkout = analysis.workouts.find((workout) => workout.isOpenToday);
+  if (openWorkout) {
+    return {
+      headline: `«${openWorkout.title}» не завершена`,
+      body: `Тренировка начата сегодня, но не закрыта — до этого момента она не идёт ни в статистику, ни в индекс. За неделю пока ${metrics.workoutsWeek} ${workoutsWord(metrics.workoutsWeek)}.`,
+      bullets,
+      actions: [OPEN_WORKOUTS],
+    };
+  }
+
+  if (metrics.workoutsRemaining > 0) {
+    const owed = focusWorkout(analysis.workouts);
+    return {
+      headline: `Сегодня по плану — ${metrics.workoutsRemaining} ${workoutsWord(metrics.workoutsRemaining)}`,
+      body: owed
+        ? `Начни с «${owed.title}»: на этой неделе ${owed.weekDone} из ${owed.weekTarget}${
+            analysis.potential.fromWorkouts > 0
+              ? `, и это ${analysis.potential.fromWorkouts} ${pointsWord(analysis.potential.fromWorkouts)} к индексу сегодня`
+              : ""
+          }.`
+        : `За неделю закрыто ${metrics.workoutsWeek} ${workoutsWord(metrics.workoutsWeek)}.`,
+      bullets,
+      actions: [OPEN_WORKOUTS],
+    };
+  }
+
+  if (metrics.workoutsWeek === 0) {
+    return {
+      headline: "За неделю ни одной тренировки",
+      body: `Программы есть, но за последние семь дней ни одна не выполнена — блок тренировок в индексе сейчас нулевой. Одна сессия сегодня уже сдвинет его.`,
+      bullets,
+      actions: [OPEN_WORKOUTS],
+    };
+  }
+
+  const weakest = focusWorkout(analysis.workouts);
+
+  return {
+    headline: `За неделю ${metrics.workoutsWeek} ${workoutsWord(metrics.workoutsWeek)}`,
+    body: [
+      metrics.workoutVolumeWeek > 0
+        ? `Суммарный объём — ${formatVolume(metrics.workoutVolumeWeek)}.`
+        : null,
+      `Выполнение плана — ${Math.round(metrics.workoutAdherence * 100)}%.`,
+      weakest && weakest.adherence !== null && weakest.adherence < 0.8
+        ? `Слабее всего идёт «${weakest.title}» — ${Math.round(weakest.adherence * 100)}%.`
+        : null,
+    ]
+      .filter(Boolean)
+      .join(" "),
+    bullets,
+    actions: [OPEN_WORKOUTS],
+  };
+}
+
+/**
+ * How the diary is going.
+ *
+ * Leads with whether today has been logged at all, because that is the one
+ * thing still actionable right now; otherwise it reports the week's logging
+ * rate against the goal. Never comments on whether the calorie target was hit
+ * — the block scores on keeping the diary, not on the number in it, and an
+ * answer that praised or scolded a specific total would be arguing with a
+ * target the score itself does not enforce.
+ */
+function nutritionAnswer(analysis: CoachAnalysis): CoachAnswer {
+  const { nutrition, metrics } = analysis;
+
+  if (!nutrition.hasGoal) {
+    return {
+      headline: "Цель по питанию не задана",
+      body: "Блок «Питание за неделю» даёт до 5 баллов индекса и сейчас пуст, потому что ему не с чем сравнивать записи. Задай дневную цель по калориям — дальше достаточно просто вести дневник.",
+      bullets: [],
+      actions: [OPEN_NUTRITION],
+    };
+  }
+
+  const bullets: CoachBullet[] = [
+    bullet(
+      "nutrition-today",
+      nutrition.isLoggedToday ? "positive" : "warning",
+      nutrition.isLoggedToday
+        ? `Сегодня уже ${Math.round(nutrition.caloriesToday)} ${caloriesWord(Math.round(nutrition.caloriesToday))} из ${nutrition.caloriesGoal}`
+        : "Сегодня в дневнике пока пусто",
+    ),
+    bullet(
+      "nutrition-water",
+      nutrition.waterGoalMl > 0 && nutrition.waterTodayMl >= nutrition.waterGoalMl
+        ? "positive"
+        : "neutral",
+      `Вода: ${nutrition.waterTodayMl} мл${nutrition.waterGoalMl > 0 ? ` из ${nutrition.waterGoalMl}` : ""}`,
+    ),
+  ];
+
+  if (nutrition.loggingStreak >= 3) {
+    bullets.push(
+      bullet(
+        "nutrition-streak",
+        "positive",
+        `Дневник ведётся ${nutrition.loggingStreak} ${daysWord(nutrition.loggingStreak)} подряд`,
+      ),
+    );
+  }
+
+  if (!nutrition.isLoggedToday) {
+    return {
+      headline: "Сегодня дневник ещё не открывали",
+      body: `За неделю записи есть в ${metrics.nutritionDaysWeek} из 7 дней.${
+        analysis.potential.fromNutrition > 0
+          ? ` Один продукт сегодня — это ${analysis.potential.fromNutrition} ${pointsWord(analysis.potential.fromNutrition)} к индексу.`
+          : ""
+      }`,
+      bullets,
+      actions: [OPEN_NUTRITION],
+    };
+  }
+
+  const adherencePercent = Math.round((nutrition.adherence ?? 0) * 100);
+
+  return {
+    headline: `За неделю дневник ведётся в ${metrics.nutritionDaysWeek} из 7 дней`,
+    body: `Выполнение — ${adherencePercent}% от того, что просит цель.`,
+    bullets,
+    actions: [OPEN_NUTRITION],
+  };
+}
+
 function overdueAnswer(analysis: CoachAnalysis): CoachAnswer {
   const overdue = analysis.tasks
     .filter((task) => task.daysOverdue > 0)
@@ -697,7 +1082,22 @@ function eveningAnswer(analysis: CoachAnalysis): CoachAnswer {
   const owed = analysis.habits.filter((habit) => habit.isDueToday && !habit.isDoneToday);
   const dueToday = analysis.tasks.filter((task) => task.isDueToday);
 
+  const owedWorkouts = analysis.workouts.filter(
+    (workout) => (workout.isPlannedToday && !workout.isDoneToday) || workout.isOpenToday,
+  );
+
   const bullets: CoachBullet[] = [];
+  if (owedWorkouts.length > 0) {
+    bullets.push(
+      bullet(
+        "evening-workouts",
+        "warning",
+        `${agree(owedWorkouts.length, ["Не закрыта", "Не закрыто", "Не закрыто"])} ${owedWorkouts.length} ${workoutsWord(owedWorkouts.length)}: ${owedWorkouts
+          .map((workout) => workout.title)
+          .join(", ")}`,
+      ),
+    );
+  }
   if (owed.length > 0) {
     bullets.push(
       bullet(
@@ -722,23 +1122,30 @@ function eveningAnswer(analysis: CoachAnalysis): CoachAnswer {
     );
   }
 
-  if (owed.length === 0 && dueToday.length === 0) {
+  if (owed.length === 0 && dueToday.length === 0 && owedWorkouts.length === 0) {
     return {
       headline: "День закрыт чисто",
-      body: `Ни одной несделанной привычки и ни одной задачи на сегодня. Индекс ${metrics.lifeScore.score} из 100. Лучшее вложение на вечер — поставить одну задачу на завтра, чтобы утро началось не с выбора.`,
+      body: `Ни одной несделанной привычки, задачи или тренировки на сегодня. Индекс ${metrics.lifeScore.score} из 100. Лучшее вложение на вечер — поставить одну задачу на завтра, чтобы утро началось не с выбора.`,
       bullets,
       actions: [{ id: "plan-tomorrow", label: "Запланировать завтра", target: "tasks" }],
     };
   }
 
-  const remaining = owed.length + dueToday.length;
-  const minutes = owed.length * 5 + dueToday.length * 15;
+  const remaining = owed.length + dueToday.length + owedWorkouts.length;
+  // A rough budget, and the ordering the body recommends follows from it:
+  // habits are minutes, tasks are a quarter of an hour, a workout is an hour.
+  const minutes = owed.length * 5 + dueToday.length * 15 + owedWorkouts.length * 60;
 
   return {
     headline: "Вечер решает, каким будет счёт дня",
-    body: `${agree(remaining, ["Остался", "Осталось", "Осталось"])} ${remaining} ${pluralizeRu(remaining, ["пункт", "пункта", "пунктов"])} — примерно ${minutes} ${pluralizeRu(minutes, ["минута", "минуты", "минут"])}. Привычки быстрее, начни с них.`,
+    body: `${agree(remaining, ["Остался", "Осталось", "Осталось"])} ${remaining} ${pluralizeRu(remaining, ["пункт", "пункта", "пунктов"])} — примерно ${minutes} ${pluralizeRu(minutes, ["минута", "минуты", "минут"])}. ${
+      owedWorkouts.length > 0 && analysis.profile.localHour >= 21
+        ? "Тренировка в такое время — решение на твоё усмотрение; привычки и задачи закрываются быстрее."
+        : "Привычки быстрее, начни с них."
+    }`,
     bullets,
     actions: [
+      ...(owedWorkouts.length > 0 ? [OPEN_WORKOUTS] : []),
       ...(owed.length > 0 ? [OPEN_HABITS] : []),
       ...(dueToday.length > 0 ? [OPEN_TASKS] : []),
     ],
@@ -844,6 +1251,50 @@ function mistakesAnswer(analysis: CoachAnalysis): CoachAnswer {
 
   if (analysis.habits.length === 0) {
     mistakes.push(bullet("m-nohabits", "warning", "Нет ни одной привычки — 20 баллов индекса недоступны"));
+  }
+
+  if (analysis.workouts.length === 0) {
+    mistakes.push(
+      bullet("m-noworkouts", "warning", "Нет ни одной тренировки — 15 баллов индекса недоступны"),
+    );
+  } else if (metrics.workoutsWeek === 0) {
+    mistakes.push(
+      bullet(
+        "m-training",
+        "critical",
+        "За неделю ни одной выполненной тренировки при непустом списке программ",
+      ),
+    );
+  }
+
+  if (!analysis.nutrition.hasGoal) {
+    mistakes.push(
+      bullet("m-nonutrition", "warning", "Цель по питанию не задана — 5 баллов индекса недоступны"),
+    );
+  } else if ((analysis.nutrition.adherence ?? 0) < 0.4) {
+    mistakes.push(
+      bullet(
+        "m-nutrition",
+        "critical",
+        `Дневник питания ведётся меньше чем в половине дней недели: ${metrics.nutritionDaysWeek} из 7`,
+      ),
+    );
+  }
+
+  const staleWorkouts = analysis.workouts.filter(
+    (workout) => workout.adherence !== null && workout.adherence < 0.4,
+  );
+  if (staleWorkouts.length > 0) {
+    mistakes.push(
+      bullet(
+        "m-workout-plan",
+        "warning",
+        `План не выполняется у ${staleWorkouts.length} ${pluralizeRu(staleWorkouts.length, ["тренировки", "тренировок", "тренировок"])}: ${staleWorkouts
+          .slice(0, 2)
+          .map((workout) => workout.title)
+          .join(", ")}`,
+      ),
+    );
   }
 
   if (metrics.tasksCompletedWeek === 0 && metrics.tasksOpen > 0) {

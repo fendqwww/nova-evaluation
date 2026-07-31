@@ -63,6 +63,8 @@ const TARGET_HREF: Record<CoachActionTarget, string> = {
   goals: "/goals",
   habits: "/habits",
   tasks: "/tasks",
+  workouts: "/workouts",
+  nutrition: "/nutrition",
 };
 
 export function actionHref(target: CoachActionTarget | null): string | null {

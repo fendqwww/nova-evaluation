@@ -11,6 +11,13 @@ export interface BottomNavigationItem {
   label: string;
   icon: ReactNode;
   href: string;
+  /**
+   * Extra route prefixes that should also light up this tab, for a tab that
+   * fronts more than one screen — Здоровье leads with Тренировки but also
+   * covers Питание, so the tab does not go dark the moment the user switches
+   * section inside it.
+   */
+  alsoActiveFor?: string[];
 }
 
 export interface BottomNavigationProps {
@@ -18,8 +25,9 @@ export interface BottomNavigationProps {
   className?: string;
 }
 
-function isRouteActive(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname.startsWith(href);
+function isRouteActive(pathname: string, item: BottomNavigationItem): boolean {
+  const prefixes = [item.href, ...(item.alsoActiveFor ?? [])];
+  return prefixes.some((href) => (href === "/" ? pathname === "/" : pathname.startsWith(href)));
 }
 
 export function BottomNavigation({ items, className }: BottomNavigationProps) {
@@ -37,7 +45,7 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
     >
       <ul className="flex items-stretch justify-around px-1.5 py-1.5">
         {items.map((item) => {
-          const active = isRouteActive(pathname, item.href);
+          const active = isRouteActive(pathname, item);
 
           return (
             <li key={item.key} className="relative flex-1">

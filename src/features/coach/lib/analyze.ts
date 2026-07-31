@@ -1,6 +1,11 @@
 import { calculateLifeScore } from "@/features/life-score/server/calculate-life-score";
 import type { LifeScoreInput } from "@/features/life-score/types";
-import type { CoachHabitFact, CoachPotential, CoachTaskFact } from "@/features/coach/types";
+import type {
+  CoachHabitFact,
+  CoachPotential,
+  CoachTaskFact,
+  CoachWorkoutFact,
+} from "@/features/coach/types";
 
 /**
  * Pure derivations shared by the analysis builder and the composer.
@@ -44,14 +49,16 @@ export function greetingFor(hour: number, firstName: string): string {
  *
  * Each figure is calculateLifeScore re-run with exactly one input changed, so
  * "+4" is the number the ring will move by rather than a guess dressed up as
- * one. `total` re-runs it once more with all three changes at once instead of
- * summing the parts: the habits and tasks blocks both saturate, so the sum
- * would over-promise for a user who is already near the cap on either.
+ * one. `total` re-runs it once more with all four changes at once instead of
+ * summing the parts: the habits, tasks and workout blocks all saturate, so the
+ * sum would over-promise for a user already near the cap on any of them.
  */
 export function computePotential(
   base: LifeScoreInput,
   habitsRemaining: number,
   overdueTasks: number,
+  workoutsRemaining: number,
+  canLogNutritionToday: boolean,
 ): CoachPotential {
   const current = calculateLifeScore(base).score;
 
@@ -77,9 +84,27 @@ export function computePotential(
     },
   };
 
+  const withWorkouts: LifeScoreInput = {
+    ...base,
+    workouts: {
+      ...base.workouts,
+      done: Math.min(base.workouts.expected, base.workouts.done + workoutsRemaining),
+    },
+  };
+
+  const withNutrition: LifeScoreInput = {
+    ...base,
+    nutrition: {
+      ...base.nutrition,
+      daysLogged: Math.min(base.nutrition.expected, base.nutrition.daysLogged + 1),
+    },
+  };
+
   const withEverything: LifeScoreInput = {
     ...base,
     habits: withHabits.habits,
+    workouts: withWorkouts.workouts,
+    nutrition: withNutrition.nutrition,
     tasks: {
       open: Math.max(0, base.tasks.open - overdueTasks),
       completed: base.tasks.completed + Math.max(overdueTasks, 1),
@@ -94,6 +119,8 @@ export function computePotential(
     fromHabits: habitsRemaining > 0 ? gain(withHabits) : 0,
     fromOverdueTasks: overdueTasks > 0 ? gain(withoutOverdue) : 0,
     fromOneTask: gain(withOneTask),
+    fromWorkouts: workoutsRemaining > 0 ? gain(withWorkouts) : 0,
+    fromNutrition: canLogNutritionToday ? gain(withNutrition) : 0,
     total: gain(withEverything),
   };
 }
@@ -132,6 +159,30 @@ export function strongestHabit(habits: CoachHabitFact[]): CoachHabitFact | null 
  * the list has buried.
  */
 const PRIORITY_WEIGHT = { high: 0, normal: 1, low: 2 } as const;
+
+/**
+ * The workout worth naming: what is owed today first, then whatever has slipped
+ * furthest. A user with five programmes does not need a list, they need the one
+ * to do next.
+ */
+export function focusWorkout(workouts: CoachWorkoutFact[]): CoachWorkoutFact | null {
+  if (workouts.length === 0) return null;
+
+  return [...workouts].sort((a, b) => {
+    const openNow = Number(b.isOpenToday) - Number(a.isOpenToday);
+    if (openNow !== 0) return openNow;
+
+    const owedNow =
+      Number(b.isPlannedToday && !b.isDoneToday) - Number(a.isPlannedToday && !a.isDoneToday);
+    if (owedNow !== 0) return owedNow;
+
+    // A workout with no plan owes nothing, so it never outranks one that does.
+    const byAdherence = (a.adherence ?? 1) - (b.adherence ?? 1);
+    if (byAdherence !== 0) return byAdherence;
+
+    return a.currentStreak - b.currentStreak;
+  })[0];
+}
 
 export function urgentTasks(tasks: CoachTaskFact[], limit: number): CoachTaskFact[] {
   return [...tasks]

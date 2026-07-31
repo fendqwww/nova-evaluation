@@ -20,8 +20,25 @@ import {
 } from "@/features/habits/server/habits.repository";
 import { getGoalStanding, listGoals } from "@/features/goals/server/goals.repository";
 import { getTaskThroughput, listTasks } from "@/features/tasks/server/tasks.repository";
+import {
+  SESSION_WINDOW_DAYS,
+  getWorkoutAdherence,
+  listSessions,
+  listWorkouts,
+} from "@/features/workouts/server/workouts.repository";
+import {
+  NUTRITION_SCORING_WINDOW_DAYS,
+  getGoal,
+  getNutritionAdherence,
+  listEntries,
+  listWater,
+} from "@/features/nutrition/server/nutrition.repository";
+import { dayProgress, loggingStreak } from "@/features/nutrition/lib/stats";
 import { habitStats } from "@/features/habits/lib/stats";
 import { scheduleSummary } from "@/features/habits/lib/schedule";
+import { workoutStats, sessionStats } from "@/features/workouts/lib/stats";
+import { planSummary, hasPlan } from "@/features/workouts/lib/plan";
+import { categoryLabel } from "@/features/workouts/lib/categories";
 import { goalProgress, daysUntil } from "@/features/goals/lib/format";
 import { bmiLabel, bmiOf, computePotential } from "@/features/coach/lib/analyze";
 import type {
@@ -29,7 +46,9 @@ import type {
   CoachGoalFact,
   CoachHabitFact,
   CoachMetrics,
+  CoachNutritionFact,
   CoachTaskFact,
+  CoachWorkoutFact,
 } from "@/features/coach/types";
 import type {
   GenderValue,
@@ -68,27 +87,49 @@ export async function buildCoachAnalysis(
 
   const profileRow = user.profile;
   const windowStart = addDays(today, -(LOG_WINDOW_DAYS - 1));
+  const sessionWindowStart = addDays(today, -(SESSION_WINDOW_DAYS - 1));
+  // A short window: the Coach only needs today's and yesterday's totals plus
+  // the streak, not the full 90-day history listNutrition ships to the screen.
+  const nutritionWindowStart = addDays(today, -NUTRITION_SCORING_WINDOW_DAYS);
 
   const [
     goals,
     habits,
     tasks,
+    workouts,
+    sessions,
+    nutritionEntries,
+    nutritionWater,
+    nutritionGoal,
     habitsToday,
     habitsYesterday,
     tasksToday,
     tasksYesterday,
     goalsToday,
     goalsYesterday,
+    workoutsToday,
+    workoutsYesterday,
+    nutritionToday,
+    nutritionYesterday,
   ] = await Promise.all([
     listGoals(userId),
     listHabits(userId, timezone, windowStart),
     listTasks(userId),
+    listWorkouts(userId, timezone),
+    listSessions(userId, sessionWindowStart),
+    listEntries(userId, nutritionWindowStart),
+    listWater(userId, nutritionWindowStart),
+    getGoal(userId),
     getHabitAdherence(userId, timezone, today, SCORING_WINDOW_DAYS),
     getHabitAdherence(userId, timezone, yesterday, SCORING_WINDOW_DAYS),
     getTaskThroughput(userId, today, SCORING_WINDOW_DAYS, timezone),
     getTaskThroughput(userId, yesterday, SCORING_WINDOW_DAYS, timezone),
     getGoalStanding(userId, today, timezone),
     getGoalStanding(userId, yesterday, timezone),
+    getWorkoutAdherence(userId, timezone, today, SCORING_WINDOW_DAYS),
+    getWorkoutAdherence(userId, timezone, yesterday, SCORING_WINDOW_DAYS),
+    getNutritionAdherence(userId, today, NUTRITION_SCORING_WINDOW_DAYS),
+    getNutritionAdherence(userId, yesterday, NUTRITION_SCORING_WINDOW_DAYS),
   ]);
 
   const habitFacts: CoachHabitFact[] = habits
@@ -106,6 +147,32 @@ export async function buildCoachAnalysis(
         adherence: stats.adherence,
         weekDone: stats.week.done,
         weekTarget: stats.week.target,
+      };
+    });
+
+  // Archived programmes are excluded for the same reason archived habits are:
+  // they owe nothing, and what they earned before archiving is not evidence
+  // about this week.
+  const workoutFacts: CoachWorkoutFact[] = workouts
+    .filter((workout) => workout.archivedAt === null)
+    .map((workout) => {
+      const stats = workoutStats(workout, sessions, today, sessionWindowStart);
+      return {
+        id: workout.id,
+        title: workout.title,
+        category: categoryLabel(workout.category),
+        plan: planSummary(workout.weekdayMask),
+        hasPlan: hasPlan(workout.weekdayMask),
+        isPlannedToday: stats.isPlannedToday,
+        isDoneToday: stats.isDoneToday,
+        isOpenToday: stats.isOpenToday,
+        currentStreak: stats.currentStreak,
+        streakUnit: stats.streakUnit,
+        adherence: stats.adherence,
+        weekDone: stats.week.done,
+        weekTarget: stats.week.target,
+        lastDay: stats.lastDay,
+        volumeKg: Math.round(stats.volumeKg),
       };
     });
 
@@ -143,6 +210,42 @@ export async function buildCoachAnalysis(
     (task) => task.isCompleted && task.completedAt !== null && completedOn(task.completedAt, today, timezone),
   ).length;
 
+  const workoutsPlannedToday = workoutFacts.filter((workout) => workout.isPlannedToday).length;
+  const workoutsDoneToday = workoutFacts.filter((workout) => workout.isDoneToday).length;
+
+  // Volume over the same trailing window the score uses, so "объём за неделю"
+  // and "тренировок за неделю" describe the same seven days.
+  const scoringWindowStart = addDays(today, -(SCORING_WINDOW_DAYS - 1));
+  const workoutById = new Map(workouts.map((workout) => [workout.id, workout]));
+  const workoutVolumeWeek = sessions
+    .filter(
+      (session) =>
+        session.completedAt !== null && diffDays(scoringWindowStart, session.day) >= 0,
+    )
+    .reduce(
+      (total, session) =>
+        total + sessionStats(session, workoutById.get(session.workoutId)).volumeKg,
+      0,
+    );
+
+  const todayNutritionProgress = dayProgress(nutritionEntries, nutritionWater, nutritionGoal, today);
+  const isNutritionLoggedToday = nutritionEntries.some((entry) => entry.day === today);
+  const nutritionStreak = loggingStreak(nutritionEntries, today);
+
+  const nutritionFact: CoachNutritionFact = {
+    hasGoal: nutritionToday.hasGoal,
+    caloriesGoal: nutritionGoal.calories,
+    caloriesToday: todayNutritionProgress.calories.value,
+    proteinTodayG: todayNutritionProgress.proteinG.value,
+    fatTodayG: todayNutritionProgress.fatG.value,
+    carbsTodayG: todayNutritionProgress.carbsG.value,
+    waterTodayMl: todayNutritionProgress.waterMl.value,
+    waterGoalMl: nutritionGoal.waterMl,
+    isLoggedToday: isNutritionLoggedToday,
+    loggingStreak: nutritionStreak,
+    adherence: nutritionToday.hasGoal ? ratio(nutritionToday.daysLogged, nutritionToday.expected) : null,
+  };
+
   const todayScoreInput: LifeScoreInput = {
     hasCompletedProfile: true,
     heightCm: profileRow.heightCm,
@@ -150,6 +253,8 @@ export async function buildCoachAnalysis(
     goalsCount: goalsToday.total,
     habits: habitsToday,
     tasks: tasksToday,
+    workouts: workoutsToday,
+    nutrition: nutritionToday,
   };
 
   const metrics: CoachMetrics = {
@@ -165,6 +270,14 @@ export async function buildCoachAnalysis(
     tasksCompletedWeek: tasksToday.completed,
     goalsActive: goalsToday.active,
     goalsCompleted: goalsToday.total - goalsToday.active,
+    workoutsPlannedToday,
+    workoutsDoneToday,
+    workoutsRemaining: Math.max(0, workoutsPlannedToday - workoutsDoneToday),
+    workoutAdherence: ratio(workoutsToday.done, workoutsToday.expected),
+    workoutsWeek: workoutsToday.done,
+    workoutVolumeWeek: Math.round(workoutVolumeWeek),
+    nutritionAdherence: ratio(nutritionToday.daysLogged, nutritionToday.expected),
+    nutritionDaysWeek: nutritionToday.daysLogged,
   };
 
   // The account's own first day has no yesterday to compare against, and
@@ -184,6 +297,8 @@ export async function buildCoachAnalysis(
           goalsCount: goalsYesterday.total,
           habits: habitsYesterday,
           tasks: tasksYesterday,
+          workouts: workoutsYesterday,
+          nutrition: nutritionYesterday,
         }),
         habitsDue: 0,
         habitsDone: 0,
@@ -196,6 +311,18 @@ export async function buildCoachAnalysis(
         tasksCompletedWeek: tasksYesterday.completed,
         goalsActive: goalsYesterday.active,
         goalsCompleted: goalsYesterday.total - goalsYesterday.active,
+        // Same shape as the habit fields above: "planned today" and "done
+        // today" are statements about *today* and have no yesterday reading
+        // that could be reconstructed honestly, so they stay at zero and the
+        // report never builds a row out of them.
+        workoutsPlannedToday: 0,
+        workoutsDoneToday: 0,
+        workoutsRemaining: 0,
+        workoutAdherence: ratio(workoutsYesterday.done, workoutsYesterday.expected),
+        workoutsWeek: workoutsYesterday.done,
+        workoutVolumeWeek: 0,
+        nutritionAdherence: ratio(nutritionYesterday.daysLogged, nutritionYesterday.expected),
+        nutritionDaysWeek: nutritionYesterday.daysLogged,
       }
     : null;
 
@@ -219,10 +346,14 @@ export async function buildCoachAnalysis(
     habits: habitFacts,
     tasks: taskFacts,
     goals: goalFacts,
+    workouts: workoutFacts,
+    nutrition: nutritionFact,
     potential: computePotential(
       todayScoreInput,
       metrics.habitsRemaining,
       metrics.tasksOverdue,
+      metrics.workoutsRemaining,
+      nutritionFact.hasGoal && !nutritionFact.isLoggedToday,
     ),
   };
 }

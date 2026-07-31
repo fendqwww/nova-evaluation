@@ -1,7 +1,7 @@
 /**
  * What the user is actually asking.
  *
- * Nine of these are the quick-action chips; `general` is where a typed question
+ * Ten of these are the quick-action chips; `general` is where a typed question
  * lands when nothing matches. The intent picks which slice of the analysis an
  * answer leads with — it never decides *what is true*, which is why a wrong
  * guess degrades the emphasis of an answer and nothing more.
@@ -12,6 +12,8 @@ export const COACH_INTENT_IDS = [
   "improve_day",
   "now",
   "weak_habits",
+  "workouts",
+  "nutrition",
   "overdue",
   "evening",
   "goal_speed",
@@ -38,6 +40,8 @@ export const COACH_QUICK_ACTIONS: CoachQuickAction[] = [
   { intent: "improve_day", label: "Как улучшить день?" },
   { intent: "now", label: "Что сделать сейчас?" },
   { intent: "weak_habits", label: "Какие привычки самые слабые?" },
+  { intent: "workouts", label: "Как идут тренировки?" },
+  { intent: "nutrition", label: "Как у меня с питанием?" },
   { intent: "overdue", label: "Что просрочено?" },
   { intent: "evening", label: "Что мне делать вечером?" },
   { intent: "goal_speed", label: "Как быстрее достичь цели?" },
@@ -58,6 +62,37 @@ const INTENT_KEYWORDS: Record<Exclude<CoachIntent, "general" | "brief">, string[
   improve_day: ["улучшить", "лучше", "поднять", "прокачать", "исправить день"],
   now: ["сейчас", "прямо сейчас", "чем занят", "с чего начать"],
   weak_habits: ["привычк", "слаб", "проседа", "серия", "стрик"],
+  // Long, specific stems on purpose: this is the intent most likely to be hit
+  // by a question that also mentions a habit ("как идут тренировки и привычки"),
+  // and longest-match-wins is what decides between them.
+  workouts: [
+    "тренировк",
+    "трениру",
+    "зал",
+    "спорт",
+    "упражнен",
+    "подход",
+    "жим",
+    "присед",
+    "тягу",
+    "кардио",
+    "штанг",
+    "вес на штанге",
+    "объём",
+    "тоннаж",
+  ],
+  nutrition: [
+    "еда",
+    "питани",
+    "калори",
+    "белк",
+    "жир",
+    "углевод",
+    "рацион",
+    "дневник питания",
+    "вода",
+    "воды",
+  ],
   overdue: ["просроч", "дедлайн", "опозда", "горит", "сроки"],
   evening: ["вечер", "ночь", "перед сном", "закончить день", "итог дня"],
   goal_speed: ["цел", "быстрее", "достич", "goal", "шаг к цели"],

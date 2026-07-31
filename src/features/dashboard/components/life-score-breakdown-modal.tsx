@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Activity, Target, Flame, ListTodo } from "lucide-react";
+import { CheckCircle2, Activity, Target, Flame, ListTodo, Dumbbell, Salad } from "lucide-react";
 import {
   Modal,
   ModalContent,
@@ -19,6 +19,10 @@ const BREAKDOWN_STYLE: Record<string, { icon: typeof CheckCircle2; tone: Tone; b
   goals: { icon: Target, tone: "goal", bar: "bg-tint-purple" },
   habits: { icon: Flame, tone: "habit", bar: "bg-tint-orange" },
   tasks: { icon: ListTodo, tone: "task", bar: "bg-tint-blue" },
+  // Training shares the health-green chip with the two body blocks above it —
+  // per globals.css that tint is the body's, and workouts are what it measures.
+  workouts: { icon: Dumbbell, tone: "score", bar: "bg-tint-green" },
+  nutrition: { icon: Salad, tone: "score", bar: "bg-tint-green" },
 };
 
 export function LifeScoreBreakdownModal({
@@ -36,7 +40,8 @@ export function LifeScoreBreakdownModal({
         <ModalHeader>
           <ModalTitle>Из чего складывается индекс</ModalTitle>
           <ModalDescription>
-            Профиль, физическое состояние и активность в целях, привычках и задачах.
+            Профиль, физическое состояние и активность в целях, привычках, задачах,
+            тренировках и питании.
           </ModalDescription>
         </ModalHeader>
 
