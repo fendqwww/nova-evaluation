@@ -12,10 +12,10 @@ import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 //
 // Seven tabs leave roughly 48px each on a 375px phone, which "Привычки" already
 // fills — an eighth tab for Nutrition would wrap onto a second line and break
-// the row's alignment. Тренировки and Питание share one "Здоровье" tab instead:
-// it opens on /workouts, and HealthSectionTabs (rendered at the top of both
-// /workouts and /nutrition) is what actually switches between the two —
-// alsoActiveFor is what keeps the tab lit while on either one.
+// the row's alignment. Тренировки, Питание and Внешность share one "Здоровье"
+// tab instead: it opens on /workouts, and HealthSectionTabs (rendered at the top
+// of all three screens) is what actually switches between them — alsoActiveFor
+// is what keeps the tab lit while on any of them.
 const navItems: BottomNavigationItem[] = [
   { key: "home", label: "Главная", href: "/", icon: <Home className="h-4.5 w-4.5" /> },
   { key: "goals", label: "Цели", href: "/goals", icon: <Target className="h-4.5 w-4.5" /> },
@@ -25,7 +25,7 @@ const navItems: BottomNavigationItem[] = [
     key: "health",
     label: "Здоровье",
     href: "/workouts",
-    alsoActiveFor: ["/nutrition"],
+    alsoActiveFor: ["/nutrition", "/appearance"],
     icon: <HeartPulse className="h-4.5 w-4.5" />,
   },
   { key: "coach", label: "Коуч", href: "/coach", icon: <Sparkles className="h-4.5 w-4.5" /> },

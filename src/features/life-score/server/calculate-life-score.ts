@@ -1,4 +1,5 @@
 import type {
+  LifeScoreAppearance,
   LifeScoreHabits,
   LifeScoreInput,
   LifeScoreNutrition,
@@ -29,13 +30,27 @@ import type {
 // completing a training session, since a day can be logged in seconds without
 // the diary being honest, and the block only rewards keeping it at all (see
 // scoreNutrition), never hitting the calorie target on the nose.
+//
+// Appearance's 5 points came out of wellness (−3) and goals (−2), and the split
+// follows the same logic training's did. Wellness is a BMI derived from numbers
+// typed once at onboarding; a week of care that actually happened is stronger
+// evidence about the body than a declaration about it. Goals gave up two for
+// the reason it keeps giving them up: it is the softest signal left, still
+// counted rather than measured. Habits, tasks, training and nutrition were left
+// alone — they already measure behaviour, and the Coach quotes all four out
+// loud.
+//
+// Appearance is worth the same as training's smallest sibling rather than more,
+// because a care routine is a cheaper act than a session: five minutes at the
+// sink is real, repeated, and worth counting, but it is not a workout.
 const MAX_PROFILE = 8;
-const MAX_WELLNESS = 17;
-const MAX_GOALS = 15;
+const MAX_WELLNESS = 14;
+const MAX_GOALS = 13;
 const MAX_HABITS = 20;
 const MAX_TASKS = 20;
 const MAX_WORKOUTS = 15;
 const MAX_NUTRITION = 5;
+const MAX_APPEARANCE = 5;
 
 /** Finishing this many tasks in the window is full marks. */
 const TASKS_FOR_FULL_MARKS = 7;
@@ -48,19 +63,30 @@ const MAX_OVERDUE_PENALTY = 0.5;
 export const SCORING_WINDOW_DAYS = 7;
 
 /**
- * The falloff is 1.44 per BMI point rather than the 1.8 it was when this block
- * was worth 25: the coefficient is scaled with the block so the *shape* of the
- * curve is unchanged and a given body still scores the same share of whatever
- * wellness is currently worth. Keeping 1.8 against a 20-point block would have
- * quietly made the penalty a third harsher, which is not a decision the
- * reweighting was meant to make.
+ * The falloff scales with the block rather than being a fixed constant.
+ *
+ * It was 1.8 when wellness was worth 25 and 1.44 when it was worth 17, and it
+ * is derived here for the same reason it was rewritten then: the coefficient
+ * has to move with the block so the *shape* of the curve is unchanged and a
+ * given body still scores the same share of whatever wellness is currently
+ * worth. Leaving a literal behind on each reweighting would quietly make the
+ * penalty harsher every time, which is not a decision any of them meant to
+ * make.
  */
+const WELLNESS_FALLOFF_PER_BMI_POINT = (MAX_WELLNESS / 25) * 1.8;
+
 function scoreWellness(heightCm: number | null, weightKg: number | null): number {
   if (!heightCm || !weightKg) return 0;
   const heightM = heightCm / 100;
   const bmi = weightKg / (heightM * heightM);
   const distanceFromIdeal = Math.abs(bmi - 22);
-  return Math.max(0, Math.min(MAX_WELLNESS, Math.round(MAX_WELLNESS - distanceFromIdeal * 1.44)));
+  return Math.max(
+    0,
+    Math.min(
+      MAX_WELLNESS,
+      Math.round(MAX_WELLNESS - distanceFromIdeal * WELLNESS_FALLOFF_PER_BMI_POINT),
+    ),
+  );
 }
 
 function scoreCount(count: number, max: number, perItem: number): number {
@@ -140,6 +166,23 @@ function scoreNutrition(nutrition: LifeScoreNutrition): number {
 }
 
 /**
+ * Appearance scores on adherence, exactly like habits and training.
+ *
+ * A care routine carries a schedule, so unlike nutrition there is a real "owed"
+ * figure to divide by — and counting routines instead would reward the wrong
+ * thing in the familiar way: an evening routine written once and never done
+ * would score as well as one kept every night.
+ *
+ * A user with no routines scores zero rather than full marks, the same
+ * vacuous-ratio guard the other adherence blocks apply.
+ */
+function scoreAppearance(appearance: LifeScoreAppearance): number {
+  if (appearance.activeCount === 0 || appearance.expected === 0) return 0;
+  const ratio = Math.min(1, appearance.done / appearance.expected);
+  return Math.round(MAX_APPEARANCE * ratio);
+}
+
+/**
  * Profile completeness + a BMI-derived wellness signal + evidence of follow
  * through.
  *
@@ -169,8 +212,9 @@ export function calculateLifeScore(input: LifeScoreInput): LifeScoreResult {
     },
     {
       key: "goals",
-      // 5 per goal against a 15-point block: three goals in flight is full
-      // marks, the same point the old 7-against-20 curve reached.
+      // 5 per goal against a 13-point block: three goals in flight is still
+      // full marks, the same point the old 7-against-20 curve reached, and the
+      // block simply saturates a little sooner than it used to.
       label: "Цели",
       score: scoreCount(input.goalsCount, MAX_GOALS, 5),
       maxScore: MAX_GOALS,
@@ -198,6 +242,12 @@ export function calculateLifeScore(input: LifeScoreInput): LifeScoreResult {
       label: "Питание за неделю",
       score: scoreNutrition(input.nutrition),
       maxScore: MAX_NUTRITION,
+    },
+    {
+      key: "appearance",
+      label: "Уход за неделю",
+      score: scoreAppearance(input.appearance),
+      maxScore: MAX_APPEARANCE,
     },
   ];
 

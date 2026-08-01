@@ -33,6 +33,21 @@ import {
   listEntries,
   listWater,
 } from "@/features/nutrition/server/nutrition.repository";
+import {
+  APPEARANCE_SCORING_WINDOW_DAYS,
+  getAppearanceAdherence,
+  listCareGoals,
+  listPhotos,
+  listRoutines,
+} from "@/features/appearance/server/appearance.repository";
+import {
+  areaBreakdown,
+  careStreak,
+  completionsOn,
+  remainingOn,
+} from "@/features/appearance/lib/stats";
+import { photoCountsByArea } from "@/features/appearance/lib/history";
+import { areaLabel } from "@/features/appearance/lib/areas";
 import { dayProgress, loggingStreak } from "@/features/nutrition/lib/stats";
 import { habitStats } from "@/features/habits/lib/stats";
 import { scheduleSummary } from "@/features/habits/lib/schedule";
@@ -43,6 +58,7 @@ import { goalProgress, daysUntil } from "@/features/goals/lib/format";
 import { bmiLabel, bmiOf, computePotential } from "@/features/coach/lib/analyze";
 import type {
   CoachAnalysis,
+  CoachAppearanceFact,
   CoachGoalFact,
   CoachHabitFact,
   CoachMetrics,
@@ -91,6 +107,10 @@ export async function buildCoachAnalysis(
   // A short window: the Coach only needs today's and yesterday's totals plus
   // the streak, not the full 90-day history listNutrition ships to the screen.
   const nutritionWindowStart = addDays(today, -NUTRITION_SCORING_WINDOW_DAYS);
+  // Longer than the scoring window on purpose: the weakest-area breakdown the
+  // Coach names is a monthly figure, and a week of logs would make it swing on
+  // a single missed evening.
+  const appearanceWindowStart = addDays(today, -29);
 
   const [
     goals,
@@ -111,6 +131,11 @@ export async function buildCoachAnalysis(
     workoutsYesterday,
     nutritionToday,
     nutritionYesterday,
+    careRoutines,
+    carePhotos,
+    careGoals,
+    appearanceToday,
+    appearanceYesterday,
   ] = await Promise.all([
     listGoals(userId),
     listHabits(userId, timezone, windowStart),
@@ -130,6 +155,11 @@ export async function buildCoachAnalysis(
     getWorkoutAdherence(userId, timezone, yesterday, SCORING_WINDOW_DAYS),
     getNutritionAdherence(userId, today, NUTRITION_SCORING_WINDOW_DAYS),
     getNutritionAdherence(userId, yesterday, NUTRITION_SCORING_WINDOW_DAYS),
+    listRoutines(userId, timezone, appearanceWindowStart),
+    listPhotos(userId, addDays(today, -365)),
+    listCareGoals(userId, timezone),
+    getAppearanceAdherence(userId, timezone, today, APPEARANCE_SCORING_WINDOW_DAYS),
+    getAppearanceAdherence(userId, timezone, yesterday, APPEARANCE_SCORING_WINDOW_DAYS),
   ]);
 
   const habitFacts: CoachHabitFact[] = habits
@@ -246,6 +276,45 @@ export async function buildCoachAnalysis(
     adherence: nutritionToday.hasGoal ? ratio(nutritionToday.daysLogged, nutritionToday.expected) : null,
   };
 
+  // Archived routines are excluded for the same reason archived habits and
+  // programmes are: they owe nothing, and what they earned before archiving is
+  // not evidence about this week.
+  const activeRoutines = careRoutines.filter((routine) => routine.archivedAt === null);
+  const careRemaining = remainingOn(activeRoutines, today);
+  const careDoneToday = completionsOn(activeRoutines, today);
+  const careAreas = areaBreakdown(
+    activeRoutines,
+    photoCountsByArea(carePhotos),
+    appearanceWindowStart,
+    today,
+  ).filter((area) => area.expected > 0);
+
+  // Worst-first, and only where there was something to measure — an area with
+  // no routines is not "going badly", it simply is not being tracked.
+  const weakestArea = careAreas.reduce<(typeof careAreas)[number] | null>(
+    (worst, area) => (worst === null || area.adherence < worst.adherence ? area : worst),
+    null,
+  );
+
+  const lastPhotoDay = carePhotos.reduce<CalendarDay | null>(
+    (latest, photo) => (latest === null || photo.day > latest ? photo.day : latest),
+    null,
+  );
+
+  const appearanceFact: CoachAppearanceFact = {
+    activeCount: activeRoutines.length,
+    dueToday: careRemaining.length + careDoneToday,
+    doneToday: careDoneToday,
+    streak: careStreak(activeRoutines, today, appearanceWindowStart),
+    adherence: activeRoutines.length === 0 ? null : ratio(appearanceToday.done, appearanceToday.expected),
+    nextTitle: careRemaining[0]?.title ?? null,
+    weakestArea: weakestArea ? areaLabel(weakestArea.area) : null,
+    weakestAreaAdherence: weakestArea ? weakestArea.adherence : null,
+    photosTotal: carePhotos.length,
+    daysSinceLastPhoto: lastPhotoDay === null ? null : diffDays(lastPhotoDay, today),
+    goalsActive: careGoals.filter((goal) => !goal.isCompleted).length,
+  };
+
   const todayScoreInput: LifeScoreInput = {
     hasCompletedProfile: true,
     heightCm: profileRow.heightCm,
@@ -255,6 +324,7 @@ export async function buildCoachAnalysis(
     tasks: tasksToday,
     workouts: workoutsToday,
     nutrition: nutritionToday,
+    appearance: appearanceToday,
   };
 
   const metrics: CoachMetrics = {
@@ -278,6 +348,10 @@ export async function buildCoachAnalysis(
     workoutVolumeWeek: Math.round(workoutVolumeWeek),
     nutritionAdherence: ratio(nutritionToday.daysLogged, nutritionToday.expected),
     nutritionDaysWeek: nutritionToday.daysLogged,
+    appearanceDueToday: appearanceFact.dueToday,
+    appearanceDoneToday: appearanceFact.doneToday,
+    appearanceRemaining: careRemaining.length,
+    appearanceAdherence: ratio(appearanceToday.done, appearanceToday.expected),
   };
 
   // The account's own first day has no yesterday to compare against, and
@@ -299,6 +373,7 @@ export async function buildCoachAnalysis(
           tasks: tasksYesterday,
           workouts: workoutsYesterday,
           nutrition: nutritionYesterday,
+          appearance: appearanceYesterday,
         }),
         habitsDue: 0,
         habitsDone: 0,
@@ -323,6 +398,14 @@ export async function buildCoachAnalysis(
         workoutVolumeWeek: 0,
         nutritionAdherence: ratio(nutritionYesterday.daysLogged, nutritionYesterday.expected),
         nutritionDaysWeek: nutritionYesterday.daysLogged,
+        // Same shape as the habit and workout fields above: "due today" and
+        // "done today" are statements about *today* with no yesterday reading
+        // that could be reconstructed honestly, so they stay at zero and the
+        // report never builds a row out of them.
+        appearanceDueToday: 0,
+        appearanceDoneToday: 0,
+        appearanceRemaining: 0,
+        appearanceAdherence: ratio(appearanceYesterday.done, appearanceYesterday.expected),
       }
     : null;
 
@@ -348,12 +431,14 @@ export async function buildCoachAnalysis(
     goals: goalFacts,
     workouts: workoutFacts,
     nutrition: nutritionFact,
+    appearance: appearanceFact,
     potential: computePotential(
       todayScoreInput,
       metrics.habitsRemaining,
       metrics.tasksOverdue,
       metrics.workoutsRemaining,
       nutritionFact.hasGoal && !nutritionFact.isLoggedToday,
+      careRemaining.length,
     ),
   };
 }

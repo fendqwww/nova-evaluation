@@ -52,6 +52,8 @@ export function composeAnswer(intent: CoachIntent, analysis: CoachAnalysis): Coa
       return workoutsAnswer(analysis);
     case "nutrition":
       return nutritionAnswer(analysis);
+    case "appearance":
+      return appearanceAnswer(analysis);
     case "overdue":
       return overdueAnswer(analysis);
     case "evening":
@@ -155,6 +157,30 @@ function composeRecommendations(analysis: CoachAnalysis): CoachBullet[] {
   } else if (!analysis.nutrition.hasGoal) {
     items.push(
       bullet("rec-nutrition-goal", "neutral", "Задай дневную цель по калориям — сейчас блок питания в индексе пуст"),
+    );
+  }
+
+  if (analysis.appearance.activeCount === 0) {
+    items.push(
+      bullet(
+        "rec-first-routine",
+        "neutral",
+        "Заведи одну процедуру ухода — сейчас блок внешности в индексе пуст",
+      ),
+    );
+  } else if (metrics.appearanceRemaining > 0) {
+    items.push(
+      bullet(
+        "rec-appearance",
+        "warning",
+        analysis.appearance.nextTitle
+          ? `Сегодня не закрыт уход: «${analysis.appearance.nextTitle}»${
+              potential.fromAppearance > 0
+                ? ` — это ${potential.fromAppearance} ${pointsWord(potential.fromAppearance)} к индексу`
+                : ""
+            }`
+          : `На сегодня осталось процедур: ${metrics.appearanceRemaining}`,
+      ),
     );
   }
 
@@ -272,6 +298,18 @@ function composeWarnings(analysis: CoachAnalysis): CoachBullet[] {
     );
   }
 
+  if (analysis.appearance.activeCount > 0 && (analysis.appearance.adherence ?? 1) < 0.5) {
+    items.push(
+      bullet(
+        "warn-appearance",
+        "warning",
+        analysis.appearance.weakestArea
+          ? `Уход проседает — хуже всего идёт зона «${analysis.appearance.weakestArea}»`
+          : "Процедуры ухода выполняются меньше чем наполовину",
+      ),
+    );
+  }
+
   if (yesterday && metrics.lifeScore.score - yesterday.lifeScore.score <= -5) {
     const drop = yesterday.lifeScore.score - metrics.lifeScore.score;
     items.push(bullet("warn-drop", "warning", `Индекс упал на ${drop} ${pointsWord(drop)} за сутки`));
@@ -341,8 +379,18 @@ const OPEN_NUTRITION: CoachAction = {
   target: "nutrition",
 };
 
+const OPEN_APPEARANCE: CoachAction = {
+  id: "open-appearance",
+  label: "Открыть внешность",
+  target: "appearance",
+};
+
 function tasksWord(count: number): string {
   return pluralizeRu(count, ["задача", "задачи", "задач"]);
+}
+
+function routinesWord(count: number): string {
+  return pluralizeRu(count, ["процедура", "процедуры", "процедур"]);
 }
 
 function workoutsWord(count: number): string {
@@ -1028,6 +1076,104 @@ function nutritionAnswer(analysis: CoachAnalysis): CoachAnswer {
   };
 }
 
+/**
+ * How the care routines are going.
+ *
+ * Names the weakest *area* rather than listing every routine: a user with a
+ * morning and an evening skincare routine, teeth and nails does not need four
+ * percentages, they need to know which one is quietly slipping. The number
+ * behind it is a real monthly adherence figure computed from the logs, so
+ * "хуже всего кожа" is a claim this can back up.
+ *
+ * Photos get a line only when there is something true to say about them — an
+ * app that nags for a selfie every day would be nagging for its own sake.
+ */
+function appearanceAnswer(analysis: CoachAnalysis): CoachAnswer {
+  const { appearance, metrics, potential } = analysis;
+
+  if (appearance.activeCount === 0) {
+    return {
+      headline: "Уход пока не настроен",
+      body: "Блок «Уход за неделю» даёт до 5 баллов индекса и сейчас пуст. Достаточно одной процедуры с расписанием — например, вечернего ухода за кожей.",
+      bullets: [],
+      actions: [OPEN_APPEARANCE],
+    };
+  }
+
+  const bullets: CoachBullet[] = [
+    bullet(
+      "appearance-today",
+      metrics.appearanceRemaining === 0 ? "positive" : "warning",
+      metrics.appearanceRemaining === 0
+        ? `Сегодня закрыто всё, что запланировано: ${appearance.doneToday} из ${appearance.dueToday}`
+        : `Сегодня выполнено ${appearance.doneToday} из ${appearance.dueToday}, осталось ${metrics.appearanceRemaining} ${routinesWord(metrics.appearanceRemaining)}`,
+    ),
+  ];
+
+  if (appearance.streak >= 3) {
+    bullets.push(
+      bullet(
+        "appearance-streak",
+        "positive",
+        `Уход без пропусков ${appearance.streak} ${daysWord(appearance.streak)} подряд`,
+      ),
+    );
+  }
+
+  if (appearance.weakestArea && (appearance.weakestAreaAdherence ?? 1) < 0.7) {
+    bullets.push(
+      bullet(
+        "appearance-area",
+        "warning",
+        `Слабее всего зона «${appearance.weakestArea}» — ${Math.round((appearance.weakestAreaAdherence ?? 0) * 100)}% за месяц`,
+      ),
+    );
+  }
+
+  if (appearance.photosTotal === 0) {
+    bullets.push(
+      bullet(
+        "appearance-photo",
+        "neutral",
+        "Фото прогресса нет — без них изменения не с чем сравнить",
+      ),
+    );
+  } else if (appearance.daysSinceLastPhoto !== null && appearance.daysSinceLastPhoto >= 30) {
+    bullets.push(
+      bullet(
+        "appearance-photo",
+        "neutral",
+        `Последнее фото было ${appearance.daysSinceLastPhoto} ${daysWord(appearance.daysSinceLastPhoto)} назад`,
+      ),
+    );
+  }
+
+  if (metrics.appearanceRemaining > 0) {
+    return {
+      headline: appearance.nextTitle
+        ? `Осталось закрыть «${appearance.nextTitle}»`
+        : `На сегодня осталось ${metrics.appearanceRemaining} ${routinesWord(metrics.appearanceRemaining)}`,
+      body: `За неделю уход выполнен на ${Math.round((appearance.adherence ?? 0) * 100)}%.${
+        potential.fromAppearance > 0
+          ? ` Закроешь сегодняшнее — это ${potential.fromAppearance} ${pointsWord(potential.fromAppearance)} к индексу.`
+          : ""
+      }`,
+      bullets,
+      actions: [OPEN_APPEARANCE],
+    };
+  }
+
+  return {
+    headline: `Уход за неделю выполнен на ${Math.round((appearance.adherence ?? 0) * 100)}%`,
+    body:
+      appearance.goalsActive > 0
+        ? `Сегодня всё закрыто. В работе целей по внешности: ${appearance.goalsActive}.`
+        : "Сегодня всё закрыто. Регулярность здесь важнее интенсивности — её и держи.",
+    bullets,
+    actions: [OPEN_APPEARANCE],
+  };
+}
+
 function overdueAnswer(analysis: CoachAnalysis): CoachAnswer {
   const overdue = analysis.tasks
     .filter((task) => task.daysOverdue > 0)
@@ -1277,6 +1423,26 @@ function mistakesAnswer(analysis: CoachAnalysis): CoachAnswer {
         "m-nutrition",
         "critical",
         `Дневник питания ведётся меньше чем в половине дней недели: ${metrics.nutritionDaysWeek} из 7`,
+      ),
+    );
+  }
+
+  if (analysis.appearance.activeCount === 0) {
+    mistakes.push(
+      bullet(
+        "m-noappearance",
+        "warning",
+        "Нет ни одной процедуры ухода — 5 баллов индекса недоступны",
+      ),
+    );
+  } else if ((analysis.appearance.adherence ?? 0) < 0.4) {
+    mistakes.push(
+      bullet(
+        "m-appearance",
+        "critical",
+        analysis.appearance.weakestArea
+          ? `Уход выполняется меньше чем наполовину, хуже всего — «${analysis.appearance.weakestArea}»`
+          : "Уход за неделю выполнен меньше чем наполовину",
       ),
     );
   }

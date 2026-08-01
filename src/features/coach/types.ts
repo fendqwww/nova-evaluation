@@ -27,7 +27,13 @@ export interface CoachBullet {
 }
 
 /** Where an action sends the user. `null` is advice with nowhere to tap. */
-export type CoachActionTarget = "goals" | "habits" | "tasks" | "workouts" | "nutrition";
+export type CoachActionTarget =
+  | "goals"
+  | "habits"
+  | "tasks"
+  | "workouts"
+  | "nutrition"
+  | "appearance";
 
 export interface CoachAction {
   id: string;
@@ -153,6 +159,38 @@ export interface CoachNutritionFact {
   adherence: number | null;
 }
 
+/**
+ * How the care routines are going, for the Coach.
+ *
+ * Shaped like CoachWorkoutFact rather than CoachNutritionFact, because a
+ * routine carries a schedule and therefore has a real "owed vs done" to talk
+ * about — the Coach can say "вечерний уход пропущен три дня подряд" and be
+ * right, which is not something it could say about a food diary.
+ *
+ * `weakestArea` is the one body part care is going worst in, already resolved
+ * to a label — the Coach names it rather than listing seven percentages.
+ */
+export interface CoachAppearanceFact {
+  activeCount: number;
+  /** Routines the schedule owes today. */
+  dueToday: number;
+  doneToday: number;
+  /** Consecutive days every due routine was completed. */
+  streak: number;
+  /** Done / owed over the trailing scoring window, 0–1. Null with no routines. */
+  adherence: number | null;
+  /** The routine most worth doing next, or null when nothing is owed. */
+  nextTitle: string | null;
+  /** "Кожа", "Зубы" — the label, not the id. Null when nothing is measurable. */
+  weakestArea: string | null;
+  /** Adherence in that area over the last month, 0–1. */
+  weakestAreaAdherence: number | null;
+  photosTotal: number;
+  /** Days since the most recent photo, null when there are none. */
+  daysSinceLastPhoto: number | null;
+  goalsActive: number;
+}
+
 export interface CoachGoalFact {
   id: string;
   title: string;
@@ -200,6 +238,12 @@ export interface CoachMetrics {
   nutritionAdherence: number;
   /** Days logged within the trailing scoring window. */
   nutritionDaysWeek: number;
+  /** Care routines the schedule owes today. */
+  appearanceDueToday: number;
+  appearanceDoneToday: number;
+  appearanceRemaining: number;
+  /** Completed / owed over the trailing scoring window, 0–1. */
+  appearanceAdherence: number;
 }
 
 /**
@@ -221,6 +265,8 @@ export interface CoachPotential {
   fromWorkouts: number;
   /** Logging at least one entry today, when it has not happened yet. */
   fromNutrition: number;
+  /** Finishing every care routine still owed today. */
+  fromAppearance: number;
   /** All of the above together — the honest ceiling for today. */
   total: number;
 }
@@ -236,6 +282,7 @@ export interface CoachAnalysis {
   goals: CoachGoalFact[];
   workouts: CoachWorkoutFact[];
   nutrition: CoachNutritionFact;
+  appearance: CoachAppearanceFact;
   potential: CoachPotential;
 }
 

@@ -36,6 +36,9 @@ model User {
   nutritionMeals     NutritionMealTemplate[]
   nutritionWaterLogs NutritionWaterLog[]
   nutritionGoal      NutritionGoal?
+  appearanceRoutines AppearanceRoutine[]
+  appearancePhotos   AppearancePhoto[]
+  appearanceGoals    AppearanceGoal[]
 }
 
 // gender/primaryGoal/occupation are validated against a zod union in
@@ -526,4 +529,180 @@ model NutritionGoal {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// One care procedure: skincare in the evening, flossing, a beard trim, whatever
+// the user invents. Structurally a Habit with an area and an optional checklist
+// — and it reuses Habit's exact three scheduling columns (frequency /
+// weekdayMask / timesPerWeek, bit 0 = Monday) so "по будням" means the same
+// thing in both sections rather than two subtly different calendars.
+//
+// It is a separate table rather than a flag on Habit because the two answer
+// different questions and are scored separately in the Life Score: a habit is
+// any repeated intention, a routine is care of a specific part of the body, and
+// the area is what makes "чем ухаживать за кожей" answerable at all.
+//
+// category / timeOfDay / frequency are plain Strings validated by zod unions in
+// src/features/appearance/schemas.ts, not Prisma enums — the same SQLite
+// connector limitation every other categorical column in this file works
+// around.
+model AppearanceRoutine {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String
+  note  String?
+  // "skin" | "hair" | "teeth" | "body" | "beard" | "nails" | "custom".
+  // "beard" is only offered when Profile.gender is "male", but the column
+  // accepts it regardless: a routine created before a gender change must keep
+  // rendering rather than becoming an unreadable row.
+  category String @default("skin")
+  // "morning" | "evening" | "any" — skincare genuinely splits into two
+  // different routines a day, and grouping the day's list by it is the whole
+  // reason it is stored rather than left to the title.
+  timeOfDay String @default("any")
+
+  // Identical semantics to Habit's three columns — see the note there.
+  frequency    String @default("daily")
+  weekdayMask  Int    @default(127)
+  timesPerWeek Int    @default(3)
+
+  // Archiving, not deleting, for the same reason Habit archives: a routine you
+  // have stopped still happened, and the streak it earned is still true.
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  steps AppearanceStep[]
+  logs  AppearanceRoutineLog[]
+}
+
+// One line of a routine's checklist — "очищение", "тоник", "сыворотка".
+//
+// createdAt is load-bearing rather than bookkeeping: a routine's completion is
+// derived from its steps (see AppearanceStepLog), so a step added today must
+// not retroactively make every past day look unfinished. Readers clip each step
+// to its own creation day, the same rule habit adherence applies.
+//
+// position is explicit because the order of a skincare routine is part of the
+// instruction — toner before serum is a decision, not a display preference.
+model AppearanceStep {
+  id        String            @id @default(cuid())
+  routineId String
+  routine   AppearanceRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  title    String
+  position Int    @default(0)
+
+  createdAt DateTime @default(now())
+
+  logs AppearanceStepLog[]
+}
+
+// A routine *without* a checklist, performed on one day.
+//
+// Only ever written for a stepless routine. When a routine has steps, its step
+// logs are the record and this table stays empty for it — storing both would be
+// two sources of truth for the same fact, and the derived one would drift the
+// moment a step was ticked. See doneOn() in features/appearance/lib/stats.ts,
+// which is the single place that rule lives.
+//
+// `day` is UTC midnight of the user's local calendar day, resolved from
+// Profile.timezone server-side — the same convention HabitLog.date uses.
+// Absence is the "not done" state, so un-ticking deletes the row.
+model AppearanceRoutineLog {
+  id        String            @id @default(cuid())
+  routineId String
+  routine   AppearanceRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+
+  day       DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([routineId, day])
+}
+
+// One checklist item ticked on one day. The atomic fact a routine with steps is
+// judged by: the routine counts as done for a day when every step that existed
+// by then carries a row here for it.
+//
+// The compound unique is what makes ticking idempotent, exactly like HabitLog.
+model AppearanceStepLog {
+  id     String         @id @default(cuid())
+  stepId String
+  step   AppearanceStep @relation(fields: [stepId], references: [id], onDelete: Cascade)
+
+  day       DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([stepId, day])
+}
+
+// A progress photo.
+//
+// The bytes live in the row as data: URIs rather than in object storage,
+// because this app has none — SQLite and a Telegram Mini App, no S3, no CDN.
+// Two sizes are stored rather than one resized on read: SQLite cannot resize an
+// image, and shipping a full-resolution photo to render a 100px grid cell would
+// make the gallery unusable on mobile data.
+//
+// `thumbData` is what the section's snapshot carries; `imageData` is fetched one
+// photo at a time when the viewer or the До/После comparison actually needs it.
+// Both are produced client-side by lib/image.ts, which is also where the size
+// ceilings enforced in schemas.ts come from.
+//
+// `day` is the user's local calendar day, the same convention as everything
+// else here — a progress photo belongs to a day, not to an instant.
+model AppearancePhoto {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Which area this documents — the same union AppearanceRoutine.category uses,
+  // so "фото кожи" and "уход за кожей" line up in the comparison view.
+  category String @default("skin")
+  day      DateTime
+  note     String?
+
+  /// data: URI, ~256px longest side. Ships with the section snapshot.
+  thumbData String
+  /// data: URI, ~1024px longest side. Fetched on demand, never in bulk.
+  imageData String
+  /// Pixel dimensions of the full image, so a viewer can reserve space for it.
+  width     Int
+  height    Int
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, day])
+}
+
+// A goal about how the user wants to look — "отрастить бороду", "убрать
+// сухость кожи". Deliberately not a Goal row with a tag: Goal is counted by the
+// Life Score as general life direction, and silently inflating that count from
+// this section would make the two numbers disagree about what a goal is.
+//
+// No steps table of its own: the routines *are* the steps, which is the whole
+// point of a section where the work is repeated care rather than a checklist
+// you finish once.
+//
+// completedAt is when, not whether — the same pair Goal and Task carry, for the
+// same reason: "что я закрыл на этой неделе" is not a question a boolean can
+// answer.
+model AppearanceGoal {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title    String
+  note     String?
+  // Same area union as AppearanceRoutine.category.
+  category String @default("skin")
+
+  // UTC midnight, formatted with timeZone: "UTC". A deadline is a calendar day.
+  targetDate DateTime?
+
+  isCompleted Boolean   @default(false)
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
 }

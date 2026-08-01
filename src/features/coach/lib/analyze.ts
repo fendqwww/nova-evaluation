@@ -49,9 +49,10 @@ export function greetingFor(hour: number, firstName: string): string {
  *
  * Each figure is calculateLifeScore re-run with exactly one input changed, so
  * "+4" is the number the ring will move by rather than a guess dressed up as
- * one. `total` re-runs it once more with all four changes at once instead of
- * summing the parts: the habits, tasks and workout blocks all saturate, so the
- * sum would over-promise for a user already near the cap on any of them.
+ * one. `total` re-runs it once more with every change at once instead of
+ * summing the parts: the habits, tasks, workout and appearance blocks all
+ * saturate, so the sum would over-promise for a user already near the cap on
+ * any of them.
  */
 export function computePotential(
   base: LifeScoreInput,
@@ -59,6 +60,7 @@ export function computePotential(
   overdueTasks: number,
   workoutsRemaining: number,
   canLogNutritionToday: boolean,
+  appearanceRemaining: number,
 ): CoachPotential {
   const current = calculateLifeScore(base).score;
 
@@ -100,11 +102,20 @@ export function computePotential(
     },
   };
 
+  const withAppearance: LifeScoreInput = {
+    ...base,
+    appearance: {
+      ...base.appearance,
+      done: Math.min(base.appearance.expected, base.appearance.done + appearanceRemaining),
+    },
+  };
+
   const withEverything: LifeScoreInput = {
     ...base,
     habits: withHabits.habits,
     workouts: withWorkouts.workouts,
     nutrition: withNutrition.nutrition,
+    appearance: withAppearance.appearance,
     tasks: {
       open: Math.max(0, base.tasks.open - overdueTasks),
       completed: base.tasks.completed + Math.max(overdueTasks, 1),
@@ -121,6 +132,7 @@ export function computePotential(
     fromOneTask: gain(withOneTask),
     fromWorkouts: workoutsRemaining > 0 ? gain(withWorkouts) : 0,
     fromNutrition: canLogNutritionToday ? gain(withNutrition) : 0,
+    fromAppearance: appearanceRemaining > 0 ? gain(withAppearance) : 0,
     total: gain(withEverything),
   };
 }

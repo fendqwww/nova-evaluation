@@ -4,20 +4,22 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
 
-export type HealthSection = "workouts" | "nutrition";
+export type HealthSection = "workouts" | "nutrition" | "appearance";
 
 const SECTIONS: { id: HealthSection; label: string; href: string }[] = [
   { id: "workouts", label: "Тренировки", href: "/workouts" },
   { id: "nutrition", label: "Питание", href: "/nutrition" },
+  { id: "appearance", label: "Внешность", href: "/appearance" },
 ];
 
 /**
- * Switches between the two screens sharing the "Здоровье" bottom-nav tab.
+ * Switches between the three screens sharing the "Здоровье" bottom-nav tab.
  *
  * The tab bar only has room for one entry point into this area (see the note
- * in app/(app)/layout.tsx), so this is what actually moves between Тренировки
- * and Питание — same sliding-pill control as WorkoutsTabs/NutritionTabs, one
- * level up, switching pages instead of in-page tabs.
+ * in app/(app)/layout.tsx), so this is what actually moves between Тренировки,
+ * Питание and Внешность — same sliding-pill control as
+ * WorkoutsTabs/NutritionTabs/AppearanceTabs, one level up, switching pages
+ * instead of in-page tabs.
  */
 export function HealthSectionTabs({ active }: { active: HealthSection }) {
   return (

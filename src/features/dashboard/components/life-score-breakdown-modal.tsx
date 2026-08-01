@@ -1,6 +1,15 @@
 "use client";
 
-import { CheckCircle2, Activity, Target, Flame, ListTodo, Dumbbell, Salad } from "lucide-react";
+import {
+  CheckCircle2,
+  Activity,
+  Target,
+  Flame,
+  ListTodo,
+  Dumbbell,
+  Salad,
+  Sparkles,
+} from "lucide-react";
 import {
   Modal,
   ModalContent,
@@ -23,6 +32,9 @@ const BREAKDOWN_STYLE: Record<string, { icon: typeof CheckCircle2; tone: Tone; b
   // per globals.css that tint is the body's, and workouts are what it measures.
   workouts: { icon: Dumbbell, tone: "score", bar: "bg-tint-green" },
   nutrition: { icon: Salad, tone: "score", bar: "bg-tint-green" },
+  // Care shares the same health-green chip as the other body blocks — it is
+  // the fourth thing this app measures about the body, not a new colour.
+  appearance: { icon: Sparkles, tone: "score", bar: "bg-tint-green" },
 };
 
 export function LifeScoreBreakdownModal({

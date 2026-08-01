@@ -63,6 +63,24 @@ export interface LifeScoreNutrition {
 }
 
 /**
+ * Care routines over the trailing window — see getAppearanceAdherence.
+ *
+ * The same shape as LifeScoreHabits and LifeScoreWorkouts because it answers
+ * the same question: how much of what was owed actually happened. Unlike
+ * nutrition, there is a real "owed" figure here — a routine carries a schedule,
+ * so "вечерний уход каждый день" is a countable obligation rather than a target
+ * to aim at.
+ */
+export interface LifeScoreAppearance {
+  /** Routines currently tracked. Archived ones owe nothing and are excluded. */
+  activeCount: number;
+  /** Completions the schedules asked for, clipped to each creation day. */
+  expected: number;
+  /** Completions that actually happened. */
+  done: number;
+}
+
+/**
  * Goals are still counted rather than measured, and that is deliberate: a goal
  * is a months-long thing, so "how many are in flight" is a fair read of
  * engagement in a way it is not for a habit or a task. Habits and tasks now
@@ -77,4 +95,5 @@ export interface LifeScoreInput {
   tasks: LifeScoreTasks;
   workouts: LifeScoreWorkouts;
   nutrition: LifeScoreNutrition;
+  appearance: LifeScoreAppearance;
 }
