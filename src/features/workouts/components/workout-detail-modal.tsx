@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useRawInitData } from "@tma.js/sdk-react";
 import { Archive, ArchiveRestore, Flame, Trash2 } from "lucide-react";
-import { Modal, ModalContent } from "@/shared/ui/modal";
+import { Modal, ModalContent, ModalTitle } from "@/shared/ui/modal";
 import { Button } from "@/shared/ui/button";
 import { Card, IconChip } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
@@ -142,14 +142,14 @@ export function WorkoutDetailModal({
               <CategoryIcon className="h-4 w-4" />
             </IconChip>
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <h2
+              <ModalTitle
                 className={cn(
                   "text-[1.125rem] font-semibold leading-snug tracking-[-0.02em]",
-                  isArchived ? "text-muted-foreground" : "text-foreground",
+                  isArchived && "text-muted-foreground",
                 )}
               >
                 {workout.title}
-              </h2>
+              </ModalTitle>
               <p className="text-caption text-subtle-foreground">
                 {category.label} · {describePlan(workout.weekdayMask)}
                 {isArchived && " · в архиве"}

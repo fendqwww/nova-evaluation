@@ -1,6 +1,8 @@
 "use client";
 
+import { BarChart3 } from "lucide-react";
 import { Card } from "@/shared/ui/card";
+import { EmptyState } from "@/shared/ui/empty-state";
 import { formatCalories, formatWater, daysWord } from "@/features/nutrition/lib/format";
 import { dailySeries, weekStats, type WeekStats } from "@/features/nutrition/lib/stats";
 import {
@@ -92,6 +94,17 @@ export function NutritionStatsCard({
 }) {
   const stats: WeekStats = weekStats(entries, water, goal, today);
   const series = dailySeries(entries, water, startOfWeek(today), today);
+
+  if (stats.daysLogged === 0) {
+    return (
+      <EmptyState
+        className="py-10"
+        icon={<BarChart3 className="h-5 w-5" />}
+        title="Статистики пока нет"
+        description="Запишите первый приём пищи — и здесь появятся калории, макросы и вода за неделю."
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">

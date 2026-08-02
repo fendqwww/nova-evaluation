@@ -29,7 +29,17 @@ const navItems: BottomNavigationItem[] = [
     icon: <HeartPulse className="h-4.5 w-4.5" />,
   },
   { key: "coach", label: "Коуч", href: "/coach", icon: <Sparkles className="h-4.5 w-4.5" /> },
-  { key: "profile", label: "Профиль", href: "/profile", icon: <User className="h-4.5 w-4.5" /> },
+  // Настройки has no tab of its own — the row is full at seven, and settings
+  // are reached from Профиль, which is where every phone already teaches people
+  // to look. alsoActiveFor is what keeps the tab lit while on /settings, the
+  // same trick Здоровье uses for the three screens behind it.
+  {
+    key: "profile",
+    label: "Профиль",
+    href: "/profile",
+    alsoActiveFor: ["/settings"],
+    icon: <User className="h-4.5 w-4.5" />,
+  },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {

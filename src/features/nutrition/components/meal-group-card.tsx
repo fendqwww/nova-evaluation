@@ -27,14 +27,14 @@ function EntryRow({
 
   return (
     <div className="group flex items-center justify-between gap-2 py-2">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-body text-foreground">{entry.food.name}</span>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="truncate text-body text-foreground">{entry.food.name}</span>
         <span className="text-caption text-subtle-foreground">
           {formatGrams(entry.amountG)} · Б {Math.round(macros.proteinG)} Ж {Math.round(macros.fatG)} У{" "}
           {Math.round(macros.carbsG)}
         </span>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <span className="numeric text-caption font-medium text-foreground">
           {formatCalories(macros.calories)}
         </span>

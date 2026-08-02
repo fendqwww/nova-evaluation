@@ -57,7 +57,7 @@ export function GoalFormModal({
 
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
-      <ModalContent>
+      <ModalContent className="max-h-[88dvh] overflow-y-auto">
         <ModalHeader>
           <ModalTitle>{goal ? "Изменить цель" : "Новая цель"}</ModalTitle>
         </ModalHeader>

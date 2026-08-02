@@ -23,7 +23,7 @@ export function GoalProgressBar({
   return (
     <div
       className={cn(
-        "w-full overflow-hidden rounded-full bg-white/8",
+        "w-full overflow-hidden rounded-full bg-surface-3",
         size === "md" ? "h-2.5" : "h-1.5",
       )}
       role="progressbar"

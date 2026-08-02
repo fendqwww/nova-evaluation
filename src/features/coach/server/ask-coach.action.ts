@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { requireUserContext } from "@/server/auth/current-user";
+import { isCoachEnabled } from "@/features/settings/server/settings.repository";
 import { todayIn } from "@/shared/lib/calendar-day";
 import { askCoachInputSchema } from "@/features/coach/schemas";
 import { buildCoachAnalysis } from "@/features/coach/server/build-coach-analysis";
@@ -35,6 +36,11 @@ const CONTEXT_TURNS = 12;
 export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResult> {
   const { rawInitData, question, intent } = askCoachInputSchema.parse(input);
   const { userId, timezone } = await requireUserContext(rawInitData);
+
+  // Enforced here as well as in getCoachOverview: the screen cannot reach this
+  // while the switch is off, but an action is a public endpoint and the switch
+  // is a promise about what leaves the account.
+  if (!(await isCoachEnabled(userId))) throw new Error("COACH_DISABLED");
 
   const analysis = await buildCoachAnalysis(userId, timezone);
   const resolvedIntent = intent ?? detectIntent(question);

@@ -58,7 +58,7 @@ export function groupCountClass(horizon: TaskHorizon): string {
  */
 export function priorityRailClass(priority: TaskPriority, isCompleted: boolean): string {
   if (isCompleted || priority === "normal") return "bg-transparent";
-  return priority === "high" ? "bg-destructive" : "bg-white/12";
+  return priority === "high" ? "bg-destructive" : "bg-border-strong";
 }
 
 export function priorityChipClass(priority: TaskPriority): string {

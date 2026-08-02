@@ -53,16 +53,22 @@ export function CoachChat({
 }) {
   const endRef = useRef<HTMLDivElement>(null);
   const seenCount = useRef(history.length);
+  const hadPending = useRef(Boolean(pendingQuestion));
 
   useEffect(() => {
     // Only follow the conversation once it grows past what was already on
     // screen. Scrolling on mount would jump straight past the day's analysis,
     // and loading older turns prepends — which must not yank the view down.
-    if (history.length > seenCount.current) {
+    // A just-sent question also needs to pull the view down: it renders
+    // before `history` grows, since the reply only lands once the mutation
+    // resolves.
+    const pendingJustAppeared = Boolean(pendingQuestion) && !hadPending.current;
+    if (history.length > seenCount.current || pendingJustAppeared) {
       endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
     seenCount.current = history.length;
-  }, [history.length]);
+    hadPending.current = Boolean(pendingQuestion);
+  }, [history.length, pendingQuestion]);
 
   const groups = groupByDay(history);
 
@@ -121,7 +127,7 @@ export function CoachChat({
           >
             <div className="flex justify-end">
               <div className="max-w-[85%] rounded-2xl rounded-br-md border border-accent-border bg-accent-soft px-3.5 py-2.5 opacity-70">
-                <p className="whitespace-pre-wrap text-caption text-foreground">
+                <p className="whitespace-pre-wrap wrap-break-word text-caption text-foreground">
                   {pendingQuestion}
                 </p>
               </div>

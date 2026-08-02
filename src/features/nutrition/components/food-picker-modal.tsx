@@ -84,11 +84,11 @@ export function FoodPickerModal({
                   onClick={() => onSelect(food)}
                   className="flex items-center justify-between gap-2 py-3 text-left transition-colors hover:bg-white/[0.04]"
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
                     {food.isFavorite && (
                       <Star className="h-3.5 w-3.5 shrink-0 fill-current text-tint-orange" />
                     )}
-                    <span className="text-body text-foreground">{food.name}</span>
+                    <span className="truncate text-body text-foreground">{food.name}</span>
                   </div>
                   <span className="numeric shrink-0 text-caption text-subtle-foreground">
                     {formatCalories(food.caloriesPer100)} / 100 г

@@ -239,11 +239,11 @@ export function RulerPicker({
                 className={
                   i % majorStride === 0
                     ? compact
-                      ? "h-5 w-[1.5px] rounded-full bg-white/20"
-                      : "h-7 w-[1.5px] rounded-full bg-white/20"
+                      ? "h-5 w-[1.5px] rounded-full bg-foreground/20"
+                      : "h-7 w-[1.5px] rounded-full bg-foreground/20"
                     : compact
-                      ? "h-2.5 w-px rounded-full bg-white/10"
-                      : "h-3.5 w-px rounded-full bg-white/10"
+                      ? "h-2.5 w-px rounded-full bg-foreground/10"
+                      : "h-3.5 w-px rounded-full bg-foreground/10"
                 }
               />
             </div>

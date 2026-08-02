@@ -61,7 +61,7 @@ export function RoutineCard({
   const isDone = doneOn(routine, day);
   const progress = stepProgressOn(routine, day);
   const steps = activeStepsOn(routine, day);
-  const tone = careTone(stats, isArchived);
+  const tone = careTone(isDone, progress.done, stats.isDueToday, isArchived);
   const Icon = AREA_ICONS[routine.area];
 
   // A future day cannot be marked done, and an archived routine owes nothing.

@@ -26,6 +26,7 @@ model User {
   updatedAt             DateTime  @updatedAt
 
   profile            Profile?
+  settings           UserSettings?
   goals              Goal[]
   habits             Habit[]
   tasks              Task[]
@@ -62,6 +63,76 @@ model Profile {
   // THEME_VALUES in src/features/onboarding/schemas.ts. String, not an
   // enum, for the same SQLite-compatibility reason as the fields above.
   themeColor  String @default("ocean")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Everything the user has decided about how the app behaves, in one mutable
+// row per user — the same shape as NutritionGoal, and for the same reason: a
+// setting is the current state of a preference, not a history of preferences,
+// so there is nothing here for a past day to point back at.
+//
+// The row is created lazily. Absence means "nothing has been changed yet", and
+// every reader resolves that to DEFAULT_SETTINGS (settings.repository.ts)
+// rather than to nulls, so a user who never opens this screen behaves exactly
+// like one who opened it and touched nothing.
+//
+// Two things are deliberately NOT here:
+//
+//   - timezone. It lives on Profile, which is what every repository in the app
+//     already resolves "which day is it for this user" from (see
+//     requireUserContext). A second copy here would be a second source of truth
+//     for the one question habit streaks depend on, and the two would disagree
+//     the first time only one of them was written.
+//   - themeColor. The accent palette is also a Profile column and is already
+//     wired end to end. themeMode below is a different axis — light/dark/system
+//     against which of six hues — so the two coexist rather than compete.
+//
+// Every categorical column is a plain String validated by a zod union in
+// src/features/settings/schemas.ts, not a Prisma enum, for the same SQLite
+// connector reason as every other categorical column in this file. Unknown
+// values degrade to the default on read instead of throwing.
+model UserSettings {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // "light" | "dark" | "system". "system" is the default because the honest
+  // answer on first launch is "whatever the device prefers", not a guess.
+  themeMode String @default("system")
+  // "ru" | "en". Only "ru" is translated today; the column exists so the
+  // choice is already stored when the second locale lands.
+  language  String @default("ru")
+  // "dmy" | "mdy" | "iso" — display only. Storage is always CalendarDay.
+  dateFormat String @default("dmy")
+  // "metric" | "imperial" — display only, for the same reason: kilograms and
+  // centimetres are what the columns hold, conversion happens at the edge.
+  unitSystem String @default("metric")
+
+  // Per-section notification switches. Storage only for now: nothing sends a
+  // notification yet, and a switch that stores an intention is honest where a
+  // switch that claims to schedule one would not be.
+  notifyHabits     Boolean @default(true)
+  notifyTasks      Boolean @default(true)
+  notifyNutrition  Boolean @default(false)
+  notifyWorkouts   Boolean @default(true)
+  notifyAppearance Boolean @default(false)
+  notifyCoach      Boolean @default(true)
+
+  // aiCoachEnabled is the one AI switch that is load-bearing today: the Coach
+  // screen reads it and refuses to answer when it is off (see
+  // get-coach-overview.action.ts). The other two are stored intentions for
+  // features that do not exist yet, and the UI says so.
+  aiCoachEnabled  Boolean @default(true)
+  aiDailyReport   Boolean @default(true)
+  aiVisionEnabled Boolean @default(false)
+
+  // "free" | "plus" | "max". Written by nothing today — there is no billing —
+  // and read by the subscription screen to decide which tier is marked current.
+  // A column rather than a hardcoded "free" so wiring a payment provider later
+  // is an insert, not a schema change plus a rewrite of every read.
+  plan String @default("free")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -25,6 +25,21 @@ export interface ResolvedSession {
   };
   onboardingCompleted: boolean;
   profile: ResolvedProfile | null;
+  /**
+   * "light" | "dark" | "system" — the appearance mode, applied before the first
+   * screen paints.
+   *
+   * It travels with the session rather than with the settings snapshot because
+   * of *when* it is needed: the session is the one fetch every screen already
+   * waits on, and a mode restored later than that would show the app in the
+   * wrong palette for a frame on every cold start. The settings screen still
+   * owns editing it — this is a read for painting, not a second source of
+   * truth.
+   *
+   * A plain string, validated where it is used (themeModeSchema), the same way
+   * themeColor above is.
+   */
+  themeMode: string;
 }
 
 export async function resolveSession(
@@ -49,7 +64,7 @@ export async function resolveSession(
       languageCode: identity.languageCode,
       photoUrl: identity.photoUrl,
     },
-    include: { profile: true },
+    include: { profile: true, settings: { select: { themeMode: true } } },
   });
 
   return {
@@ -61,6 +76,9 @@ export async function resolveSession(
       photoUrl: user.photoUrl,
     },
     onboardingCompleted: user.onboardingCompletedAt !== null,
+    // No settings row yet means nothing has been chosen, which is exactly what
+    // "system" means. Kept identical to DEFAULT_SETTINGS.themeMode.
+    themeMode: user.settings?.themeMode ?? "system",
     profile: user.profile
       ? {
           name: user.profile.name,

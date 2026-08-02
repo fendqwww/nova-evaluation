@@ -4,7 +4,7 @@ import { Skeleton } from "@/shared/ui/skeleton";
 // to content doesn't visibly reflow.
 export function DashboardSkeleton() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-2">
           <Skeleton className="h-3.5 w-24" />
@@ -14,7 +14,7 @@ export function DashboardSkeleton() {
         <Skeleton className="h-11.5 w-11.5 rounded-full" />
       </div>
 
-      <Skeleton className="h-76 w-full rounded-xl" />
+      <Skeleton className="h-31 w-full rounded-xl" />
       <Skeleton className="h-44 w-full rounded-xl" />
       <Skeleton className="h-18 w-full rounded-xl" />
 

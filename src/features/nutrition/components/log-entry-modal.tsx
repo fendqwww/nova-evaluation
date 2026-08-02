@@ -69,12 +69,12 @@ export function LogEntryModal({
       <ModalContent>
         <ModalHeader>
           <div className="flex items-center justify-between gap-2">
-            <ModalTitle>{food.name}</ModalTitle>
+            <ModalTitle className="min-w-0 flex-1 truncate">{food.name}</ModalTitle>
             <button
               type="button"
               onClick={() => onToggleFavorite(food.id, !food.isFavorite)}
               aria-label={food.isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
-              className="rounded-md p-1.5 text-subtle-foreground transition-colors hover:bg-white/[0.06]"
+              className="shrink-0 rounded-md p-1.5 text-subtle-foreground transition-colors hover:bg-white/[0.06]"
             >
               <Star className={cn("h-4 w-4", food.isFavorite && "fill-current text-tint-orange")} />
             </button>

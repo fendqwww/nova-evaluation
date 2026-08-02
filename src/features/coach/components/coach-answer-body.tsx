@@ -24,8 +24,8 @@ export function CoachAnswerBody({
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="flex flex-col gap-1.5">
-        <p className="text-title text-foreground">{answer.headline}</p>
-        <p className="text-caption text-muted-foreground">{answer.body}</p>
+        <p className="wrap-break-word text-title text-foreground">{answer.headline}</p>
+        <p className="wrap-break-word text-caption text-muted-foreground">{answer.body}</p>
       </div>
 
       {answer.bullets.length > 0 && (

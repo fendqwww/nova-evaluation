@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTelegramSession } from "@/features/auth/hooks/use-telegram-session";
 import { TelegramAuthError } from "@/features/auth/components/auth-status-screens";
 import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
-import { applyThemeColor } from "@/shared/lib/apply-theme";
+import { applyThemeColor, watchThemeMode } from "@/shared/lib/apply-theme";
 import type { ResolvedSession } from "@/features/auth/server/resolve-session.action";
 
 interface SessionBoundaryProps {
@@ -36,6 +36,15 @@ export function SessionBoundary({
       applyThemeColor(themeColor);
     }
   }, [themeColor]);
+
+  // The light/dark axis. A subscription rather than a write because "system"
+  // has to keep following the device — watchThemeMode returns a no-op cleanup
+  // for the two fixed modes, so the shape is the same either way.
+  const themeMode = data?.themeMode;
+  useEffect(() => {
+    if (!themeMode) return;
+    return watchThemeMode(themeMode === "light" || themeMode === "dark" ? themeMode : "system");
+  }, [themeMode]);
 
   if (isError) {
     return <TelegramAuthError onRetry={() => refetch()} />;

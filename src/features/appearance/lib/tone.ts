@@ -10,11 +10,24 @@ import type { CareDayState, CareRoutineStats } from "@/features/appearance/lib/s
  */
 export type CareTone = "done" | "partial" | "due" | "resting" | "archived";
 
-export function careTone(stats: CareRoutineStats, isArchived: boolean): CareTone {
+/**
+ * `isDone`/`stepsDone` describe the day actually on screen, not necessarily
+ * today — a routine card viewing yesterday must not borrow today's
+ * completion state, or the fill colour and the checklist count it wraps can
+ * end up describing two different days at once. `isDueToday` alone still
+ * comes from the stats object: it only distinguishes "due" from "resting",
+ * both of which render as the same empty ring either way.
+ */
+export function careTone(
+  isDone: boolean,
+  stepsDone: number,
+  isDueToday: CareRoutineStats["isDueToday"],
+  isArchived: boolean,
+): CareTone {
   if (isArchived) return "archived";
-  if (stats.isDoneToday) return "done";
-  if (stats.today.done > 0) return "partial";
-  return stats.isDueToday ? "due" : "resting";
+  if (isDone) return "done";
+  if (stepsDone > 0) return "partial";
+  return isDueToday ? "due" : "resting";
 }
 
 /** The card's today control: filled once finished, ringed while in progress. */

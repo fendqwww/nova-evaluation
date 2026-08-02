@@ -91,9 +91,14 @@ export function FoodsList({
               <button
                 type="button"
                 onClick={() => onEdit(food)}
-                className="flex flex-1 flex-col items-start gap-0.5 text-left"
+                className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
               >
-                <span className={cn("text-body text-foreground", food.archivedAt && "text-subtle-foreground")}>
+                <span
+                  className={cn(
+                    "w-full truncate text-body text-foreground",
+                    food.archivedAt && "text-subtle-foreground",
+                  )}
+                >
                   {food.name}
                   {food.archivedAt && " (архив)"}
                 </span>

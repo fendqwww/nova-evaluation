@@ -99,6 +99,66 @@
   --accent: #838a9c;
 }
 
+/*
+ * LIGHT MODE — the second axis, independent of the accent blocks above.
+ *
+ * `data-mode` is written on <html> by watchThemeMode (shared/lib/apply-theme),
+ * which resolves "system" against the device and keeps resolving it. Dark is
+ * the :root default and stays the app's native look: this block only overrides
+ * the surface, text and border tokens, and never touches --accent, so all six
+ * palettes keep working in both modes without a second set of hues.
+ *
+ * PROVISIONAL. The token architecture makes the swap work everywhere colour
+ * goes through a variable, which is nearly everywhere — but a handful of older
+ * components paint with literal `bg-black/20`, `bg-white/[0.06]` and
+ * `ring-white/[0.06]` utilities that were written when dark was the only mode.
+ * Those read as flat rather than broken here, and turning them into tokens is a
+ * pass over shipped sections that belongs to the technical stage, not to this
+ * one. Nothing below is a design decision beyond "legible and neutral".
+ */
+[data-mode="light"] {
+  --background: #fbfbfd;
+  --foreground: #0c0d11;
+  --muted-foreground: #656a75;
+  --subtle-foreground: #878d99;
+  --lead-foreground: #454a54;
+
+  /* Same elevation idea inverted: a raised surface is *lighter* than the page
+     in dark mode and whiter-than-the-wash here, so light still falls from
+     above rather than the gradient reading upside down. */
+  --surface-0: #fbfbfd;
+  --surface-1: #ffffff;
+  --surface-1-top: #ffffff;
+  --surface-2: #f3f4f8;
+  --surface-2-top: #f8f9fc;
+  --surface-3: #e8eaf0;
+
+  --border: rgba(9, 11, 20, 0.09);
+  --border-strong: rgba(9, 11, 20, 0.16);
+  --input: rgba(9, 11, 20, 0.04);
+
+  /* Softer and shorter than the dark shadows: on a white page the same depth
+     reads as dirt rather than as elevation. */
+  --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px 0 rgba(12, 13, 17, 0.06), 0 10px 24px -16px rgba(12, 13, 17, 0.22);
+  --shadow-raised: inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    0 2px 6px 0 rgba(12, 13, 17, 0.08), 0 18px 40px -20px rgba(12, 13, 17, 0.3);
+  --shadow-nav: inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    0 -1px 3px 0 rgba(12, 13, 17, 0.05), 0 16px 36px -14px rgba(12, 13, 17, 0.24);
+
+  /* Semantic and category colours darkened just enough to keep their contrast
+     against white. Same hues — a habit is still orange, a task still blue. */
+  --destructive: #d9363d;
+  --positive: #12986a;
+  --warning: #c47509;
+
+  --tint-green: #17a074;
+  --tint-purple: #6d4ae0;
+  --tint-orange: #d2701a;
+  --tint-blue: #2d7fe0;
+  --tint-cyan: #1596bd;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -250,6 +310,14 @@
 
 html {
   color-scheme: dark;
+}
+
+/* applyThemeMode also writes color-scheme inline, which wins over both of
+   these. This is the CSS-only fallback so a light page never keeps a dark
+   scrollbar in the frame between the attribute landing and the style property
+   being set. */
+html[data-mode="light"] {
+  color-scheme: light;
 }
 
 /* Plain, near-black — no ambient brand-colour wash behind the whole app.

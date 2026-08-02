@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/shared/ui/button";
@@ -37,6 +38,7 @@ const itemVariants: Variants = {
 export function CoachView() {
   const {
     overview,
+    isDisabled,
     isPending,
     isError,
     retry,
@@ -53,6 +55,26 @@ export function CoachView() {
     return (
       <PageContainer className="flex flex-col gap-4">
         <CoachSkeleton />
+      </PageContainer>
+    );
+  }
+
+  // Switched off in Настройки. Nothing was computed and nothing was sent, so
+  // this is the whole screen — with the way back to the switch that caused it.
+  if (isDisabled) {
+    return (
+      <PageContainer className="flex flex-col gap-4">
+        <EmptyState
+          className="py-16"
+          icon={<Sparkles className="h-5 w-5" />}
+          title="AI Coach выключен"
+          description="Nova не анализирует твои данные и ничего не отправляет наружу. Включить можно в настройках."
+          action={
+            <Button asChild variant="secondary">
+              <Link href="/settings">Открыть настройки</Link>
+            </Button>
+          }
+        />
       </PageContainer>
     );
   }

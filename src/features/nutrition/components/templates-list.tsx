@@ -58,8 +58,10 @@ export function TemplatesList({
                 <IconChip tone="score" size="md">
                   <Layers className="h-4 w-4" />
                 </IconChip>
-                <div className="flex flex-1 flex-col gap-0.5">
-                  <span className="text-body font-medium text-foreground">{template.name}</span>
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <span className="truncate text-body font-medium text-foreground">
+                    {template.name}
+                  </span>
                   <span className="text-caption text-subtle-foreground">
                     {MEAL_SLOT_LABELS[template.mealSlot]} · {template.items.length}{" "}
                     продукт(ов) · {formatCalories(templateCalories(template))}

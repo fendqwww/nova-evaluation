@@ -59,7 +59,10 @@ export function NumberStepper({
           }}
           inputMode="decimal"
           aria-label={label}
-          className="numeric h-10 w-full border-y border-border bg-input text-center text-body font-semibold text-foreground transition-colors duration-200 focus-visible:border-accent-border focus-visible:outline-none"
+          className={cn(
+            "numeric h-10 w-full border-y border-border bg-input text-center text-body font-semibold text-foreground transition-colors duration-200 focus-visible:border-accent-border focus-visible:outline-none",
+            suffix && "pr-6",
+          )}
         />
         {suffix && (
           <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[0.6875rem] text-subtle-foreground">

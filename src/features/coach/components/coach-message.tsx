@@ -18,7 +18,9 @@ export function CoachMessage({ message }: { message: CoachMessageItem }) {
     return (
       <div className="flex justify-end">
         <div className="max-w-[85%] rounded-2xl rounded-br-md border border-accent-border bg-accent-soft px-3.5 py-2.5">
-          <p className="whitespace-pre-wrap text-caption text-foreground">{message.text}</p>
+          <p className="whitespace-pre-wrap wrap-break-word text-caption text-foreground">
+            {message.text}
+          </p>
         </div>
       </div>
     );
@@ -36,7 +38,9 @@ export function CoachMessage({ message }: { message: CoachMessageItem }) {
       {message.answer ? (
         <CoachAnswerBody answer={message.answer} />
       ) : (
-        <p className="whitespace-pre-wrap text-caption text-muted-foreground">{message.text}</p>
+        <p className="whitespace-pre-wrap wrap-break-word text-caption text-muted-foreground">
+          {message.text}
+        </p>
       )}
     </Card>
   );

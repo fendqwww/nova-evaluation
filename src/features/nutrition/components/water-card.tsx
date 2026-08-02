@@ -22,8 +22,8 @@ export function WaterCard({
   return (
     <Card>
       <div className="flex items-center gap-3 p-4">
-        <IconChip tone="accent" size="lg">
-          <Droplet className="h-5 w-5" />
+        <IconChip tone="accent" size="md">
+          <Droplet className="h-4 w-4" />
         </IconChip>
 
         <div className="flex flex-1 flex-col gap-1.5">

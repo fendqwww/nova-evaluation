@@ -29,6 +29,7 @@ export const coachActionTargetSchema = z.enum([
   "tasks",
   "workouts",
   "nutrition",
+  "appearance",
 ]);
 
 /**
@@ -132,7 +133,10 @@ export const COACH_ANSWER_JSON_SCHEMA = {
           label: { type: "string" },
           target: {
             anyOf: [
-              { type: "string", enum: ["goals", "habits", "tasks", "workouts", "nutrition"] },
+              {
+                type: "string",
+                enum: ["goals", "habits", "tasks", "workouts", "nutrition", "appearance"],
+              },
               { type: "null" },
             ],
           },

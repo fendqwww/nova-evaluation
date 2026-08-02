@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion, type Variants } from "framer-motion";
-import { Target, Repeat, ListTodo } from "lucide-react";
+import { Target, Repeat, ListTodo, Sparkles } from "lucide-react";
 import { useDashboardData } from "@/features/dashboard/hooks/use-dashboard-data";
 import { DashboardSkeleton } from "@/features/dashboard/components/dashboard-skeleton";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
@@ -13,6 +13,7 @@ import { CoachPreviewCard } from "@/features/dashboard/components/coach-preview-
 import { ActivityOverviewCard } from "@/features/activity/components/activity-overview-card";
 import { QuickCaptureModal } from "@/features/activity/components/quick-capture-modal";
 import { Button } from "@/shared/ui/button";
+import { EmptyState } from "@/shared/ui/empty-state";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
 import type { ActivityItemType } from "@/features/activity/types";
 
@@ -36,15 +37,16 @@ export function DashboardView() {
 
   if (isError || !data) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
-        <div>
-          <p className="text-heading text-foreground">Не удалось загрузить дашборд</p>
-          <p className="mt-1 text-caption text-muted-foreground">Проверьте соединение и попробуйте снова.</p>
-        </div>
-        <Button variant="secondary" onClick={() => refetch()}>
-          Повторить
-        </Button>
-      </div>
+      <EmptyState
+        icon={<Sparkles className="h-5 w-5" />}
+        title="Не удалось загрузить дашборд"
+        description="Проверьте соединение и попробуйте снова."
+        action={
+          <Button variant="secondary" onClick={() => refetch()}>
+            Повторить
+          </Button>
+        }
+      />
     );
   }
 

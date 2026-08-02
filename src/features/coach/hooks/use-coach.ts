@@ -40,7 +40,7 @@ export function useCoach() {
   const ask = useMutation({
     mutationFn: askCoachAction,
     onSuccess: (result) => {
-      queryClient.setQueryData<CoachOverview>(key, (previous) =>
+      queryClient.setQueryData<CoachOverview | null>(key, (previous) =>
         previous
           ? { ...previous, history: [...previous.history, result.question, result.reply] }
           : previous,
@@ -51,7 +51,7 @@ export function useCoach() {
   const loadEarlier = useMutation({
     mutationFn: getCoachHistory,
     onSuccess: (page) => {
-      queryClient.setQueryData<CoachOverview>(key, (previous) =>
+      queryClient.setQueryData<CoachOverview | null>(key, (previous) =>
         previous
           ? {
               ...previous,
@@ -63,18 +63,29 @@ export function useCoach() {
     },
   });
 
-  const overview = query.data;
+  // null is the server saying "AI Coach выключен" (see getCoachOverview), which
+  // is a different screen from an error and from an empty account — so it is
+  // surfaced as its own flag rather than collapsed into `overview === undefined`.
+  const overview = query.data ?? undefined;
+  const isDisabled = query.data === null;
   const oldestId = overview?.history[0]?.id ?? null;
 
   return {
     overview,
+    isDisabled,
     isPending: query.isPending,
     isError: query.isError,
     retry: () => void query.refetch(),
     refresh: () => void queryClient.invalidateQueries({ queryKey: key }),
 
-    /** The question currently in flight, echoed back for the pending bubble. */
-    pendingQuestion: ask.isPending ? (ask.variables?.question ?? null) : null,
+    /**
+     * The question currently in flight, echoed back for the pending bubble.
+     * Kept visible through a failed send too — `ask.variables` still holds it
+     * after the mutation settles — so the error line has something to attach
+     * to instead of the just-typed question vanishing.
+     */
+    pendingQuestion:
+      ask.isPending || ask.isError ? (ask.variables?.question ?? null) : null,
     isAnswering: ask.isPending,
     askFailed: ask.isError,
     ask: (question: string, intent: CoachIntent | null) =>

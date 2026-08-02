@@ -1,6 +1,7 @@
 "use server";
 
 import { requireUserContext } from "@/server/auth/current-user";
+import { isCoachEnabled } from "@/features/settings/server/settings.repository";
 import { COACH_HISTORY_PAGE } from "@/features/coach/schemas";
 import { buildCoachAnalysis } from "@/features/coach/server/build-coach-analysis";
 import { listRecentCoachMessages } from "@/features/coach/server/coach.repository";
@@ -22,11 +23,19 @@ import type { CoachOverview } from "@/features/coach/types";
  * The brief is composed deterministically so the first screen is never blank
  * and never waits on a network call. The model writes in the chat, where a
  * couple of seconds is a conversation rather than a loading screen.
+ *
+ * Returns null when the user has switched AI Coach off in Настройки. The check
+ * comes first, before the analysis is built, which is what makes the privacy
+ * policy's "если AI Coach выключен, наружу не уходит ничего" literally true:
+ * nothing is assembled, so there is nothing to send. Null rather than an empty
+ * overview because "выключено" and "нет данных" are different screens.
  */
 export async function getCoachOverview(
   rawInitData: string | undefined,
-): Promise<CoachOverview> {
+): Promise<CoachOverview | null> {
   const { userId, timezone } = await requireUserContext(rawInitData);
+
+  if (!(await isCoachEnabled(userId))) return null;
 
   const analysis = await buildCoachAnalysis(userId, timezone);
   const history = await listRecentCoachMessages(userId, COACH_HISTORY_PAGE);

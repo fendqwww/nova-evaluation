@@ -1,10 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { ThemePicker } from "@/features/profile/components/theme-picker";
+import { ProfileView } from "@/features/profile/components/profile-view";
 import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
-import { PageContainer } from "@/shared/ui/page-container";
-import { DEFAULT_THEME, type ThemeValue } from "@/shared/config/themes";
+import { DEFAULT_THEME } from "@/shared/config/themes";
 
 // useRawInitData() reads window/sessionStorage synchronously on first
 // render — it can never run during Next's server-side prerender pass, so
@@ -23,19 +22,13 @@ export default function ProfilePage() {
       redirectWhen={(session) => !session.onboardingCompleted}
       redirectTo="/onboarding"
     >
+      {/* The accent colour comes from the session rather than from the profile
+          snapshot: it lives on Profile, SessionBoundary already applies it on
+          every load, and the picker writes back through the session's own
+          cache. Reading it from a second fetch would give the app two answers
+          to one question. */}
       {(session) => (
-        <PageContainer className="flex flex-col gap-7">
-          <header className="flex flex-col gap-1">
-            <h1 className="text-title text-foreground">Профиль</h1>
-            <p className="text-caption text-muted-foreground">
-              {session.profile?.name ?? "Nova"}
-            </p>
-          </header>
-
-          <ThemePicker
-            current={(session.profile?.themeColor as ThemeValue) ?? DEFAULT_THEME}
-          />
-        </PageContainer>
+        <ProfileView themeColor={session.profile?.themeColor ?? DEFAULT_THEME} />
       )}
     </SessionBoundary>
   );

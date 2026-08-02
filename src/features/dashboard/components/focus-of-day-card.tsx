@@ -33,7 +33,7 @@ export function FocusOfDayCard({
 
   return (
     <Card>
-      <CardContent className="flex items-center gap-3 p-3.5">
+      <CardContent className="flex items-center gap-3 p-4">
         <IconChip tone={focus.type === "goal" ? "goal" : "task"} size="md">
           {focus.type === "goal" ? (
             <Target className="h-4 w-4" />
