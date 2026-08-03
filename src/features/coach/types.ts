@@ -12,8 +12,8 @@ import type {
  *
  * Every answer — the daily brief, a quick action, a typed question — is the
  * same CoachAnswer shape, so the renderer is written once and the two producers
- * (the deterministic composer in lib/compose.ts and the Claude call in
- * server/claude.ts) are interchangeable. That interchangeability is the point:
+ * (the deterministic composer in lib/compose.ts and the Gemini call in
+ * ai/coach.ts) are interchangeable. That interchangeability is the point:
  * the model is a narrator over facts this module already computed, never the
  * source of the facts, so a missing API key downgrades the prose and nothing
  * else.
@@ -332,7 +332,7 @@ export interface CoachSignals {
 // ---------------------------------------------------------------------------
 
 /** Which producer wrote an answer. Surfaced so the UI never has to guess. */
-export type CoachAnswerSource = "claude" | "rules";
+export type CoachAnswerSource = "gemini" | "rules";
 
 export interface CoachOverview {
   today: CalendarDay;

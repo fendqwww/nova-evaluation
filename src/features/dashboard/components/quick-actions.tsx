@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Target, Repeat, ListTodo, Sparkles, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { IconChip } from "@/shared/ui/card";
 
 type Tone = "goal" | "habit" | "task" | "ai";
@@ -26,7 +25,7 @@ interface QuickAction {
 }
 
 const TILE_CLASS =
-  "group flex items-center gap-2.5 rounded-xl border border-border surface-raised px-3 py-3 text-left shadow-card transition-colors duration-200 active:border-border-strong";
+  "press-sm group flex items-center gap-2.5 rounded-xl border border-border surface-raised px-3 py-3 text-left shadow-card edge-light active:border-border-strong";
 
 export function QuickActions({
   onGoal,
@@ -66,15 +65,14 @@ export function QuickActions({
               {inner}
             </Link>
           ) : (
-            <motion.button
+            <button
               key={action.key}
               type="button"
               onClick={action.onSelect}
-              whileTap={{ scale: 0.97 }}
               className={TILE_CLASS}
             >
               {inner}
-            </motion.button>
+            </button>
           );
         })}
       </div>

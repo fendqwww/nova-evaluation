@@ -129,7 +129,7 @@ export function GoalsView() {
 
   return (
     <PageContainer className="flex flex-col gap-4">
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
             Цели

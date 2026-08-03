@@ -136,7 +136,7 @@ function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "shrink-0 rounded-lg border px-3 py-1.5 text-caption font-medium transition-colors duration-200",
+        "press-sm shrink-0 rounded-lg border px-3 py-1.5 text-caption font-medium transition-colors duration-200",
         active
           ? "border-accent-border bg-accent-muted text-accent"
           : "border-border text-subtle-foreground active:border-border-strong",
@@ -181,7 +181,7 @@ function RoutinePresets({
               key={preset.title}
               type="button"
               onClick={() => onPick(preset)}
-              className="flex items-center gap-3 rounded-xl border border-border bg-black/20 px-3.5 py-3 text-left transition-colors duration-200 active:border-border-strong"
+              className="press-sm glass-card flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left active:border-border-strong"
             >
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-white/[0.06] text-muted-foreground">
                 <Icon className="h-4 w-4" />

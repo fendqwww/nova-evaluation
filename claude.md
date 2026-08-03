@@ -13,7 +13,7 @@
 - **Styling:** Tailwind CSS, `shadcn/ui` (Radix UI primitives)
 - **Animations:** Framer Motion (subtle spring animations, crisp feedback)
 - **State & Data Fetching:** Zustand, TanStack Query (React Query)
-- **AI Core:** Anthropic Claude API (`@anthropic-ai/sdk`), Tool Use / Function Calling, Structured Outputs
+- **AI Core:** Google Gemini API (`@google/genai`), model `gemini-2.5-flash`, Structured Outputs (`responseSchema`/`responseJsonSchema`)
 - **Database & ORM:** PostgreSQL, Prisma ORM (or Supabase)
 
 ---
@@ -35,10 +35,10 @@
 
 ---
 
-## 5. Claude API & System Prompts Rules
+## 5. Gemini API & System Prompts Rules
 - **Formatting:** Use XML tags (`<context>`, `<instructions>`, `<rules>`, `<output>`) in internal system prompts for maximum steering accuracy.
-- **Outputs:** Enforce JSON Schemas via Function Calling / Structured Outputs for dynamic UI component rendering.
-- **Efficiency:** Utilize Prompt Caching for static context and long-running memory threads to keep latency low.
+- **Outputs:** Enforce JSON Schemas via `responseJsonSchema`/Structured Outputs for dynamic UI component rendering.
+- **Architecture:** All Gemini access goes through `src/ai/` (`gemini.ts`, `prompts/`, `types.ts`, `limits.ts`, `coach.ts`, `nutrition.ts`, `appearance.ts`) — no feature calls `@google/genai` directly.
 
 ---
 

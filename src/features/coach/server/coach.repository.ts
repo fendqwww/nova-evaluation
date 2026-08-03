@@ -90,7 +90,7 @@ export async function appendCoachMessage(
  *
  * The query is newest-first because that is the end of the conversation worth
  * loading; the reversal happens here so every consumer — the chat list, the
- * Claude context builder — reads in reading order and none of them has to
+ * Gemini context builder — reads in reading order and none of them has to
  * remember to flip it. `hasMore` comes from asking for one extra row rather
  * than a second COUNT.
  */

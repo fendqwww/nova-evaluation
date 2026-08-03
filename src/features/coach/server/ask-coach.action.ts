@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { requireUserContext } from "@/server/auth/current-user";
-import { isCoachEnabled } from "@/features/settings/server/settings.repository";
+import { isCoachEnabled, getSettings } from "@/features/settings/server/settings.repository";
 import { todayIn } from "@/shared/lib/calendar-day";
 import { askCoachInputSchema } from "@/features/coach/schemas";
 import { buildCoachAnalysis } from "@/features/coach/server/build-coach-analysis";
@@ -10,7 +10,7 @@ import {
   appendCoachMessage,
   listRecentCoachMessages,
 } from "@/features/coach/server/coach.repository";
-import { askClaude } from "@/features/coach/server/claude";
+import { askCoachModel } from "@/ai/coach";
 import { composeAnswer } from "@/features/coach/lib/compose";
 import { detectIntent } from "@/features/coach/lib/intents";
 import type { CoachAnswer, CoachAskResult } from "@/features/coach/types";
@@ -31,7 +31,7 @@ const CONTEXT_TURNS = 12;
  *
  * The stored answer is whichever one won. Nothing records that it came from the
  * model, because nothing downstream should behave differently — a rules answer
- * and a Claude answer are the same shape, built from the same facts.
+ * and a Gemini answer are the same shape, built from the same facts.
  */
 export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResult> {
   const { rawInitData, question, intent } = askCoachInputSchema.parse(input);
@@ -46,8 +46,16 @@ export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResu
   const resolvedIntent = intent ?? detectIntent(question);
   const draft = composeAnswer(resolvedIntent, analysis);
 
+  const settings = await getSettings(userId);
   const history = await listRecentCoachMessages(userId, CONTEXT_TURNS);
-  const fromModel = await askClaude(question, analysis, draft, history.messages);
+  const fromModel = await askCoachModel(
+    question,
+    analysis,
+    draft,
+    history.messages,
+    userId,
+    settings.plan,
+  );
 
   const answer: CoachAnswer = fromModel ?? draft;
   const day = todayIn(timezone);
@@ -68,5 +76,5 @@ export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResu
     day,
   });
 
-  return { question: stored, reply, source: fromModel ? "claude" : "rules" };
+  return { question: stored, reply, source: fromModel ? "gemini" : "rules" };
 }

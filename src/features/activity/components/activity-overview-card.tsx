@@ -1,7 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { Card, CardContent, IconChip } from "@/shared/ui/card";
 
@@ -21,14 +20,13 @@ export function ActivityOverviewCard({
   onCreate: () => void;
 }) {
   return (
-    <motion.button
+    <button
       type="button"
       onClick={onCreate}
-      whileTap={{ scale: 0.97 }}
       aria-label={`${title}: ${count}. Добавить`}
       className="w-full text-left"
     >
-      <Card className="h-full transition-colors duration-200 active:border-border-strong">
+      <Card interactive className="h-full">
         <CardContent className="flex h-full flex-col gap-2.5 p-3">
           <div className="flex items-center justify-between gap-1">
             <IconChip tone={tone} size="sm">
@@ -48,6 +46,6 @@ export function ActivityOverviewCard({
           </div>
         </CardContent>
       </Card>
-    </motion.button>
+    </button>
   );
 }

@@ -10,7 +10,7 @@ import type { CoachAnswer } from "@/features/coach/types";
  * A CoachAnswer, rendered once.
  *
  * The daily brief and every reply in the chat are the same shape, so they are
- * the same component — which is also what guarantees a Claude-written answer
+ * the same component — which is also what guarantees a Gemini-written answer
  * and a rules-written one are visually indistinguishable. They are equally
  * real; only the prose differs.
  */

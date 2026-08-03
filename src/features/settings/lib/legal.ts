@@ -3,8 +3,9 @@
  *
  * IMPORTANT — this is engineering copy, not a lawyer's document. Every clause
  * below is a plain description of something the code actually does today
- * (photos stored inline in the user's own row, questions forwarded to
- * Anthropic, no third-party analytics), written so a user can find out what
+ * (photos stored inline in the user's own row, questions and food/appearance
+ * photos forwarded to Google's Gemini API, no third-party analytics), written
+ * so a user can find out what
  * happens to their data before there is a legal team to write it properly. It
  * must be reviewed before the app is offered publicly, and the screen says so
  * rather than passing a draft off as a binding agreement.
@@ -29,7 +30,7 @@ export interface LegalDocument {
 export const PRIVACY_POLICY: LegalDocument = {
   id: "privacy",
   title: "Политика конфиденциальности",
-  updated: "2026-08-02",
+  updated: "2026-08-03",
   intro:
     "Nova хранит только то, что вы сами внесли в приложение, и использует это только чтобы показывать вам ваши же данные.",
   sections: [
@@ -52,8 +53,9 @@ export const PRIVACY_POLICY: LegalDocument = {
     {
       title: "Что уходит наружу",
       paragraphs: [
-        "Когда вы задаёте вопрос AI Coach, текст вопроса и краткая сводка ваших показателей за последние дни отправляются в Anthropic (Claude API), чтобы сформировать ответ. Фото туда не отправляются.",
-        "Если AI Coach выключен в настройках, наружу не уходит ничего.",
+        "Когда вы задаёте вопрос AI Coach, текст вопроса и краткая сводка ваших показателей за последние дни отправляются в Google (Gemini API), чтобы сформировать ответ. Фото туда не отправляются.",
+        "Когда вы запускаете анализ фото еды или анализ фото внешности, в Gemini API отправляется только это одно фото — чтобы распознать блюдо или дать обратную связь по снимку. Оно не сохраняется на стороне Google дольше времени обработки запроса.",
+        "Если AI Coach выключен в настройках, наружу не уходит ничего из переписки с коучем. Анализ фото запускается только по вашему явному действию — открытию камеры и подтверждению снимка.",
         "Мы не используем рекламные сети, сторонние трекеры и системы аналитики.",
         "Мы не продаём и не передаём ваши данные третьим лицам.",
       ],
@@ -63,7 +65,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       paragraphs: [
         "Экспорт: в разделе «Данные» можно выгрузить всё, что хранит приложение, одним JSON-файлом.",
         "Удаление: там же можно очистить историю любого раздела по отдельности. Удаление необратимо.",
-        "Выключение AI: переключатель в разделе «AI» останавливает любую отправку данных в Claude API.",
+        "Выключение AI: переключатель в разделе «AI» останавливает отправку данных в Gemini API из AI Coach. Анализ фото еды и внешности запускается только вручную, отдельным действием на своём экране.",
       ],
     },
     {

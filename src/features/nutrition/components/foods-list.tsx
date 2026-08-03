@@ -60,7 +60,7 @@ export function FoodsList({
             type="button"
             onClick={() => setFilter(option.id)}
             className={cn(
-              "rounded-lg border px-3 py-1.5 text-caption font-medium transition-colors duration-200",
+              "press-sm rounded-lg border px-3 py-1.5 text-caption font-medium transition-colors duration-200",
               filter === option.id
                 ? "border-accent-border bg-accent-muted text-accent"
                 : "border-border text-subtle-foreground",
@@ -91,7 +91,7 @@ export function FoodsList({
               <button
                 type="button"
                 onClick={() => onEdit(food)}
-                className="flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
+                className="press-sm flex min-w-0 flex-1 flex-col items-start gap-0.5 text-left"
               >
                 <span
                   className={cn(

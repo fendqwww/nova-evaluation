@@ -29,10 +29,10 @@ export function SubscriptionView() {
 
   return (
     <PageContainer className="flex flex-col gap-5">
-      <header className="flex flex-col gap-3">
+      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] flex-col gap-3">
         <Link
           href="/settings"
-          className="flex w-fit items-center gap-1.5 text-caption text-muted-foreground transition-colors duration-200 active:text-foreground"
+          className="press-sm flex w-fit items-center gap-1.5 text-caption text-muted-foreground active:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" />
           Настройки

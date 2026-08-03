@@ -29,8 +29,8 @@ import type {
  * thing is unavailable" — it is the grounding layer. Every claim it makes is a
  * number that buildCoachAnalysis measured, which is why the same composer backs
  * the daily brief on the first screen, every quick action, and any typed
- * question when no model is configured. When Claude *is* configured it writes
- * the prose over these same facts (see server/claude.ts); it never gets to
+ * question when no model is configured. When Gemini *is* configured it writes
+ * the prose over these same facts (see ai/coach.ts); it never gets to
  * decide what is true.
  *
  * Pure and synchronous: no clock, no database, no network. Give it the same

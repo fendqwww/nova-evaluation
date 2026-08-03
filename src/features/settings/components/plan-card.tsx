@@ -54,7 +54,12 @@ export function PlanCard({ plan, current }: { plan: Plan; current: PlanId }) {
           )}
         </div>
 
-        <p className={cn("text-title", plan.price === 0 ? "text-foreground" : TONE_TEXT[plan.tone])}>
+        <p
+          className={cn(
+            "numeric text-[1.625rem] font-bold leading-none tracking-[-0.03em]",
+            plan.price === 0 ? "text-foreground" : TONE_TEXT[plan.tone],
+          )}
+        >
           {formatPrice(plan.price)}
         </p>
 

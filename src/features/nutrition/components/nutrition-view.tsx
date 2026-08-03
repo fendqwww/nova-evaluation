@@ -152,7 +152,7 @@ export function NutritionView() {
     <PageContainer className="flex flex-col gap-4">
       <HealthSectionTabs active="nutrition" />
 
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
             Питание
@@ -183,6 +183,11 @@ export function NutritionView() {
         </div>
       </header>
 
+      {/* The tab bar depends only on local UI state, never on the data below
+          it, so it renders immediately rather than popping in once loading
+          resolves — the one piece of chrome that has no reason to wait. */}
+      {!isError && <NutritionTabs tab={tab} onChange={setTab} />}
+
       {isPending && <NutritionSkeleton />}
 
       {isError && (
@@ -200,8 +205,6 @@ export function NutritionView() {
 
       {!isPending && !isError && (
         <>
-          <NutritionTabs tab={tab} onChange={setTab} />
-
           {tab === "diary" && progress && (
             <>
               <DayNavigator day={activeDay} today={today} windowStart={windowStart} onChange={setDay} />

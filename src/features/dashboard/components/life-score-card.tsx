@@ -38,7 +38,7 @@ export function LifeScoreCard({ result }: { result: LifeScoreResult }) {
 
   return (
     <>
-      <Card>
+      <Card elevation="lifted">
         <CardContent className="flex items-center gap-4 p-4">
           <CircularProgress value={result.score} size={92} strokeWidth={8}>
             <span className="numeric text-metric text-foreground">{displayValue}</span>
@@ -51,7 +51,7 @@ export function LifeScoreCard({ result }: { result: LifeScoreResult }) {
                 type="button"
                 onClick={() => setShowBreakdown(true)}
                 aria-label="Из чего складывается индекс"
-                className="inline-flex text-subtle-foreground active:text-muted-foreground"
+                className="press-sm -m-1 inline-flex p-1 text-subtle-foreground active:text-muted-foreground"
               >
                 <Info className="h-3 w-3" />
               </button>

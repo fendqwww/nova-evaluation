@@ -134,6 +134,15 @@ model UserSettings {
   // is an insert, not a schema change plus a rewrite of every read.
   plan String @default("free")
 
+  // One lifetime counter across every AI call that actually produced a result
+  // — Coach, food-photo analysis, appearance-photo analysis alike (see
+  // src/ai/limits.ts, the single place that reads and increments it). FREE
+  // stops at a fixed ceiling; PLUS and MAX never check it. A single column
+  // rather than one per feature because the product's limit is one shared
+  // budget, not three separate ones that would have to be explained
+  // separately on the pricing screen.
+  aiUsageCount Int @default(0)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

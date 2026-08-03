@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { motion, type Variants } from "framer-motion";
 import { Target, Repeat, ListTodo, Sparkles } from "lucide-react";
 import { useDashboardData } from "@/features/dashboard/hooks/use-dashboard-data";
 import { DashboardSkeleton } from "@/features/dashboard/components/dashboard-skeleton";
@@ -14,18 +13,9 @@ import { ActivityOverviewCard } from "@/features/activity/components/activity-ov
 import { QuickCaptureModal } from "@/features/activity/components/quick-capture-modal";
 import { Button } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
+import { Reveal, RevealItem } from "@/shared/ui/reveal";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
 import type { ActivityItemType } from "@/features/activity/types";
-
-const containerVariants: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
-};
 
 export function DashboardView() {
   const { data, isPending, isError, refresh, refetch } = useDashboardData();
@@ -52,41 +42,36 @@ export function DashboardView() {
 
   return (
     <>
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="flex flex-col gap-3"
-      >
-        <motion.div variants={itemVariants}>
+      <Reveal className="gap-3">
+        <RevealItem>
           <DashboardHeader
             firstName={data.user.firstName}
             photoUrl={data.user.photoUrl}
             timezone={data.timezone}
           />
-        </motion.div>
+        </RevealItem>
 
-        <motion.div variants={itemVariants}>
+        <RevealItem>
           <LifeScoreCard result={data.lifeScore} />
-        </motion.div>
+        </RevealItem>
 
-        <motion.div variants={itemVariants}>
+        <RevealItem>
           <CoachPreviewCard coach={data.coach} />
-        </motion.div>
+        </RevealItem>
 
-        <motion.div variants={itemVariants}>
+        <RevealItem>
           <FocusOfDayCard focus={data.focus} onCreateGoal={() => setCaptureType("goal")} />
-        </motion.div>
+        </RevealItem>
 
-        <motion.div variants={itemVariants}>
+        <RevealItem>
           <QuickActions
             onGoal={() => setCaptureType("goal")}
             onHabit={() => setCaptureType("habit")}
             onTask={() => setCaptureType("task")}
           />
-        </motion.div>
+        </RevealItem>
 
-        <motion.div variants={itemVariants} className="flex flex-col gap-2.5">
+        <RevealItem className="flex flex-col gap-2.5">
           <p className="text-section text-muted-foreground">Обзор активности</p>
           <div className="grid grid-cols-3 gap-2.5">
             <ActivityOverviewCard
@@ -114,8 +99,8 @@ export function DashboardView() {
               onCreate={() => setCaptureType("task")}
             />
           </div>
-        </motion.div>
-      </motion.div>
+        </RevealItem>
+      </Reveal>
 
       <QuickCaptureModal
         type={captureType ?? "goal"}

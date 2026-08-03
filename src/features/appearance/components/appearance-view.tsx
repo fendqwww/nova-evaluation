@@ -139,7 +139,7 @@ export function AppearanceView() {
     <PageContainer className="flex flex-col gap-4">
       <HealthSectionTabs active="appearance" />
 
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
             Внешность
@@ -171,6 +171,10 @@ export function AppearanceView() {
         </div>
       </header>
 
+      {/* Depends only on local UI state, never on the data below it, so it
+          renders immediately rather than popping in once loading resolves. */}
+      {!isError && <AppearanceTabs tab={tab} onChange={setTab} />}
+
       {isPending && <AppearanceSkeleton />}
 
       {isError && (
@@ -188,8 +192,6 @@ export function AppearanceView() {
 
       {!isPending && !isError && (
         <>
-          <AppearanceTabs tab={tab} onChange={setTab} />
-
           {tab === "today" && (
             <>
               <DayNavigator

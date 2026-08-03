@@ -117,7 +117,7 @@ export function SettingsRow({
 
   const className = cn(
     "flex w-full items-center gap-3 px-4 py-3.5 transition-colors duration-200",
-    (onClick || href) && !disabled && "active:bg-white/[0.04]",
+    (onClick || href) && !disabled && "press-sm active:bg-white/[0.04]",
     disabled && "opacity-50",
   );
 

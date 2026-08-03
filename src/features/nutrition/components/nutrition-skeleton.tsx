@@ -6,19 +6,30 @@ import { Card } from "@/shared/ui/card";
 export function NutritionSkeleton() {
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+      </div>
+
       <Card>
-        <div className="flex flex-col gap-3 p-4">
-          <div className="flex items-center justify-between">
-            <Skeleton className="h-8 w-28" />
-            <Skeleton className="h-8 w-8 rounded-full" />
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
+        <div className="flex items-center gap-4 p-4">
+          <Skeleton className="h-18 w-18 shrink-0 rounded-full" />
+          <div className="flex flex-1 flex-col gap-2.5">
+            <Skeleton className="h-3 w-3/5" />
+            <Skeleton className="h-3 w-4/5" />
+            <Skeleton className="h-3 w-2/5" />
           </div>
         </div>
       </Card>
+
+      <Card>
+        <div className="flex items-center gap-3 p-4">
+          <Skeleton className="h-9 w-9 shrink-0 rounded-[0.625rem]" />
+          <Skeleton className="h-4 flex-1" />
+        </div>
+      </Card>
+
       {[0, 1].map((index) => (
         <Card key={index}>
           <div className="flex flex-col gap-2.5 p-3.5">

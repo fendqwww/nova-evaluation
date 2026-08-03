@@ -11,13 +11,23 @@ import { cn } from "@/shared/lib/cn";
 const cardVariants = cva("relative rounded-xl border", {
   variants: {
     elevation: {
-      raised: "surface-raised border-border shadow-card",
-      lifted: "surface-raised-2 border-border-strong shadow-raised",
+      raised: "surface-raised border-border shadow-card edge-light",
+      lifted: "surface-raised-2 border-border-strong shadow-raised edge-light",
       inset: "border-white/5 bg-black/20",
-      accent: "surface-raised border-accent-border shadow-card",
+      accent: "surface-raised border-accent-border shadow-card edge-light",
+      /* Frosted, for a surface that wants to feel like it is floating over the
+         page rather than printed on it. Used sparingly — a screen where every
+         card is glass has no hierarchy left to spend. */
+      glass: "glass-card border shadow-card edge-light",
+    },
+    /* Opt-in press feedback. A card that navigates or opens something should
+       answer a touch; a card that is only a container must not. */
+    interactive: {
+      true: "press cursor-pointer select-none active:border-border-strong",
+      false: "",
     },
   },
-  defaultVariants: { elevation: "raised" },
+  defaultVariants: { elevation: "raised", interactive: false },
 });
 
 export interface CardProps
@@ -25,8 +35,12 @@ export interface CardProps
     VariantProps<typeof cardVariants> {}
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, elevation, ...props }, ref) => (
-    <div ref={ref} className={cn(cardVariants({ elevation, className }))} {...props} />
+  ({ className, elevation, interactive, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn(cardVariants({ elevation, interactive, className }))}
+      {...props}
+    />
   ),
 );
 Card.displayName = "Card";
@@ -76,7 +90,9 @@ CardFooter.displayName = "CardFooter";
  * metric. One component so Goal is always the same purple chip everywhere.
  */
 const iconChipVariants = cva(
-  "flex shrink-0 items-center justify-center rounded-[0.625rem] ring-1 ring-inset ring-white/[0.06]",
+  // The inset ring plus a top-down sheen give the chip a slight dome, so it
+  // reads as a physical key rather than a coloured square.
+  "relative flex shrink-0 items-center justify-center overflow-hidden rounded-[0.625rem] ring-1 ring-inset ring-white/[0.06] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/10 before:to-transparent",
   {
     variants: {
       tone: {

@@ -15,19 +15,17 @@ const SECTIONS: { id: HealthSection; label: string; href: string }[] = [
 /**
  * Switches between the three screens sharing the "Здоровье" bottom-nav tab.
  *
- * The tab bar only has room for one entry point into this area (see the note
- * in app/(app)/layout.tsx), so this is what actually moves between Тренировки,
- * Питание and Внешность — same sliding-pill control as
- * WorkoutsTabs/NutritionTabs/AppearanceTabs, one level up, switching pages
- * instead of in-page tabs.
+ * Deliberately a quieter, underlined strip rather than the filled sliding pill
+ * every screen's own in-page tabs (WorkoutsTabs/NutritionTabs/AppearanceTabs)
+ * use one row below it — two identical bold controls stacked back to back read
+ * as one confusing control with too many buttons, not two. This one is the
+ * quiet "where in the app am I" wayfinding; the pill below it is the loud
+ * "what am I looking at" choice, and the visual gap between them is what makes
+ * the screen readable at a glance.
  */
 export function HealthSectionTabs({ active }: { active: HealthSection }) {
   return (
-    <div
-      role="tablist"
-      aria-label="Раздел здоровья"
-      className="flex gap-1 rounded-xl border border-border bg-black/20 p-1"
-    >
+    <div role="tablist" aria-label="Раздел здоровья" className="flex items-stretch gap-5">
       {SECTIONS.map((section) => {
         const isActive = section.id === active;
 
@@ -38,18 +36,18 @@ export function HealthSectionTabs({ active }: { active: HealthSection }) {
             role="tab"
             aria-selected={isActive}
             className={cn(
-              "relative flex-1 rounded-lg px-2 py-2 text-center text-caption font-medium transition-colors duration-200",
-              isActive ? "text-accent-foreground" : "text-muted-foreground active:text-foreground",
+              "press-sm relative flex flex-col items-center gap-1.5 pb-2 pt-0.5 text-caption font-medium",
+              isActive ? "text-foreground" : "text-subtle-foreground active:text-muted-foreground",
             )}
           >
+            {section.label}
             {isActive && (
               <motion.span
                 layoutId="health-section-active"
-                className="absolute inset-0 -z-10 rounded-lg bg-accent"
+                className="absolute -bottom-px h-[2.5px] w-6 rounded-full bg-accent"
                 transition={{ type: "spring", stiffness: 420, damping: 34 }}
               />
             )}
-            {section.label}
           </Link>
         );
       })}

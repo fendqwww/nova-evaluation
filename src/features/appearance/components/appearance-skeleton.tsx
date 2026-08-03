@@ -6,6 +6,12 @@ import { Card } from "@/shared/ui/card";
 export function AppearanceSkeleton() {
   return (
     <div className="flex flex-col gap-3">
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+        <Skeleton className="h-4 w-20" />
+        <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+      </div>
+
       <Card>
         <div className="flex items-center gap-4 p-4">
           <Skeleton className="h-21 w-21 rounded-full" />

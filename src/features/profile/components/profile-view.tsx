@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
+import { Reveal, RevealItem } from "@/shared/ui/reveal";
 import { useProfileOverview } from "@/features/profile/hooks/use-profile-overview";
 import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
 import { ProfileHeaderCard } from "@/features/profile/components/profile-header-card";
@@ -48,7 +49,7 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
 
   return (
     <PageContainer className="flex flex-col gap-6">
-      <header className="flex flex-col gap-0.5">
+      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] flex-col gap-0.5">
         <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
           Профиль
         </h1>
@@ -73,44 +74,57 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
       )}
 
       {!isPending && !isError && overview && (
-        <>
-          <ProfileHeaderCard account={overview.account} />
+        <Reveal className="gap-6">
+          <RevealItem>
+            <ProfileHeaderCard account={overview.account} />
+          </RevealItem>
 
-          <ProfileStatsCard
-            lifeScore={overview.lifeScore}
-            streak={overview.streak}
-            totals={overview.totals}
-          />
+          <RevealItem>
+            <ProfileStatsCard
+              lifeScore={overview.lifeScore}
+              streak={overview.streak}
+              totals={overview.totals}
+            />
+          </RevealItem>
 
-          <ActivityCard
-            activity={overview.activity}
-            counts={overview.counts}
-            chartDays={ACTIVITY_CHART_DAYS}
-          />
+          <RevealItem>
+            <ActivityCard
+              activity={overview.activity}
+              counts={overview.counts}
+              chartDays={ACTIVITY_CHART_DAYS}
+            />
+          </RevealItem>
 
-          <AchievementsCard items={achievements} />
+          <RevealItem>
+            <AchievementsCard items={achievements} />
+          </RevealItem>
 
-          <AiProfileCard ai={overview.ai} />
+          <RevealItem>
+            <AiProfileCard ai={overview.ai} />
+          </RevealItem>
 
-          <ProfileSubscriptionCard plan={overview.account.plan} />
+          <RevealItem>
+            <ProfileSubscriptionCard plan={overview.account.plan} />
+          </RevealItem>
 
-          <ThemePicker current={(themeColor as ThemeValue) ?? DEFAULT_THEME} />
+          <RevealItem>
+            <ThemePicker current={(themeColor as ThemeValue) ?? DEFAULT_THEME} />
+          </RevealItem>
 
-          <Card>
-            <Link
-              href="/settings"
-              className="flex items-center gap-3 p-4 transition-colors duration-200 active:bg-white/[0.04]"
-            >
-              <Settings className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
-              <span className="flex flex-1 flex-col gap-0.5">
-                <span className="text-body font-medium text-foreground">Настройки</span>
-                <span className="text-caption text-muted-foreground">
-                  Тема, регион, уведомления, данные
+          <RevealItem>
+            <Card interactive>
+              <Link href="/settings" className="flex items-center gap-3 p-4">
+                <Settings className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
+                <span className="flex flex-1 flex-col gap-0.5">
+                  <span className="text-body font-medium text-foreground">Настройки</span>
+                  <span className="text-caption text-muted-foreground">
+                    Тема, регион, уведомления, данные
+                  </span>
                 </span>
-              </span>
-            </Link>
-          </Card>
-        </>
+              </Link>
+            </Card>
+          </RevealItem>
+        </Reveal>
       )}
     </PageContainer>
   );

@@ -89,7 +89,7 @@ export function GoalsToolbar({
               onClick={() => onFilterChange(option.id)}
               aria-pressed={isSelected}
               className={cn(
-                "flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-caption font-medium transition-colors duration-200",
+                "press-sm flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-caption font-medium transition-colors duration-200",
                 isSelected
                   ? "border-accent bg-accent text-accent-foreground"
                   : "border-border text-muted-foreground active:border-border-strong",

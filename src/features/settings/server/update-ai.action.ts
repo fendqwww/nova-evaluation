@@ -18,7 +18,7 @@ export type UpdateAiInput = z.infer<typeof updateAiInputSchema>;
  *
  * `coachEnabled` is the one with teeth: getCoachOverview refuses to build an
  * analysis when it is false, so turning it off actually stops the app sending
- * anything to Claude rather than only hiding a screen. That is what makes the
+ * anything to Gemini rather than only hiding a screen. That is what makes the
  * privacy policy's "если AI Coach выключен, наружу не уходит ничего" a true
  * statement rather than a UI promise.
  */

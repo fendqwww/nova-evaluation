@@ -69,7 +69,7 @@ export function TaskCard({
           <button
             type="button"
             onClick={onOpen}
-            className="flex min-w-0 flex-1 flex-col gap-1 text-left"
+            className="press-sm flex min-w-0 flex-1 flex-col gap-1 text-left"
           >
             <span
               className={cn(
@@ -113,7 +113,7 @@ export function TaskCard({
             type="button"
             onClick={onOpen}
             aria-label={`Открыть задачу: ${task.title}`}
-            className="mt-0.5 shrink-0 p-0.5"
+            className="press-sm mt-0.5 shrink-0 p-0.5"
           >
             <ChevronRight className="h-4 w-4 text-subtle-foreground" />
           </button>

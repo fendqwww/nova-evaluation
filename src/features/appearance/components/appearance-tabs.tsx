@@ -30,7 +30,7 @@ export function AppearanceTabs({
     <div
       role="tablist"
       aria-label="Разделы внешности"
-      className="flex gap-1 rounded-xl border border-border bg-black/20 p-1"
+      className="glass-card flex gap-1 rounded-xl border p-1"
     >
       {TABS.map((option) => {
         const isActive = option.id === tab;
@@ -50,7 +50,7 @@ export function AppearanceTabs({
             {isActive && (
               <motion.span
                 layoutId="appearance-tab-active"
-                className="absolute inset-0 -z-10 rounded-lg bg-accent"
+                className="absolute inset-0 -z-10 rounded-lg bg-accent shadow-[0_4px_14px_-6px_var(--accent)]"
                 transition={{ type: "spring", stiffness: 420, damping: 34 }}
               />
             )}

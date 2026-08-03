@@ -5,9 +5,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Dumbbell, Plus, SearchX } from "lucide-react";
 import { HealthSectionTabs } from "@/components/health-section-tabs";
 import { Button } from "@/shared/ui/button";
+import { Card } from "@/shared/ui/card";
+import { CircularProgress } from "@/shared/ui/circular-progress";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
+import { cn } from "@/shared/lib/cn";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
 import { useWorkouts } from "@/features/workouts/hooks/use-workouts";
 import { WorkoutCard } from "@/features/workouts/components/workout-card";
@@ -196,20 +199,12 @@ export function WorkoutsView() {
     <PageContainer className="flex flex-col gap-4">
       <HealthSectionTabs active="workouts" />
 
-      <header className="flex items-start justify-between gap-3">
+      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
         <div className="flex flex-col gap-0.5">
           <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
             Тренировки
           </h1>
-          {hasWorkouts && (
-            <p className="text-caption text-muted-foreground">
-              {summary.plannedToday === 0 && summary.openToday === 0 && summary.doneToday > 0 ? (
-                <span className="font-semibold text-positive">{headline}</span>
-              ) : (
-                headline
-              )}
-            </p>
-          )}
+          <p className="text-caption text-muted-foreground">Программы и прогресс</p>
         </div>
 
         <Button size="icon" aria-label="Новая тренировка" onClick={openCreate}>
@@ -252,6 +247,48 @@ export function WorkoutsView() {
 
           {tab === "plan" && (
             <>
+              <Card elevation="lifted">
+                <div className="flex items-center gap-4 p-4">
+                  {summary.weekTarget > 0 ? (
+                    <CircularProgress value={summary.weekRatio * 100} size={72} strokeWidth={7}>
+                      <div className="flex flex-col items-center justify-center">
+                        <span className="numeric text-[0.9375rem] font-bold leading-tight text-foreground">
+                          {summary.weekDone}
+                        </span>
+                        <span className="text-[0.625rem] text-subtle-foreground">
+                          из {summary.weekTarget}
+                        </span>
+                      </div>
+                    </CircularProgress>
+                  ) : (
+                    <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-full border border-border text-subtle-foreground">
+                      <Dumbbell className="h-6 w-6" />
+                    </div>
+                  )}
+
+                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                    <p className="text-label uppercase text-muted-foreground">Эта неделя</p>
+                    <p
+                      className={cn(
+                        "text-title",
+                        summary.plannedToday === 0 && summary.openToday === 0 && summary.doneToday > 0
+                          ? "text-positive"
+                          : "text-foreground",
+                      )}
+                    >
+                      {headline}
+                    </p>
+                    {summary.weekTarget > 0 && (
+                      <p className="text-caption text-muted-foreground">
+                        {summary.weekDone} из {summary.weekTarget}{" "}
+                        {pluralizeRu(summary.weekTarget, ["тренировка", "тренировки", "тренировок"])}{" "}
+                        на неделе
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </Card>
+
               <WorkoutsToolbar
                 query={query}
                 onQueryChange={setQuery}

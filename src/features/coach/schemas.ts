@@ -36,7 +36,7 @@ export const coachActionTargetSchema = z.enum([
  * The one shape both producers must hit.
  *
  * It validates two different things, and that is deliberate: a payload read
- * back out of CoachMessage, and a fresh answer coming out of the Claude call.
+ * back out of CoachMessage, and a fresh answer coming out of the Gemini call.
  * Using the same schema for both means a model response that drifts from the
  * contract is rejected at exactly the same boundary as a stored row written by
  * an older version — and in both cases the caller falls back rather than
@@ -83,7 +83,7 @@ export const getCoachHistoryInputSchema = z.object({
 });
 
 /**
- * The JSON Schema handed to Claude's structured outputs.
+ * The JSON Schema handed to Gemini's structured outputs.
  *
  * Hand-written rather than derived from `coachAnswerSchema`: structured outputs
  * reject most of what zod emits (`minLength`, `maxLength`, numeric bounds), so

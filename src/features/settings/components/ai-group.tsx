@@ -17,7 +17,7 @@ import type { AiSettings } from "@/features/settings/types";
  * otherwise:
  *
  *   - AI Coach is enforced. Off means getCoachOverview refuses to build an
- *     analysis and nothing is sent to Claude — the Coach screen shows why.
+ *     analysis and nothing is sent to Gemini — the Coach screen shows why.
  *   - Ежедневный разбор is stored. The report is currently recomputed on every
  *     visit to the Coach screen rather than pushed, so this switch is what a
  *     future scheduled report will read.
@@ -81,7 +81,7 @@ export function AiGroup({
       {!ai.coachEnabled && (
         <Card elevation="inset">
           <p className="p-3.5 text-caption text-muted-foreground">
-            AI Coach выключен. Nova не отправляет ваши данные в Claude API, а раздел
+            AI Coach выключен. Nova не отправляет ваши данные в Gemini API, а раздел
             «Коуч» показывает, как включить его обратно.
           </p>
         </Card>

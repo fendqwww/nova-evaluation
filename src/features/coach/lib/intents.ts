@@ -127,7 +127,7 @@ const INTENT_KEYWORDS: Record<Exclude<CoachIntent, "general" | "brief">, string[
  * A single scan, longest-match-wins, with ties broken by the declaration order
  * above — narrower intents ("просрочено") are listed before broader ones
  * ("следующий шаг") so a question that mentions both lands on the specific one.
- * There is no attempt at real NLU here: when Claude is configured it reads the
+ * There is no attempt at real NLU here: when Gemini is configured it reads the
  * question itself, and when it is not, an honest overview beats a confidently
  * wrong topic.
  */

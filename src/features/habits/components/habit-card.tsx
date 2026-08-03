@@ -76,7 +76,7 @@ export function HabitCard({
           <button
             type="button"
             onClick={onOpen}
-            className="flex min-w-0 flex-1 items-start gap-2 text-left"
+            className="press-sm flex min-w-0 flex-1 items-start gap-2 text-left"
           >
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span
@@ -99,7 +99,11 @@ export function HabitCard({
         {/* The streak is the loudest thing on the card by design — it is the
             number a habit exists to grow, set at metric scale rather than in
             caption text. Adherence sits opposite it as the honest counterweight. */}
-        <button type="button" onClick={onOpen} className="flex items-end justify-between gap-3 text-left">
+        <button
+          type="button"
+          onClick={onOpen}
+          className="press-sm flex items-end justify-between gap-3 text-left"
+        >
           <div className="flex items-baseline gap-2">
             <span
               className={cn(

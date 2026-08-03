@@ -68,7 +68,7 @@ export function GoalCard({
           <button
             type="button"
             onClick={onOpen}
-            className="flex min-w-0 flex-1 items-start gap-2 text-left"
+            className="press-sm flex min-w-0 flex-1 items-start gap-2 text-left"
           >
             {/* The title owns the whole row. The status badge used to sit here
                 and squeezed it into two or three ragged lines; it now pairs with
@@ -87,7 +87,7 @@ export function GoalCard({
 
         {/* Progress is the loudest thing on the card by design — the percentage
             is set at metric scale, not in caption text. */}
-        <button type="button" onClick={onOpen} className="flex flex-col gap-2 text-left">
+        <button type="button" onClick={onOpen} className="press-sm flex flex-col gap-2 text-left">
           <div className="flex items-end justify-between gap-3">
             <div className="flex items-center gap-2">
               <span

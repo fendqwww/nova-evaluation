@@ -19,7 +19,7 @@ import type { DashboardData } from "@/features/dashboard/server/get-dashboard-da
 export function CoachPreviewCard({ coach }: { coach: DashboardData["coach"] }) {
   return (
     <Link href="/coach" className="block">
-      <Card elevation="accent" className="transition-colors duration-200 active:border-accent">
+      <Card elevation="accent" interactive className="active:border-accent">
         <CardContent className="flex items-start gap-3 p-4 pt-4">
           <IconChip tone="ai" size="md">
             <Sparkles className="h-4 w-4" />

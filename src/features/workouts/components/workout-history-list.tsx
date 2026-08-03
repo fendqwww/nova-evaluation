@@ -92,7 +92,7 @@ export function WorkoutHistoryList({
                     <button
                       type="button"
                       onClick={() => onOpenSession(session.id)}
-                      className="flex w-full items-center gap-2.5 p-3 text-left"
+                      className="press-sm flex w-full items-center gap-2.5 p-3 text-left"
                     >
                       <span
                         className={cn(

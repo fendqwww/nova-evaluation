@@ -34,6 +34,17 @@
   --shadow-nav: inset 0 1px 0 0 rgba(255, 255, 255, 0.08),
     0 -1px 3px 0 rgba(0, 0, 0, 0.3), 0 18px 40px -12px rgba(0, 0, 0, 0.9);
 
+  /* Glass. One tint + one hairline, mode-aware, so every frosted surface in
+     the app is the same material rather than each panel inventing its own
+     opacity. Blur strength lives in the utilities, not here. */
+  --glass-tint: rgba(22, 23, 30, 0.72);
+  --glass-hairline: rgba(255, 255, 255, 0.1);
+  --glass-sheen: rgba(255, 255, 255, 0.06);
+
+  /* The sweep that crosses a loading placeholder. */
+  --skeleton-base: rgba(255, 255, 255, 0.055);
+  --skeleton-sheen: rgba(255, 255, 255, 0.11);
+
   --destructive: #f2555a;
   --destructive-foreground: #fafafa;
   --positive: #34d399;
@@ -56,6 +67,23 @@
 
   --radius: 1rem;
   --bottom-nav-height: 4.75rem;
+
+  /*
+   * MOTION — one vocabulary for the whole app.
+   *
+   * Three curves, each with a job, so nothing is ever eased "roughly like the
+   * thing next to it". `exit` is deliberately faster than `enter`: something
+   * leaving should get out of the way, something arriving deserves to be
+   * watched. `spring` is the only curve that overshoots and is reserved for
+   * direct manipulation — a tap, a toggle, a tab landing.
+   */
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --duration-fast: 140ms;
+  --duration-base: 220ms;
+  --duration-slow: 380ms;
 
   --app-safe-top: max(
     env(safe-area-inset-top, 0px),
@@ -157,6 +185,16 @@
   --tint-orange: #d2701a;
   --tint-blue: #2d7fe0;
   --tint-cyan: #1596bd;
+
+  /* Frosted white rather than frosted black, and a darker hairline — the same
+     material logic inverted, so a glass panel still reads as glass over a
+     light page instead of as a grey rectangle. */
+  --glass-tint: rgba(255, 255, 255, 0.72);
+  --glass-hairline: rgba(9, 11, 20, 0.1);
+  --glass-sheen: rgba(255, 255, 255, 0.7);
+
+  --skeleton-base: rgba(9, 11, 20, 0.055);
+  --skeleton-sheen: rgba(9, 11, 20, 0.1);
 }
 
 @theme inline {
@@ -302,10 +340,90 @@
   background-image: linear-gradient(180deg, var(--surface-2-top) 0%, var(--surface-2) 62%);
 }
 
+/*
+ * GLASS — two strengths, one material.
+ *
+ * `glass-panel` is for chrome that floats over scrolling content (the tab bar,
+ * a sticky header): heavy blur, because content passing underneath has to be
+ * suggested rather than read. `glass-card` is for a surface sitting *in* the
+ * flow, where a heavy blur would just look like fog — it leans on the tint and
+ * a top sheen instead, and keeps the blur low enough to stay cheap on mobile.
+ *
+ * Both fall back to a solid surface where backdrop-filter is unsupported, so
+ * nothing ever renders as transparent-and-illegible.
+ */
 @utility glass-panel {
-  background-color: color-mix(in oklab, var(--surface-2) 74%, transparent);
-  backdrop-filter: blur(28px) saturate(160%);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  background-color: color-mix(in oklab, var(--surface-2) 88%, transparent);
+  border-color: var(--glass-hairline);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-color: var(--glass-tint);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+  }
+}
+
+@utility glass-card {
+  position: relative;
+  background-color: color-mix(in oklab, var(--surface-1) 92%, transparent);
+  border-color: var(--glass-hairline);
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-image: linear-gradient(
+      180deg,
+      var(--glass-sheen) 0%,
+      transparent 42%
+    );
+    background-color: color-mix(in oklab, var(--surface-1) 76%, transparent);
+    backdrop-filter: blur(14px) saturate(150%);
+    -webkit-backdrop-filter: blur(14px) saturate(150%);
+  }
+}
+
+/*
+ * The hairline of light along the top edge of a raised surface. Sits above the
+ * card's own background so it reads as the edge catching light, which is what
+ * separates a premium surface from a flat rectangle with a border.
+ */
+@utility edge-light {
+  &::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--glass-sheen) 22%,
+      var(--glass-sheen) 78%,
+      transparent
+    );
+    pointer-events: none;
+  }
+}
+
+/* Presses. Applied to anything tappable so the whole app answers touch the
+   same way, instead of some surfaces reacting and others feeling dead. */
+@utility press {
+  transition: transform var(--duration-fast) var(--ease-spring),
+    background-color var(--duration-base) var(--ease-enter),
+    border-color var(--duration-base) var(--ease-enter);
+
+  &:active {
+    transform: scale(0.975);
+  }
+}
+
+@utility press-sm {
+  transition: transform var(--duration-fast) var(--ease-spring),
+    background-color var(--duration-base) var(--ease-enter),
+    border-color var(--duration-base) var(--ease-enter);
+
+  &:active {
+    transform: scale(0.99);
+  }
 }
 
 html {
@@ -376,5 +494,63 @@ body {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/*
+ * The loading sweep. A travelling highlight rather than a pulse: a pulse makes
+ * the whole screen breathe at once, which reads as "broken", while a sweep
+ * moving in one direction reads as "arriving". Same reason Whoop and Oura use
+ * one.
+ */
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* The one entrance in the app: content rises a few pixels as it fades in.
+   Distance is deliberately small — 8px reads as material settling, 24px reads
+   as a slideshow. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility skeleton-sheen {
+  background-color: var(--skeleton-base);
+  background-image: linear-gradient(
+    90deg,
+    transparent 20%,
+    var(--skeleton-sheen) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.6s linear infinite;
+}
+
+/*
+ * Motion is a courtesy, not a requirement. Everything above degrades to an
+ * instant state change for anyone who has asked their device to stop moving
+ * things — including the skeleton sweep, which is the one animation here that
+ * would otherwise loop forever.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

@@ -38,7 +38,7 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
   return (
     <nav
       className={cn(
-        "fixed inset-x-3 z-40 mx-auto max-w-lg rounded-2xl border border-white/9 glass-panel shadow-nav",
+        "fixed inset-x-3 z-40 mx-auto max-w-lg rounded-2xl border glass-panel shadow-nav",
         className,
       )}
       style={{ bottom: "calc(var(--app-safe-bottom) + 0.625rem)" }}
@@ -53,7 +53,7 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 rounded-xl px-1 pb-1.5 pt-2 transition-colors duration-200",
+                  "press-sm relative flex flex-col items-center gap-1 rounded-xl px-1 pb-1.5 pt-2",
                   active ? "text-accent" : "text-subtle-foreground active:text-foreground",
                 )}
               >
@@ -66,7 +66,13 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
                     transition={{ type: "spring", stiffness: 420, damping: 34 }}
                   />
                 )}
-                <span className="flex h-5 items-center justify-center">{item.icon}</span>
+                <motion.span
+                  className="flex h-5 items-center justify-center"
+                  animate={active ? { scale: 1.08 } : { scale: 1 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 24 }}
+                >
+                  {item.icon}
+                </motion.span>
                 <span className="text-[0.625rem] font-medium leading-none tracking-[-0.005em]">
                   {item.label}
                 </span>
