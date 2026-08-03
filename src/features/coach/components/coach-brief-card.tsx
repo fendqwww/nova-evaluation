@@ -18,9 +18,12 @@ import type { CoachAnalysis, CoachAnswer } from "@/features/coach/types";
 export function CoachBriefCard({
   analysis,
   brief,
+  isWriting = false,
 }: {
   analysis: CoachAnalysis;
   brief: CoachAnswer;
+  /** The model is writing today's briefing over the one already shown. */
+  isWriting?: boolean;
 }) {
   const score = analysis.metrics.lifeScore.score;
   const previous = analysis.yesterday?.lifeScore.score ?? null;
@@ -42,6 +45,14 @@ export function CoachBriefCard({
                 <Sparkles className="h-3.5 w-3.5" />
               </IconChip>
               <p className="text-label uppercase text-muted-foreground">Анализ дня</p>
+              {/* The card is already complete and readable — this only says a
+                  deeper version is on its way, so it is a word, not a spinner
+                  over the content. */}
+              {isWriting && (
+                <span className="text-label uppercase text-subtle-foreground motion-safe:animate-pulse">
+                  обновляю
+                </span>
+              )}
             </div>
 
             <div className="mt-2 flex items-center gap-2">

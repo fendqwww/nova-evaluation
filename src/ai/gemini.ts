@@ -16,14 +16,17 @@ import { env } from "@/shared/config/env";
 // ---------------------------------------------------------------------------
 
 export const GEMINI_CONFIG = {
-  model: "gemini-2.5-flash",
+  // A floating alias, not a dated snapshot: Google points this at whatever it
+  // currently recommends as its fast/cheap model. Pinning a specific
+  // snapshot (e.g. "gemini-2.5-flash") looked equivalent until it started
+  // 404ing with "no longer available to new users" — the snapshot had been
+  // retired out from under this project's API key while still appearing in
+  // ListModels. The alias is what stays valid across that kind of retirement.
+  model: "gemini-flash-latest",
   /** Deterministic-leaning: every caller here wants a structured, factual
    *  answer, not creative variation. */
   temperature: 0.4,
   maxOutputTokens: 2048,
-  /** Structured extraction/classification has no use for extended reasoning —
-   *  it costs latency without changing a JSON-schema-constrained answer. */
-  thinkingBudget: 0,
   timeoutMs: 20_000,
   maxRetries: 2,
   /** Base delay for exponential backoff between retries, in ms. */
@@ -154,6 +157,14 @@ export interface GenerateStructuredInput {
   /** Hand-written JSON Schema — Gemini's `responseJsonSchema` accepts it
    *  directly, the same shape every feature's `*_JSON_SCHEMA` export uses. */
   jsonSchema: Record<string, unknown>;
+  /** Overrides GEMINI_CONFIG.temperature for one call. Only the Coach uses
+   *  it: reading a food photo wants the most likely answer, writing a coaching
+   *  analysis wants a voice, and one global setting cannot be both. */
+  temperature?: number;
+  /** Overrides GEMINI_CONFIG.maxOutputTokens for one call, for the same
+   *  reason — a four-sentence analysis with five bullets needs more room than
+   *  a macro breakdown. */
+  maxOutputTokens?: number;
 }
 
 /**
@@ -207,9 +218,14 @@ export async function generateStructured(input: GenerateStructuredInput): Promis
         contents,
         config: {
           systemInstruction: input.systemInstruction,
-          temperature: GEMINI_CONFIG.temperature,
-          maxOutputTokens: GEMINI_CONFIG.maxOutputTokens,
-          thinkingConfig: { thinkingBudget: GEMINI_CONFIG.thinkingBudget },
+          temperature: input.temperature ?? GEMINI_CONFIG.temperature,
+          maxOutputTokens: input.maxOutputTokens ?? GEMINI_CONFIG.maxOutputTokens,
+          // No thinkingConfig: forcing thinkingBudget: 0 was a latency
+          // optimization for gemini-2.5-flash, but the same request 400s
+          // ("invalid argument") against gemini-flash-latest — the option
+          // isn't universally supported across whatever model the alias
+          // currently resolves to, so a working structured answer wins over
+          // shaving a fraction of a second off it.
           responseMimeType: "application/json",
           responseJsonSchema: input.jsonSchema,
           abortSignal: AbortSignal.timeout(GEMINI_CONFIG.timeoutMs),

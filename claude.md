@@ -13,7 +13,7 @@
 - **Styling:** Tailwind CSS, `shadcn/ui` (Radix UI primitives)
 - **Animations:** Framer Motion (subtle spring animations, crisp feedback)
 - **State & Data Fetching:** Zustand, TanStack Query (React Query)
-- **AI Core:** Google Gemini API (`@google/genai`), model `gemini-2.5-flash`, Structured Outputs (`responseSchema`/`responseJsonSchema`)
+- **AI Core:** Google Gemini API (`@google/genai`), model `gemini-flash-latest` (floating alias — see the note in `src/ai/gemini.ts`), Structured Outputs (`responseSchema`/`responseJsonSchema`)
 - **Database & ORM:** PostgreSQL, Prisma ORM (or Supabase)
 
 ---

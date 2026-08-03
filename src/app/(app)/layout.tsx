@@ -12,10 +12,10 @@ import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 //
 // Seven tabs leave roughly 48px each on a 375px phone, which "Привычки" already
 // fills — an eighth tab for Nutrition would wrap onto a second line and break
-// the row's alignment. Тренировки, Питание and Внешность share one "Здоровье"
-// tab instead: it opens on /workouts, and HealthSectionTabs (rendered at the top
-// of all three screens) is what actually switches between them — alsoActiveFor
-// is what keeps the tab lit while on any of them.
+// the row's alignment. Тренировки, Питание, Сон and Внешность share one
+// "Здоровье" tab instead: it opens on /workouts, and HealthSectionTabs
+// (rendered at the top of all four screens) is what actually switches between
+// them — alsoActiveFor is what keeps the tab lit while on any of them.
 const navItems: BottomNavigationItem[] = [
   { key: "home", label: "Главная", href: "/", icon: <Home className="h-4.5 w-4.5" /> },
   { key: "goals", label: "Цели", href: "/goals", icon: <Target className="h-4.5 w-4.5" /> },
@@ -25,19 +25,19 @@ const navItems: BottomNavigationItem[] = [
     key: "health",
     label: "Здоровье",
     href: "/workouts",
-    alsoActiveFor: ["/nutrition", "/appearance"],
+    alsoActiveFor: ["/nutrition", "/sleep", "/appearance"],
     icon: <HeartPulse className="h-4.5 w-4.5" />,
   },
   { key: "coach", label: "Коуч", href: "/coach", icon: <Sparkles className="h-4.5 w-4.5" /> },
   // Настройки has no tab of its own — the row is full at seven, and settings
   // are reached from Профиль, which is where every phone already teaches people
   // to look. alsoActiveFor is what keeps the tab lit while on /settings, the
-  // same trick Здоровье uses for the three screens behind it.
+  // same trick Здоровье uses for the four screens behind it.
   {
     key: "profile",
     label: "Профиль",
     href: "/profile",
-    alsoActiveFor: ["/settings"],
+    alsoActiveFor: ["/settings", "/reports"],
     icon: <User className="h-4.5 w-4.5" />,
   },
 ];

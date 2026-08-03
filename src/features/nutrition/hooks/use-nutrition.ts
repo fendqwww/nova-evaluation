@@ -17,6 +17,7 @@ import { createTemplateAction } from "@/features/nutrition/server/create-templat
 import { updateTemplateAction } from "@/features/nutrition/server/update-template.action";
 import { deleteTemplateAction } from "@/features/nutrition/server/delete-template.action";
 import { applyTemplateAction } from "@/features/nutrition/server/apply-template.action";
+import { applyQuickTemplateAction } from "@/features/nutrition/server/apply-quick-template.action";
 import { dashboardQueryKey } from "@/features/dashboard/hooks/use-dashboard-data";
 import type { MealSlot, NutritionSnapshot } from "@/features/nutrition/types";
 import type { FoodDraft, GoalDraft, TemplateDraft } from "@/features/nutrition/schemas";
@@ -98,6 +99,7 @@ export function useNutrition() {
   const templateUpdate = useMutation({ mutationFn: updateTemplateAction, onSuccess: refresh });
   const templateDelete = useMutation({ mutationFn: deleteTemplateAction, onSuccess: refresh });
   const templateApply = useMutation({ mutationFn: applyTemplateAction, onSuccess: refresh });
+  const quickTemplateApply = useMutation({ mutationFn: applyQuickTemplateAction, onSuccess: refresh });
 
   const snapshot = query.data;
 
@@ -142,5 +144,8 @@ export function useNutrition() {
       templateDelete.mutateAsync({ rawInitData, templateId }),
     applyTemplate: (templateId: string, mealSlot: MealSlot, day: CalendarDay) =>
       templateApply.mutateAsync({ rawInitData, templateId, mealSlot, day }),
+
+    applyQuickTemplate: (templateId: string, mealSlot: MealSlot, day: CalendarDay) =>
+      quickTemplateApply.mutateAsync({ rawInitData, templateId, mealSlot, day }),
   };
 }

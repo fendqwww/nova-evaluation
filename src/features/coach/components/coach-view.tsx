@@ -32,6 +32,7 @@ export function CoachView() {
     isPending,
     isError,
     retry,
+    isWritingBrief,
     pendingQuestion,
     isAnswering,
     askFailed,
@@ -100,7 +101,11 @@ export function CoachView() {
         </RevealItem>
 
         <RevealItem>
-          <CoachBriefCard analysis={overview.analysis} brief={overview.brief} />
+          <CoachBriefCard
+            analysis={overview.analysis}
+            brief={overview.brief}
+            isWriting={isWritingBrief}
+          />
         </RevealItem>
 
         <RevealItem>

@@ -51,8 +51,14 @@ export type NotificationChannel = keyof NotificationSettings;
  *
  * `coachEnabled` is enforced server-side (see get-coach-overview.action.ts) —
  * turning it off actually stops the Coach answering rather than only hiding a
- * tab. `dailyReport` and `vision` are stored intentions for behaviour that does
- * not exist yet, and the UI labels them as such rather than implying otherwise.
+ * tab. `dailyReport` is enforced too: it gates the model-written daily briefing
+ * (see generate-daily-brief.action.ts). `vision` gates the two photo-analysis
+ * actions (analyze-food-photo, analyze-appearance-photo) — off means the
+ * camera button still opens, but nothing is sent to Gemini.
+ *
+ * `vision` is independent of `coachEnabled` on purpose: reading a plate of
+ * food is not the Coach talking, and someone who wants macros estimated
+ * without a coach reading their day is a coherent position to hold.
  */
 export interface AiSettings {
   coachEnabled: boolean;
@@ -100,12 +106,24 @@ export interface SettingsAccount {
   onboardingCompleted: boolean;
 }
 
+/**
+ * Where the shared AI budget stands (see ai/limits.ts) — the same lifetime
+ * counter Coach, food-photo and appearance-photo analysis all spend from.
+ * `limit` is null for PLUS/MAX, which the display reads as "без ограничений"
+ * rather than as a hidden ceiling.
+ */
+export interface AiUsageStatus {
+  used: number;
+  limit: number | null;
+}
+
 /** One fetch of the Настройки screen. */
 export interface SettingsSnapshot {
   account: SettingsAccount;
   settings: UserSettingsItem;
   /** How much there is to restore, per kind — the badge on "Архив". */
   archiveCount: number;
+  aiUsage: AiUsageStatus;
 }
 
 /**

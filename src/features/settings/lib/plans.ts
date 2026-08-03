@@ -3,16 +3,16 @@ import type { PlanId } from "@/features/settings/types";
 /**
  * The three NOVA tiers, as the subscription screen renders them.
  *
- * Presentation only. Nothing here is enforced anywhere — there is no billing,
- * no entitlement check and no gate that reads `plan` to refuse a feature — and
- * the screen says so plainly rather than implying a paywall that does not
- * exist. When payments land, this file stays the copy and the enforcement goes
- * next to the features it limits, not here.
+ * Presentation only. There is no billing and no gate that reads `plan` to
+ * refuse a section, and the screen says so plainly rather than implying a
+ * paywall that does not exist. When payments land, this file stays the copy
+ * and the enforcement goes next to the features it limits, not here.
  *
- * `limits` is what the tier actually promises in numbers. FREE's coach ceiling
- * is written down because it is the one limit the product has committed to; it
- * is not implemented yet, which is exactly why it lives as data rather than as
- * a constant buried in the coach action.
+ * The one number here that *is* enforced is FREE's daily AI allowance, and it
+ * is enforced in src/ai/limits.ts rather than from this file — this is the
+ * copy, that is the ceiling. They have to be changed together, which is why
+ * the number is spelled out in the feature line instead of hidden behind a
+ * vague "с ограничениями".
  */
 export interface PlanFeature {
   text: string;
@@ -43,9 +43,9 @@ export const PLAN_LIST: Plan[] = [
     inherits: null,
     features: [
       { text: "Цели, привычки, задачи", included: true },
-      { text: "Тренировки, питание, внешность", included: true },
+      { text: "Тренировки, питание, сон, внешность", included: true },
       { text: "Life Score и аналитика дня", included: true },
-      { text: "AI Coach — до 10 сообщений в день", included: true },
+      { text: "AI Coach, анализ еды и внешности — 20 запросов в день", included: true },
     ],
   },
   {
@@ -90,10 +90,3 @@ export const PLAN_LABELS: Record<PlanId, string> = {
 export function formatPrice(price: number): string {
   return price === 0 ? "Бесплатно" : `${price} ₽ / месяц`;
 }
-
-/** How many coach messages a day the tier allows. Null means no ceiling. */
-export const PLAN_COACH_LIMIT: Record<PlanId, number | null> = {
-  free: 10,
-  plus: null,
-  max: null,
-};

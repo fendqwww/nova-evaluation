@@ -1,13 +1,15 @@
 "use server";
 
 import { requireUserContext } from "@/server/auth/current-user";
-import { isCoachEnabled } from "@/features/settings/server/settings.repository";
+import { getSettings, isCoachEnabled } from "@/features/settings/server/settings.repository";
 import { COACH_HISTORY_PAGE } from "@/features/coach/schemas";
 import { buildCoachAnalysis } from "@/features/coach/server/build-coach-analysis";
 import { listRecentCoachMessages } from "@/features/coach/server/coach.repository";
+import { getCoachDailyBrief } from "@/features/coach/server/coach-brief.repository";
 import { composeAnswer, composeSignals } from "@/features/coach/lib/compose";
 import { buildDailyReport } from "@/features/coach/lib/report";
 import { greetingFor } from "@/features/coach/lib/analyze";
+import { isCoachModelEnabled } from "@/ai/coach";
 import type { CoachOverview } from "@/features/coach/types";
 
 /**
@@ -38,13 +40,25 @@ export async function getCoachOverview(
   if (!(await isCoachEnabled(userId))) return null;
 
   const analysis = await buildCoachAnalysis(userId, timezone);
-  const history = await listRecentCoachMessages(userId, COACH_HISTORY_PAGE);
+  const [history, aiBrief, settings] = await Promise.all([
+    listRecentCoachMessages(userId, COACH_HISTORY_PAGE),
+    // Today's model-written briefing if it has already been generated. Reading
+    // it is free; writing it is a Gemini call the screen makes separately (see
+    // generate-daily-brief.action.ts), which is what keeps this a pure read.
+    getCoachDailyBrief(userId, analysis.today),
+    getSettings(userId),
+  ]);
 
   return {
     today: analysis.today,
     greeting: greetingFor(analysis.profile.localHour, analysis.profile.firstName),
     analysis,
-    brief: composeAnswer("brief", analysis),
+    brief: aiBrief ?? composeAnswer("brief", analysis),
+    briefSource: aiBrief ? "gemini" : "rules",
+    // Whether it is worth *asking* for one. A screen that cannot get a model
+    // brief — no key, the daily-report switch off, one already written — must
+    // not fire a request that can only come back empty.
+    canWriteBrief: aiBrief === null && isCoachModelEnabled() && settings.ai.dailyReport,
     signals: composeSignals(analysis),
     report: buildDailyReport(analysis),
     history: history.messages,

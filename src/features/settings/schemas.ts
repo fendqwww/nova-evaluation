@@ -211,7 +211,7 @@ export const CLEAR_SCOPE_LABELS: Record<ClearScope, string> = {
  * opposite will press it once and regret it.
  */
 export const CLEAR_SCOPE_HINTS: Record<ClearScope, string> = {
-  coach: "Все сообщения. Сам коуч и анализ останутся — он считает их заново.",
+  coach: "Все сообщения и заметки коуча о ваших предпочтениях. Анализ дня останется — он считается заново.",
   nutrition: "Все записи о еде и воде. Продукты и шаблоны останутся.",
   workouts: "Все проведённые сессии и подходы. Программы останутся.",
   appearancePhotos: "Все фото прогресса. Процедуры и цели останутся.",

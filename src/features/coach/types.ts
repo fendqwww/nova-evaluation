@@ -33,6 +33,7 @@ export type CoachActionTarget =
   | "tasks"
   | "workouts"
   | "nutrition"
+  | "sleep"
   | "appearance";
 
 export interface CoachAction {
@@ -49,6 +50,27 @@ export interface CoachAnswer {
   bullets: CoachBullet[];
   actions: CoachAction[];
 }
+
+/**
+ * One thing the Coach knows about the user between conversations.
+ *
+ * See the CoachMemory model in schema.prisma for why this exists at all: the
+ * transcript is what was said, this is what was learned, and only the second
+ * one is short enough to travel with every prompt a month later.
+ */
+export interface CoachMemoryItem {
+  key: string;
+  kind: CoachMemoryKind;
+  value: string;
+  updatedAt: string;
+}
+
+export type CoachMemoryKind =
+  | "preference"
+  | "dislike"
+  | "goal"
+  | "constraint"
+  | "context";
 
 export type CoachMessageRole = "user" | "coach";
 
@@ -70,6 +92,30 @@ export interface CoachMessageItem {
 // ---------------------------------------------------------------------------
 // Facts
 // ---------------------------------------------------------------------------
+
+/**
+ * When the conversation is happening, in the user's own terms.
+ *
+ * The Coach used to get a bare `localHour` and a "YYYY-MM-DD", which is enough
+ * to greet someone and nothing else: "сегодня среда, рабочий день" and
+ * "сегодня суббота" are different advice, and a model handed an ISO date has
+ * to guess the weekday to tell them apart. Resolved server-side for the same
+ * reason `today` is — the client's clock is not the authority on which day it
+ * is for this user.
+ */
+export interface CoachClockFacts {
+  /** "понедельник" … "воскресенье". */
+  weekdayName: string;
+  /** "3 августа 2026". */
+  dateLabel: string;
+  isWeekend: boolean;
+  /** Local hour 0–23. */
+  localHour: number;
+  /** "ночь" | "утро" | "день" | "вечер". */
+  partOfDay: string;
+  /** Days since the account was created — how long Nova has known them. */
+  daysWithNova: number;
+}
 
 export interface CoachProfileFacts {
   firstName: string;
@@ -157,6 +203,32 @@ export interface CoachNutritionFact {
   loggingStreak: number;
   /** Days logged / days owed over the trailing scoring window, 0–1. Null without a goal. */
   adherence: number | null;
+  /**
+   * What was actually eaten today, one line per meal that has entries.
+   *
+   * The one place the Coach sees food by name rather than as a calorie total,
+   * and the difference between "ты недобрал 600 ккал" and "ужин — только
+   * творог 150 г, отсюда и недобор". Capped and formatted server-side; an
+   * empty array is a day with nothing logged, which is its own answer.
+   */
+  todayMeals: CoachMealLine[];
+  /** Mean calories over the days of the last 7 that have entries. 0 when none. */
+  averageCaloriesWeek: number;
+  /** The same figure for days 8–14 back, so "стал есть больше" is measurable. */
+  averageCaloriesPrevWeek: number;
+  /** Mean protein over the logged days of the last 7, in grams. */
+  averageProteinWeekG: number;
+  /** Mean water over the last 7 days, in millilitres — including dry days. */
+  averageWaterWeekMl: number;
+  /** Days of the last 7 whose calories landed within ±10% of the goal. */
+  daysOnTargetWeek: number;
+}
+
+/** One meal of today's diary, already written out: "Завтрак: овсянка 80 г". */
+export interface CoachMealLine {
+  slot: string;
+  text: string;
+  calories: number;
 }
 
 /**
@@ -189,6 +261,66 @@ export interface CoachAppearanceFact {
   /** Days since the most recent photo, null when there are none. */
   daysSinceLastPhoto: number | null;
   goalsActive: number;
+}
+
+/**
+ * How sleep is going, for the Coach.
+ *
+ * Thin like CoachNutritionFact rather than schedule-shaped like
+ * CoachWorkoutFact: a night is logged or it is not, and there is no "owed"
+ * figure to divide by — the 8h target is a number to aim at, not a schedule.
+ * `hasLogs` is what tells the composer the difference between "спит плохо"
+ * and "ещё ни разу не записывал", which are entirely different answers.
+ */
+export interface CoachSleepFact {
+  hasLogs: boolean;
+  /** Minutes, averaged over the nights logged this week. 0 when none. */
+  averageDurationMin: number;
+  /** 1–5, averaged over the same nights. 0 when none. */
+  averageQuality: number;
+  /** Nights logged within the trailing scoring window. */
+  daysLoggedWeek: number;
+  /** Consecutive days up to today with a logged night. */
+  streak: number;
+  /** Last night's duration in minutes, or null when it was not logged. */
+  lastNightMin: number | null;
+  /** The target every figure here is measured against. 8 hours. */
+  goalMin: number;
+  /** Last night's 1–5 rating, bedtime and wake time, when it was logged. */
+  lastNightQuality: number | null;
+  lastNightBedTime: string | null;
+  lastNightWakeTime: string | null;
+  /**
+   * Trailing seven days rather than the calendar week `averageDurationMin`
+   * uses — the two disagree by design, and only this one can be compared
+   * against the seven before it. On Monday morning a calendar-week average is
+   * one night; this is still seven, which is what makes "ниже твоей нормы" a
+   * statement about a norm.
+   */
+  average7dMin: number;
+  /** The same figure for days 8–14 back. 0 when nothing was logged then. */
+  averagePrev7dMin: number;
+  /** Σ of what each logged night of the last 7 fell short of the goal. */
+  debtWeekMin: number;
+  /** Nights of the last 7 that reached the goal. */
+  nightsOnTargetWeek: number;
+  /**
+   * Spread between the earliest and latest bedtime of the last 7 nights, in
+   * minutes. The one honest measure of regularity this section can produce —
+   * a person averaging 7h30m on a two-hour swing is not sleeping the way the
+   * average makes it sound.
+   */
+  bedTimeSpreadMin: number | null;
+  /** The last seven nights, oldest first. Absent nights are simply not here. */
+  recentNights: CoachSleepNight[];
+}
+
+export interface CoachSleepNight {
+  day: CalendarDay;
+  durationMin: number;
+  quality: number;
+  bedTime: string;
+  wakeTime: string;
 }
 
 export interface CoachGoalFact {
@@ -271,18 +403,57 @@ export interface CoachPotential {
   total: number;
 }
 
+/** One finished session, as history rather than as a programme. */
+export interface CoachSessionFact {
+  day: CalendarDay;
+  title: string;
+  volumeKg: number;
+  setsCount: number;
+}
+
+/** This week against the week before it. Percentages are 0–100, not 0–1. */
+export interface CoachTrendPair {
+  current: number;
+  previous: number;
+}
+
+/**
+ * Direction, not position.
+ *
+ * `yesterday` answers "что изменилось со вчера", which is a day of noise;
+ * these answer "куда всё движется", which is the question a coach is actually
+ * for. Every pair is the trailing seven days against the seven before them,
+ * measured by the same repository functions that score the current week — so a
+ * trend can never disagree with the metric it is a trend of.
+ */
+export interface CoachTrends {
+  habitAdherencePercent: CoachTrendPair;
+  workoutsDone: CoachTrendPair;
+  tasksCompleted: CoachTrendPair;
+  nutritionDaysLogged: CoachTrendPair;
+  /** Mean minutes slept per logged night. */
+  sleepAverageMin: CoachTrendPair;
+}
+
 export interface CoachAnalysis {
   today: CalendarDay;
+  clock: CoachClockFacts;
   profile: CoachProfileFacts;
   metrics: CoachMetrics;
   /** Yesterday's metrics, or null when the account did not exist yet. */
   yesterday: CoachMetrics | null;
+  trends: CoachTrends;
   habits: CoachHabitFact[];
   tasks: CoachTaskFact[];
   goals: CoachGoalFact[];
   workouts: CoachWorkoutFact[];
+  /** The last few finished sessions, newest first. */
+  recentSessions: CoachSessionFact[];
+  /** Days since the last finished session, null when there has never been one. */
+  daysSinceLastWorkout: number | null;
   nutrition: CoachNutritionFact;
   appearance: CoachAppearanceFact;
+  sleep: CoachSleepFact;
   potential: CoachPotential;
 }
 
@@ -340,6 +511,14 @@ export interface CoachOverview {
   analysis: CoachAnalysis;
   /** Today's headline analysis — the thing the first screen leads with. */
   brief: CoachAnswer;
+  /** Which producer wrote that brief. Deterministic until the model replaces it. */
+  briefSource: CoachAnswerSource;
+  /**
+   * True when today's AI briefing has not been written yet and still could be.
+   * The screen uses it to decide whether to ask for one — a single call per
+   * day, never on a screen that already has the model's version.
+   */
+  canWriteBrief: boolean;
   signals: CoachSignals;
   report: CoachDailyReport;
   /** Newest-last, so the chat reads top to bottom. */

@@ -69,7 +69,7 @@ export const DEFAULT_SETTINGS: UserSettingsItem = {
   ai: {
     coachEnabled: true,
     dailyReport: true,
-    vision: false,
+    vision: true,
   },
   plan: "free",
 };
@@ -481,8 +481,16 @@ export async function deleteArchived(
 export async function clearScope(userId: string, scope: ClearScope): Promise<number> {
   switch (scope) {
     case "coach": {
-      const { count } = await db.coachMessage.deleteMany({ where: { userId } });
-      return count;
+      // The transcript, what the Coach remembered from it, and the cached
+      // daily briefings written out of it. A user who clears the conversation
+      // means "забудь это", and leaving the memory rows behind would let the
+      // Coach quote a preference from a chat that no longer exists.
+      const [messages, memories] = await db.$transaction([
+        db.coachMessage.deleteMany({ where: { userId } }),
+        db.coachMemory.deleteMany({ where: { userId } }),
+        db.coachDailyBrief.deleteMany({ where: { userId } }),
+      ]);
+      return messages.count + memories.count;
     }
     case "nutrition": {
       // Entries and water, not foods or templates — the catalogue is a library
@@ -584,6 +592,7 @@ export async function buildExport(userId: string): Promise<Record<string, unknow
     careGoals,
     coachMessages,
     settings,
+    coachMemories,
   ] = await Promise.all([
     db.goal.findMany({ where: { userId }, include: { steps: true } }),
     db.habit.findMany({ where: { userId }, include: { logs: { select: { date: true } } } }),
@@ -615,6 +624,7 @@ export async function buildExport(userId: string): Promise<Record<string, unknow
     db.appearanceGoal.findMany({ where: { userId } }),
     db.coachMessage.findMany({ where: { userId }, orderBy: { createdAt: "asc" } }),
     getSettings(userId),
+    db.coachMemory.findMany({ where: { userId }, orderBy: { updatedAt: "desc" } }),
   ]);
 
   return {
@@ -777,6 +787,16 @@ export async function buildExport(userId: string): Promise<Record<string, unknow
       content: message.content,
       day: dateToDay(message.day),
       createdAt: message.createdAt.toISOString(),
+    })),
+    // What the Coach remembered about the user, exported for the same reason
+    // the transcript is: it is stored, it is about them, and a file that says
+    // "всё, что вы внесли" cannot quietly leave out the part the Coach quotes
+    // back at them.
+    coachMemory: coachMemories.map((memory) => ({
+      kind: memory.kind,
+      key: memory.key,
+      value: memory.value,
+      updatedAt: memory.updatedAt.toISOString(),
     })),
     notes: [
       "Файл содержит данные, которые Nova хранит о вашем аккаунте.",

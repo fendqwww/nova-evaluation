@@ -3,6 +3,8 @@ import { formatStreak } from "@/features/habits/lib/stats";
 import { formatStreak as formatWorkoutStreak } from "@/features/workouts/lib/stats";
 import { formatVolume } from "@/features/workouts/lib/format";
 import { caloriesWord, daysWord } from "@/features/nutrition/lib/format";
+import { formatDuration } from "@/features/sleep/lib/duration";
+import { SLEEP_GOAL_MIN } from "@/features/sleep/lib/stats";
 import { PRIMARY_GOAL_LABELS } from "@/features/onboarding/schemas";
 import {
   focusWorkout,
@@ -11,6 +13,7 @@ import {
   urgentTasks,
   weakestHabits,
 } from "@/features/coach/lib/analyze";
+import { observe } from "@/features/coach/lib/observations";
 import type { CoachIntent } from "@/features/coach/lib/intents";
 import type {
   CoachAction,
@@ -52,6 +55,8 @@ export function composeAnswer(intent: CoachIntent, analysis: CoachAnalysis): Coa
       return workoutsAnswer(analysis);
     case "nutrition":
       return nutritionAnswer(analysis);
+    case "sleep":
+      return sleepAnswer(analysis);
     case "appearance":
       return appearanceAnswer(analysis);
     case "overdue":
@@ -157,6 +162,23 @@ function composeRecommendations(analysis: CoachAnalysis): CoachBullet[] {
   } else if (!analysis.nutrition.hasGoal) {
     items.push(
       bullet("rec-nutrition-goal", "neutral", "Задай дневную цель по калориям — сейчас блок питания в индексе пуст"),
+    );
+  }
+
+  if (!analysis.sleep.hasLogs) {
+    items.push(
+      bullet("rec-first-sleep", "neutral", "Запиши первую ночь в разделе «Сон» — без неё не с чем связывать усталость"),
+    );
+  } else if (
+    analysis.sleep.averageDurationMin > 0 &&
+    analysis.sleep.averageDurationMin < SLEEP_GOAL_MIN - 45
+  ) {
+    items.push(
+      bullet(
+        "rec-sleep",
+        "warning",
+        `Недосып: в среднем ${formatDuration(analysis.sleep.averageDurationMin)} за ночь при цели 8 ч`,
+      ),
     );
   }
 
@@ -384,6 +406,8 @@ const OPEN_APPEARANCE: CoachAction = {
   label: "Открыть внешность",
   target: "appearance",
 };
+
+const OPEN_SLEEP: CoachAction = { id: "open-sleep", label: "Открыть сон", target: "sleep" };
 
 function tasksWord(count: number): string {
   return pluralizeRu(count, ["задача", "задачи", "задач"]);
@@ -621,14 +645,49 @@ function briefAnswer(analysis: CoachAnalysis): CoachAnswer {
             ? "Отличный день, чтобы закрыть главную цель"
             : "Ты идёшь ровно";
 
+  // What changed, ahead of what is owed. The list above is today's ledger —
+  // true, but it is the same shape of sentence every morning. An observation
+  // is the part the user could not have read off their own screen ("на 1 ч 20
+  // мин меньше твоей нормы"), so it leads both the body and the bullets, and
+  // this is what makes the brief proactive without a model involved.
+  const insights = briefInsights(analysis);
+
   const body = [
+    insights[0]?.text,
     `Индекс ${metrics.lifeScore.score} из 100 — ${scoreVerdict(metrics.lifeScore.score)}.`,
     potentialLine(analysis),
   ]
     .filter(Boolean)
     .join(" ");
 
-  return { headline, body, bullets: bullets.slice(0, 5), actions: briefActions(analysis) };
+  const merged = [
+    ...insights.slice(0, 2).map((insight) => bullet(insight.id, insight.tone, insight.text)),
+    ...bullets,
+  ];
+
+  return { headline, body, bullets: merged.slice(0, 5), actions: briefActions(analysis) };
+}
+
+/**
+ * Observations the brief's own bullets do not already make.
+ *
+ * The ledger above covers what is owed today, so an observation saying the
+ * same thing in different words would cost a line and add nothing — those ids
+ * are skipped here rather than filtered by re-reading the bullets, because the
+ * overlap is a fixed, knowable list and a text comparison would not be.
+ */
+function briefInsights(analysis: CoachAnalysis) {
+  const covered = new Set([
+    "habit-remaining",
+    "habit-milestone",
+    "workout-due",
+    "workout-open",
+    "tasks-overdue",
+    "goal-deadline",
+    "goal-nearly",
+  ]);
+
+  return observe(analysis).filter((signal) => !covered.has(signal.id));
 }
 
 function briefActions(analysis: CoachAnalysis): CoachAction[] {
@@ -949,6 +1008,29 @@ function workoutsAnswer(analysis: CoachAnalysis): CoachAnswer {
     ),
   );
 
+  // Programmes describe the plan; these two lines describe what actually
+  // happened — a gap since the last session, and the session itself.
+  if (analysis.daysSinceLastWorkout !== null && analysis.daysSinceLastWorkout >= 3) {
+    bullets.push(
+      bullet(
+        "workout-gap",
+        analysis.daysSinceLastWorkout >= 7 ? "critical" : "warning",
+        `Последняя завершённая — ${analysis.daysSinceLastWorkout} ${daysWord(analysis.daysSinceLastWorkout)} назад`,
+      ),
+    );
+  } else {
+    const last = analysis.recentSessions[0];
+    if (last && last.volumeKg > 0) {
+      bullets.push(
+        bullet(
+          "workout-last",
+          "positive",
+          `Последняя — «${last.title}», ${last.setsCount} подходов, ${formatVolume(last.volumeKg)}`,
+        ),
+      );
+    }
+  }
+
   const openWorkout = analysis.workouts.find((workout) => workout.isOpenToday);
   if (openWorkout) {
     return {
@@ -1043,6 +1125,33 @@ function nutritionAnswer(analysis: CoachAnalysis): CoachAnswer {
     ),
   ];
 
+  // The only line in this answer that names food rather than counting it —
+  // "ужин: творог 150 г" is something the user can act on, "1400 ккал" is a
+  // number they already saw on the Питание screen.
+  const lastMeal = nutrition.todayMeals.at(-1);
+  if (lastMeal) {
+    bullets.push(
+      bullet(
+        "nutrition-last-meal",
+        "neutral",
+        `${lastMeal.slot}: ${lastMeal.text} — ${lastMeal.calories} ${caloriesWord(lastMeal.calories)}`,
+      ),
+    );
+  }
+
+  if (nutrition.averageCaloriesWeek > 0 && nutrition.averageCaloriesPrevWeek > 0) {
+    const delta = nutrition.averageCaloriesWeek - nutrition.averageCaloriesPrevWeek;
+    if (Math.abs(delta) >= nutrition.averageCaloriesPrevWeek * 0.1) {
+      bullets.push(
+        bullet(
+          "nutrition-trend",
+          "neutral",
+          `В среднем ${nutrition.averageCaloriesWeek} ${caloriesWord(nutrition.averageCaloriesWeek)} в день против ${nutrition.averageCaloriesPrevWeek} неделей раньше`,
+        ),
+      );
+    }
+  }
+
   if (nutrition.loggingStreak >= 3) {
     bullets.push(
       bullet(
@@ -1073,6 +1182,102 @@ function nutritionAnswer(analysis: CoachAnalysis): CoachAnswer {
     body: `Выполнение — ${adherencePercent}% от того, что просит цель.`,
     bullets,
     actions: [OPEN_NUTRITION],
+  };
+}
+
+/**
+ * How sleep is going.
+ *
+ * Unlike every other section answer, this one never scolds a number: sleep is
+ * reported to the Coach but not scored by the Life Score (see the note in
+ * build-coach-analysis.ts), so there are no points to promise and no block to
+ * blame. It reports duration, quality and consistency, and says plainly when
+ * there is nothing logged yet rather than reading an absence as a bad night.
+ */
+function sleepAnswer(analysis: CoachAnalysis): CoachAnswer {
+  const { sleep } = analysis;
+
+  if (!sleep.hasLogs) {
+    return {
+      headline: "Сон пока не записывается",
+      body: "В разделе «Сон» ещё нет ни одной ночи. Отмечай время отхода ко сну и пробуждения по утрам — через несколько дней я смогу связать твой сон с тренировками и дисциплиной.",
+      bullets: [],
+      actions: [OPEN_SLEEP],
+    };
+  }
+
+  const bullets: CoachBullet[] = [
+    bullet(
+      "sleep-last",
+      sleep.lastNightMin === null
+        ? "neutral"
+        : sleep.lastNightMin >= SLEEP_GOAL_MIN
+          ? "positive"
+          : "warning",
+      sleep.lastNightMin === null
+        ? "Прошлая ночь ещё не записана"
+        : `Прошлая ночь — ${formatDuration(sleep.lastNightMin)}`,
+    ),
+    bullet(
+      "sleep-week",
+      sleep.averageDurationMin >= SLEEP_GOAL_MIN ? "positive" : "warning",
+      `В среднем за неделю — ${formatDuration(sleep.averageDurationMin)} при цели 8 ч`,
+    ),
+  ];
+
+  if (sleep.averageQuality > 0) {
+    bullets.push(
+      bullet(
+        "sleep-quality",
+        sleep.averageQuality >= 4 ? "positive" : sleep.averageQuality >= 3 ? "neutral" : "warning",
+        `Среднее качество — ${sleep.averageQuality} из 5`,
+      ),
+    );
+  }
+
+  // Week against week: the one line here that says which direction things are
+  // moving rather than where they stand. Below half an hour it is noise, and
+  // a comparison against a week with nothing logged is not a comparison.
+  if (sleep.averagePrev7dMin > 0 && Math.abs(sleep.average7dMin - sleep.averagePrev7dMin) >= 30) {
+    const rising = sleep.average7dMin > sleep.averagePrev7dMin;
+    bullets.push(
+      bullet(
+        "sleep-trend",
+        rising ? "positive" : "warning",
+        `Неделя к неделе — ${formatDuration(sleep.average7dMin)} против ${formatDuration(sleep.averagePrev7dMin)}`,
+      ),
+    );
+  }
+
+  if (sleep.bedTimeSpreadMin !== null && sleep.bedTimeSpreadMin >= 120) {
+    bullets.push(
+      bullet(
+        "sleep-spread",
+        "warning",
+        `Отбой гуляет на ${formatDuration(sleep.bedTimeSpreadMin)} между самой ранней и самой поздней ночью`,
+      ),
+    );
+  }
+
+  if (sleep.streak >= 3) {
+    bullets.push(
+      bullet("sleep-streak", "positive", `Записано ${sleep.streak} ${daysWord(sleep.streak)} подряд`),
+    );
+  }
+
+  const deficit = SLEEP_GOAL_MIN - sleep.averageDurationMin;
+
+  return {
+    headline:
+      sleep.averageDurationMin >= SLEEP_GOAL_MIN
+        ? "Со сном всё в порядке"
+        : `Недосып — в среднем ${formatDuration(Math.max(0, deficit))} до цели`,
+    body:
+      sleep.averageDurationMin >= SLEEP_GOAL_MIN
+        ? `Записано ${sleep.daysLoggedWeek} из 7 ночей, средняя длительность держится выше восьми часов. Это тот фон, на котором тренировки и дисциплина даются заметно легче.`
+        : `Записано ${sleep.daysLoggedWeek} из 7 ночей. Сдвинуть отбой на ${formatDuration(Math.max(15, Math.min(60, deficit)))} раньше — самое дешёвое, что можно сделать для восстановления.`,
+    bullets,
+    actions: [OPEN_SLEEP],
   };
 }
 

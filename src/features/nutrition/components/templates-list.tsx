@@ -16,7 +16,8 @@ function templateCalories(template: NutritionMealTemplate): number {
   }, 0);
 }
 
-/** Quick-add templates — a saved meal, applied to today (or the open day) in one tap. */
+/** The user's own saved meals — see QuickTemplatesGrid for the curated
+ *  presets shown above this list. Applied to today (or the open day) in one tap. */
 export function TemplatesList({
   templates,
   onCreate,
@@ -31,7 +32,7 @@ export function TemplatesList({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="text-caption text-muted-foreground">Быстрые шаблоны еды</p>
+        <p className="text-caption text-muted-foreground">Мои шаблоны</p>
         <Button size="icon" aria-label="Новый шаблон" onClick={onCreate}>
           <Plus className="h-4 w-4" />
         </Button>

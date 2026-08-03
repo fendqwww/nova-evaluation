@@ -18,12 +18,14 @@ import { FoodFormModal } from "@/features/nutrition/components/food-form-modal";
 import { LogEntryModal } from "@/features/nutrition/components/log-entry-modal";
 import { FoodsList } from "@/features/nutrition/components/foods-list";
 import { TemplatesList } from "@/features/nutrition/components/templates-list";
+import { QuickTemplatesGrid } from "@/features/nutrition/components/quick-templates-grid";
 import { TemplateFormModal } from "@/features/nutrition/components/template-form-modal";
 import { GoalFormModal } from "@/features/nutrition/components/goal-form-modal";
 import { NutritionStatsCard } from "@/features/nutrition/components/nutrition-stats-card";
 import { dayProgress, entriesOnDay, groupByMeal } from "@/features/nutrition/lib/stats";
 import { formatCalories } from "@/features/nutrition/lib/format";
 import type { MealSlot, NutritionFoodItem, NutritionMealTemplate } from "@/features/nutrition/types";
+import type { QuickMealTemplate } from "@/features/nutrition/lib/quick-templates";
 
 /**
  * NOTE ON WHAT THIS SECTION DOES NOT DO. There is no shared food database and
@@ -56,6 +58,7 @@ export function NutritionView() {
     updateTemplate,
     deleteTemplate,
     applyTemplate,
+    applyQuickTemplate,
   } = useNutrition();
 
   const [tab, setTab] = useState<NutritionTabId>("diary");
@@ -146,6 +149,10 @@ export function NutritionView() {
 
   async function applyTemplateToday(template: NutritionMealTemplate) {
     await applyTemplate(template.id, template.mealSlot, activeDay);
+  }
+
+  async function applyQuickTemplateToday(template: QuickMealTemplate) {
+    await applyQuickTemplate(template.id, template.mealSlot, activeDay);
   }
 
   return (
@@ -241,16 +248,20 @@ export function NutritionView() {
           )}
 
           {tab === "templates" && (
-            <TemplatesList
-              templates={templates}
-              onCreate={() => {
-                setEditingTemplate(null);
-                setTemplateKey((n) => n + 1);
-                setTemplateFormOpen(true);
-              }}
-              onApply={(template) => void applyTemplateToday(template)}
-              onDelete={deleteTemplate}
-            />
+            <div className="flex flex-col gap-5">
+              <QuickTemplatesGrid onApply={applyQuickTemplateToday} />
+
+              <TemplatesList
+                templates={templates}
+                onCreate={() => {
+                  setEditingTemplate(null);
+                  setTemplateKey((n) => n + 1);
+                  setTemplateFormOpen(true);
+                }}
+                onApply={(template) => void applyTemplateToday(template)}
+                onDelete={deleteTemplate}
+              />
+            </div>
           )}
 
           {tab === "foods" && (

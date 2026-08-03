@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { requireUserId } from "@/server/auth/current-user";
+import { requireUserContext } from "@/server/auth/current-user";
+import { todayIn } from "@/shared/lib/calendar-day";
 import { getSettings } from "@/features/settings/server/settings.repository";
 import { analyzeFoodPhoto } from "@/ai/nutrition";
 import { GeminiError } from "@/ai/gemini";
@@ -38,11 +39,25 @@ export async function analyzeFoodPhotoAction(
   input: AnalyzeFoodPhotoInput,
 ): Promise<AnalyzeFoodPhotoResult> {
   const { rawInitData, imageData } = analyzeFoodPhotoInputSchema.parse(input);
-  const userId = await requireUserId(rawInitData);
+  // The user's own calendar day, because the AI budget renews per day in their
+  // timezone rather than at UTC midnight — see src/ai/limits.ts.
+  const { userId, timezone } = await requireUserContext(rawInitData);
   const settings = await getSettings(userId);
 
+  // The "AI Vision" switch in Настройки. Checked before the photo travels
+  // anywhere, so off really means nothing reaches Gemini — the form still
+  // works, filled in by hand.
+  if (!settings.ai.vision) {
+    return { ok: false, reason: "error", message: "AI Vision выключен в настройках." };
+  }
+
   try {
-    const analysis = await analyzeFoodPhoto(userId, settings.plan, parseImageDataUrl(imageData));
+    const analysis = await analyzeFoodPhoto(
+      userId,
+      settings.plan,
+      todayIn(timezone),
+      parseImageDataUrl(imageData),
+    );
     return { ok: true, analysis };
   } catch (error) {
     if (error instanceof AiLimitExceededError) {

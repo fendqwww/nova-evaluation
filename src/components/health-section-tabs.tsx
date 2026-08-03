@@ -4,21 +4,23 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
 
-export type HealthSection = "workouts" | "nutrition" | "appearance";
+export type HealthSection = "workouts" | "nutrition" | "sleep" | "appearance";
 
 const SECTIONS: { id: HealthSection; label: string; href: string }[] = [
   { id: "workouts", label: "Тренировки", href: "/workouts" },
   { id: "nutrition", label: "Питание", href: "/nutrition" },
+  { id: "sleep", label: "Сон", href: "/sleep" },
   { id: "appearance", label: "Внешность", href: "/appearance" },
 ];
 
 /**
- * Switches between the three screens sharing the "Здоровье" bottom-nav tab.
+ * Switches between the four screens sharing the "Здоровье" bottom-nav tab.
  *
  * Deliberately a quieter, underlined strip rather than the filled sliding pill
- * every screen's own in-page tabs (WorkoutsTabs/NutritionTabs/AppearanceTabs)
- * use one row below it — two identical bold controls stacked back to back read
- * as one confusing control with too many buttons, not two. This one is the
+ * every screen's own in-page tabs (WorkoutsTabs/NutritionTabs/SleepTabs/
+ * AppearanceTabs) use one row below it — two identical bold controls stacked
+ * back to back read as one confusing control with too many buttons, not two.
+ * This one is the
  * quiet "where in the app am I" wayfinding; the pill below it is the loud
  * "what am I looking at" choice, and the visual gap between them is what makes
  * the screen readable at a glance.

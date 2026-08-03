@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRawInitData } from "@tma.js/sdk-react";
 import { getCoachOverview } from "@/features/coach/server/get-coach-overview.action";
 import { getCoachHistory } from "@/features/coach/server/get-coach-history.action";
 import { askCoachAction } from "@/features/coach/server/ask-coach.action";
+import { generateDailyBriefAction } from "@/features/coach/server/generate-daily-brief.action";
 import type { CoachIntent } from "@/features/coach/lib/intents";
 import type { CoachOverview } from "@/features/coach/types";
 
@@ -48,6 +50,45 @@ export function useCoach() {
     },
   });
 
+  /**
+   * The Coach's opening message for today, fetched once per day.
+   *
+   * Fired from an effect rather than from the query itself because it is a
+   * write that costs a Gemini call, and getCoachOverview is deliberately a
+   * pure read (see the note on that action). The server decides whether it is
+   * worth asking — `canWriteBrief` is already false when a briefing exists,
+   * when there is no key, or when the daily-report switch is off — and the ref
+   * below stops React's double-invoked effects in development from asking
+   * twice for the same day.
+   *
+   * A failure is silent by design: the deterministic brief is already on
+   * screen and is a complete answer, so there is nothing to report and nothing
+   * to retry.
+   */
+  const brief = useMutation({
+    mutationFn: generateDailyBriefAction,
+    onSuccess: (result) => {
+      if (!result.ok) return;
+      queryClient.setQueryData<CoachOverview | null>(key, (previous) =>
+        previous
+          ? { ...previous, brief: result.brief, briefSource: "gemini", canWriteBrief: false }
+          : previous,
+      );
+    },
+  });
+
+  const requestedBriefFor = useRef<string | null>(null);
+  const overviewData = query.data ?? null;
+  const briefMutate = brief.mutate;
+
+  useEffect(() => {
+    if (!overviewData?.canWriteBrief) return;
+    if (requestedBriefFor.current === overviewData.today) return;
+
+    requestedBriefFor.current = overviewData.today;
+    briefMutate({ rawInitData });
+  }, [overviewData, briefMutate, rawInitData]);
+
   const loadEarlier = useMutation({
     mutationFn: getCoachHistory,
     onSuccess: (page) => {
@@ -77,6 +118,9 @@ export function useCoach() {
     isError: query.isError,
     retry: () => void query.refetch(),
     refresh: () => void queryClient.invalidateQueries({ queryKey: key }),
+
+    /** The model is writing today's briefing over the deterministic one. */
+    isWritingBrief: brief.isPending,
 
     /**
      * The question currently in flight, echoed back for the pending bubble.

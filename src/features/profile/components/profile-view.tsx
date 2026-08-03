@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Settings, Sparkles } from "lucide-react";
+import { BarChart3, Settings, Sparkles } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
@@ -109,6 +109,20 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
 
           <RevealItem>
             <ThemePicker current={(themeColor as ThemeValue) ?? DEFAULT_THEME} />
+          </RevealItem>
+
+          <RevealItem>
+            <Card interactive>
+              <Link href="/reports" className="flex items-center gap-3 p-4">
+                <BarChart3 className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
+                <span className="flex flex-1 flex-col gap-0.5">
+                  <span className="text-body font-medium text-foreground">Отчёты</span>
+                  <span className="text-caption text-muted-foreground">
+                    Прогресс по всем сферам, графики, AI-сводка
+                  </span>
+                </span>
+              </Link>
+            </Card>
           </RevealItem>
 
           <RevealItem>

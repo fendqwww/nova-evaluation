@@ -7,6 +7,7 @@ import {
   APPEARANCE_ANALYSIS_JSON_SCHEMA,
   type AppearanceAnalysis,
 } from "@/ai/types";
+import type { CalendarDay } from "@/shared/lib/calendar-day";
 import type { PlanId } from "@/features/settings/types";
 
 /**
@@ -22,9 +23,10 @@ import type { PlanId } from "@/features/settings/types";
 export async function analyzeAppearancePhoto(
   userId: string,
   plan: PlanId,
+  today: CalendarDay,
   image: { base64Data: string; mimeType: string },
 ): Promise<AppearanceAnalysis> {
-  await requireAiBudget(userId, plan);
+  await requireAiBudget(userId, plan, today);
 
   const raw = await generateStructured({
     systemInstruction: APPEARANCE_PROMPT,
@@ -43,6 +45,6 @@ export async function analyzeAppearancePhoto(
     );
   }
 
-  await recordAiUsage(userId, "appearance");
+  await recordAiUsage(userId, "appearance", today);
   return result.data;
 }

@@ -14,6 +14,7 @@ export const COACH_INTENT_IDS = [
   "weak_habits",
   "workouts",
   "nutrition",
+  "sleep",
   "appearance",
   "overdue",
   "evening",
@@ -43,6 +44,7 @@ export const COACH_QUICK_ACTIONS: CoachQuickAction[] = [
   { intent: "weak_habits", label: "Какие привычки самые слабые?" },
   { intent: "workouts", label: "Как идут тренировки?" },
   { intent: "nutrition", label: "Как у меня с питанием?" },
+  { intent: "sleep", label: "Как я сплю?" },
   { intent: "appearance", label: "Как идёт уход за собой?" },
   { intent: "overdue", label: "Что просрочено?" },
   { intent: "evening", label: "Что мне делать вечером?" },
@@ -94,6 +96,25 @@ const INTENT_KEYWORDS: Record<Exclude<CoachIntent, "general" | "brief">, string[
     "дневник питания",
     "вода",
     "воды",
+  ],
+  // "сон"/"сном" deliberately overlap with evening's "перед сном" — the
+  // longest-match-wins rule is what keeps "что делать перед сном" an evening
+  // question while "как у меня со сном" lands here.
+  sleep: [
+    "сон",
+    "сна",
+    "сне",
+    "сном",
+    "сплю",
+    "спать",
+    "спал",
+    "выспа",
+    "высып",
+    "недосып",
+    "качество сна",
+    "часов сна",
+    "ложусь",
+    "просыпа",
   ],
   // Long, specific stems for the same reason the workouts list has them: this
   // intent is the one most likely to collide with a question that also mentions

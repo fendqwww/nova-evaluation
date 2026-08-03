@@ -9,6 +9,7 @@ import { PageContainer } from "@/shared/ui/page-container";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { PlanCard } from "@/features/settings/components/plan-card";
+import { AiUsageCard } from "@/features/settings/components/ai-usage-card";
 import { PLAN_LIST } from "@/features/settings/lib/plans";
 
 /**
@@ -25,7 +26,7 @@ import { PLAN_LIST } from "@/features/settings/lib/plans";
  * exist is the one kind of lie a settings section cannot afford.
  */
 export function SubscriptionView() {
-  const { settings, isPending, isError, retry } = useSettings();
+  const { settings, aiUsage, isPending, isError, retry } = useSettings();
 
   return (
     <PageContainer className="flex flex-col gap-5">
@@ -70,8 +71,10 @@ export function SubscriptionView() {
         />
       )}
 
-      {!isPending && !isError && settings && (
+      {!isPending && !isError && settings && aiUsage && (
         <>
+          <AiUsageCard usage={aiUsage} />
+
           <div className="flex flex-col gap-4">
             {PLAN_LIST.map((plan) => (
               <PlanCard key={plan.id} plan={plan} current={settings.plan} />

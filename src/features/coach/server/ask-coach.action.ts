@@ -10,6 +10,10 @@ import {
   appendCoachMessage,
   listRecentCoachMessages,
 } from "@/features/coach/server/coach.repository";
+import {
+  listCoachMemories,
+  rememberCoachFacts,
+} from "@/features/coach/server/coach-memory.repository";
 import { askCoachModel } from "@/ai/coach";
 import { composeAnswer } from "@/features/coach/lib/compose";
 import { detectIntent } from "@/features/coach/lib/intents";
@@ -32,6 +36,13 @@ const CONTEXT_TURNS = 12;
  * The stored answer is whichever one won. Nothing records that it came from the
  * model, because nothing downstream should behave differently — a rules answer
  * and a Gemini answer are the same shape, built from the same facts.
+ *
+ * Memory is the one thing that outlives the turn. Anything the user said about
+ * themselves that will still be true next month goes to CoachMemory, and comes
+ * back in the next conversation's prompt — which is what lets the Coach say "ты
+ * говорил, что не любишь бег" in September about a sentence typed in August.
+ * It is written after the answer and never blocks it (see
+ * rememberCoachFacts).
  */
 export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResult> {
   const { rawInitData, question, intent } = askCoachInputSchema.parse(input);
@@ -46,18 +57,22 @@ export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResu
   const resolvedIntent = intent ?? detectIntent(question);
   const draft = composeAnswer(resolvedIntent, analysis);
 
-  const settings = await getSettings(userId);
-  const history = await listRecentCoachMessages(userId, CONTEXT_TURNS);
-  const fromModel = await askCoachModel(
-    question,
+  const [settings, history, memories] = await Promise.all([
+    getSettings(userId),
+    listRecentCoachMessages(userId, CONTEXT_TURNS),
+    listCoachMemories(userId),
+  ]);
+
+  const fromModel = await askCoachModel(question, {
     analysis,
     draft,
-    history.messages,
+    history: history.messages,
+    memories,
     userId,
-    settings.plan,
-  );
+    plan: settings.plan,
+  });
 
-  const answer: CoachAnswer = fromModel ?? draft;
+  const answer: CoachAnswer = fromModel?.answer ?? draft;
   const day = todayIn(timezone);
 
   const stored = await appendCoachMessage(userId, {
@@ -75,6 +90,10 @@ export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResu
     answer,
     day,
   });
+
+  if (fromModel && fromModel.memory.length > 0) {
+    await rememberCoachFacts(userId, fromModel.memory);
+  }
 
   return { question: stored, reply, source: fromModel ? "gemini" : "rules" };
 }

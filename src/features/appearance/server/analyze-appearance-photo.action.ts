@@ -1,7 +1,8 @@
 "use server";
 
 import { z } from "zod";
-import { requireUserId } from "@/server/auth/current-user";
+import { requireUserContext } from "@/server/auth/current-user";
+import { todayIn } from "@/shared/lib/calendar-day";
 import { getSettings } from "@/features/settings/server/settings.repository";
 import { analyzeAppearancePhoto } from "@/ai/appearance";
 import { GeminiError } from "@/ai/gemini";
@@ -36,13 +37,22 @@ export async function analyzeAppearancePhotoAction(
   input: AnalyzeAppearancePhotoInput,
 ): Promise<AnalyzeAppearancePhotoResult> {
   const { rawInitData, imageData } = analyzeAppearancePhotoInputSchema.parse(input);
-  const userId = await requireUserId(rawInitData);
+  // The user's own calendar day, because the AI budget renews per day in their
+  // timezone rather than at UTC midnight — see src/ai/limits.ts.
+  const { userId, timezone } = await requireUserContext(rawInitData);
   const settings = await getSettings(userId);
+
+  // Same "AI Vision" switch the food-photo action honours — checked before the
+  // photo travels anywhere.
+  if (!settings.ai.vision) {
+    return { ok: false, reason: "error", message: "AI Vision выключен в настройках." };
+  }
 
   try {
     const analysis = await analyzeAppearancePhoto(
       userId,
       settings.plan,
+      todayIn(timezone),
       parseImageDataUrl(imageData),
     );
     return { ok: true, analysis };

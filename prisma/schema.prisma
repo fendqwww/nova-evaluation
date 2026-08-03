@@ -32,6 +32,8 @@ model User {
   tasks              Task[]
   workouts           Workout[]
   coachMessages      CoachMessage[]
+  coachMemories      CoachMemory[]
+  coachBriefs        CoachDailyBrief[]
   nutritionFoods     NutritionFood[]
   nutritionEntries   NutritionEntry[]
   nutritionMeals     NutritionMealTemplate[]
@@ -40,6 +42,7 @@ model User {
   appearanceRoutines AppearanceRoutine[]
   appearancePhotos   AppearancePhoto[]
   appearanceGoals    AppearanceGoal[]
+  sleepLogs          SleepLog[]
 }
 
 // gender/primaryGoal/occupation are validated against a zod union in
@@ -120,13 +123,16 @@ model UserSettings {
   notifyAppearance Boolean @default(false)
   notifyCoach      Boolean @default(true)
 
-  // aiCoachEnabled is the one AI switch that is load-bearing today: the Coach
-  // screen reads it and refuses to answer when it is off (see
-  // get-coach-overview.action.ts). The other two are stored intentions for
-  // features that do not exist yet, and the UI says so.
+  // All three AI switches are load-bearing: aiCoachEnabled makes the Coach
+  // refuse to answer at all (see get-coach-overview.action.ts), aiDailyReport
+  // gates the model-written daily briefing (see generate-daily-brief.action.ts)
+  // and aiVisionEnabled gates the two photo-analysis actions (food and
+  // appearance). Vision defaults on because it ships enabled: it is only ever
+  // reached by deliberately attaching a photo, so an off-by-default switch
+  // would read as the feature being broken rather than as a choice.
   aiCoachEnabled  Boolean @default(true)
   aiDailyReport   Boolean @default(true)
-  aiVisionEnabled Boolean @default(false)
+  aiVisionEnabled Boolean @default(true)
 
   // "free" | "plus" | "max". Written by nothing today — there is no billing —
   // and read by the subscription screen to decide which tier is marked current.
@@ -134,14 +140,25 @@ model UserSettings {
   // is an insert, not a schema change plus a rewrite of every read.
   plan String @default("free")
 
-  // One lifetime counter across every AI call that actually produced a result
-  // — Coach, food-photo analysis, appearance-photo analysis alike (see
-  // src/ai/limits.ts, the single place that reads and increments it). FREE
-  // stops at a fixed ceiling; PLUS and MAX never check it. A single column
-  // rather than one per feature because the product's limit is one shared
-  // budget, not three separate ones that would have to be explained
-  // separately on the pricing screen.
-  aiUsageCount Int @default(0)
+  // One counter across every AI call that actually produced a result — Coach,
+  // food-photo analysis, appearance-photo analysis alike (see src/ai/limits.ts,
+  // the single place that reads and increments it). A single column rather than
+  // one per feature because the product's limit is one shared budget, not three
+  // separate ones that would have to be explained separately on the pricing
+  // screen.
+  //
+  // aiUsageCount is the lifetime total, kept for analytics and never compared
+  // against a ceiling. What the FREE plan is actually limited by is
+  // aiUsageToday, which counts only the calls made on aiUsageDay — the user's
+  // own local calendar day. A lifetime ceiling was the previous design and it
+  // made "лимит исчерпан" a permanent state an account could never leave,
+  // which is exactly what it looked like to a user who had just finished
+  // onboarding.
+  aiUsageCount Int       @default(0)
+  aiUsageToday Int       @default(0)
+  // UTC midnight of the local day aiUsageToday belongs to, same convention as
+  // HabitLog.date. Null until the account's first AI call.
+  aiUsageDay   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -443,6 +460,64 @@ model CoachMessage {
   // History reads newest-first, scoped to one user, and that is the only
   // access pattern there is.
   @@index([userId, createdAt])
+}
+
+// What the Coach remembers about a user between conversations.
+//
+// CoachMessage stores what was *said*; this stores what was *learned* — "не
+// любит бег", "тренируется по утрам", "цель — минус 6 кг к декабрю". The
+// distinction matters because the transcript is far too long to travel with
+// every prompt and far too noisy to reason over: twenty short facts are what
+// let the Coach still know a preference a month later, when the turn that
+// mentioned it has long since scrolled out of the context window.
+//
+// Every row is written by the model itself as a side channel on an ordinary
+// answer (see src/ai/coach.ts) and is always the user's own statement about
+// themselves — never an inference about their health.
+model CoachMemory {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // "preference" | "dislike" | "goal" | "constraint" | "context" — a zod union
+  // in src/features/coach/schemas.ts, not a Prisma enum, for the same
+  // SQLite-compatibility reason as everything else.
+  kind String
+  // A stable kebab-case slug the model reuses when it learns more about the
+  // same thing, so "не любит бег" is updated rather than duplicated. The
+  // unique constraint is what enforces that.
+  key  String
+  // One sentence, in the user's own terms.
+  value String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, key])
+  @@index([userId, updatedAt])
+}
+
+// The one AI-written daily briefing, cached for the day it describes.
+//
+// The Coach screen opens with a proactive message rather than an empty chat,
+// and that message costs a Gemini call — so it is generated once per local day
+// and read from here on every later open. Caching by day is also what keeps
+// the screen cheap to reopen: without it, every visit would spend budget to
+// regenerate a text the user has already read.
+model CoachDailyBrief {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // UTC midnight of the local day, same convention as CoachMessage.day.
+  day     DateTime
+  // A CoachAnswer as JSON — the same payload shape CoachMessage.payload holds,
+  // validated by the same zod schema on the way out.
+  payload String
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, day])
 }
 
 // A food in the user's own catalogue: something they created, or a favourite
@@ -785,4 +860,41 @@ model AppearanceGoal {
   completedAt DateTime?
 
   createdAt DateTime @default(now())
+}
+
+// One night's sleep, logged the morning after. One row per day, the same
+// upsertable shape as NutritionWaterLog rather than an absence-is-false log
+// like HabitLog — sleep is a quantity with a quality attached, not a thing
+// that either happened or did not.
+//
+// bedTime/wakeTime are "HH:mm" strings rather than DateTimes: a bedtime is a
+// wall-clock moment the user glanced at, not an instant that needs a
+// timezone, and storing it as a plain string keeps it printable without ever
+// re-deriving a zone for it. durationMin is computed server-side from the
+// pair at write time (see minutesBetween in features/sleep/lib/duration.ts)
+// rather than trusted from the client, so a forged payload cannot claim an
+// impossible night.
+//
+// `day` is UTC midnight of the user's local calendar day, the same
+// convention every other day-scoped table in this file uses — the day being
+// logged is the morning woken up on, so a bedtime just after midnight still
+// files under the day that follows it.
+model SleepLog {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  day         DateTime
+  bedTime     String
+  wakeTime    String
+  durationMin Int
+  // 1 (плохо) – 5 (отлично).
+  quality     Int      @default(3)
+  note        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, day])
+  @@index([userId, day])
 }

@@ -204,11 +204,17 @@ export function weekStats(
   };
 }
 
-/** Consecutive days up to and including `today` with at least one entry logged. */
+/**
+ * Consecutive days up to and including `today` with at least one entry logged.
+ *
+ * An unlogged today is pending, not a break — nobody has logged breakfast at
+ * 8am, and a streak that reads zero every morning and returns by lunch is
+ * noise. Same rule habits/lib/stats.ts follows for a habit due today.
+ */
 export function loggingStreak(entries: NutritionEntryItem[], today: CalendarDay): number {
   const loggedDays = new Set(entries.map((entry) => entry.day));
   let streak = 0;
-  let day = today;
+  let day = loggedDays.has(today) ? today : addDays(today, -1);
   while (loggedDays.has(day)) {
     streak += 1;
     day = addDays(day, -1);

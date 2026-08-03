@@ -3,30 +3,27 @@
 import { Camera, FileText, Sparkles } from "lucide-react";
 import { Card } from "@/shared/ui/card";
 import { Switch } from "@/shared/ui/switch";
-import {
-  SettingsGroup,
-  SettingsRow,
-  SoonBadge,
-} from "@/features/settings/components/settings-group";
+import { SettingsGroup, SettingsRow } from "@/features/settings/components/settings-group";
 import type { AiSettings } from "@/features/settings/types";
 
 /**
  * What the AI side of the app is allowed to do.
  *
- * The three switches are deliberately unequal and the UI does not pretend
- * otherwise:
+ * All three switches are enforced server-side — none is a stored intention:
  *
- *   - AI Coach is enforced. Off means getCoachOverview refuses to build an
- *     analysis and nothing is sent to Gemini — the Coach screen shows why.
- *   - Ежедневный разбор is stored. The report is currently recomputed on every
- *     visit to the Coach screen rather than pushed, so this switch is what a
- *     future scheduled report will read.
- *   - AI Vision does not exist yet, and is marked "Скоро" rather than shipped
- *     as a live-looking toggle.
+ *   - AI Coach: off means getCoachOverview refuses to build an analysis and
+ *     nothing is sent to Gemini — the Coach screen shows why.
+ *   - Ежедневные отчёты: off means generate-daily-brief.action refuses, and
+ *     the screen keeps the deterministic analysis it always had. Nothing is
+ *     scheduled or pushed — the briefing is written on the day's first visit
+ *     and cached.
+ *   - AI Vision: off means the two photo-analysis actions refuse, so the
+ *     camera still opens and the form still works by hand.
  *
- * Turning the coach off also greys out the other two: neither means anything
- * without it, and leaving them tappable would suggest an "off but still
- * reporting" state that cannot happen.
+ * Turning the coach off greys out Ежедневные отчёты only — a briefing is the
+ * Coach speaking, so it cannot mean anything without it. AI Vision stays
+ * tappable because reading a plate of food is not the Coach talking, and
+ * greying it out would claim a dependency that does not exist.
  */
 export function AiGroup({
   ai,
@@ -56,7 +53,7 @@ export function AiGroup({
           icon={<FileText className="h-4 w-4" />}
           tone="ai"
           label="Ежедневные отчёты"
-          hint="Итоги дня утром следующего"
+          hint="Персональный разбор дня при первом входе"
           disabled={!ai.coachEnabled}
           trailing={
             <Switch
@@ -73,8 +70,13 @@ export function AiGroup({
           tone="ai"
           label="AI Vision"
           hint="Анализ еды и внешности по фото"
-          disabled
-          trailing={<SoonBadge />}
+          trailing={
+            <Switch
+              checked={ai.vision}
+              onCheckedChange={(checked) => onChange({ ...ai, vision: checked })}
+              aria-label="AI Vision"
+            />
+          }
         />
       </SettingsGroup>
 

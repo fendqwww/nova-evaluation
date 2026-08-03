@@ -65,6 +65,7 @@ const TARGET_HREF: Record<CoachActionTarget, string> = {
   tasks: "/tasks",
   workouts: "/workouts",
   nutrition: "/nutrition",
+  sleep: "/sleep",
   appearance: "/appearance",
 };
 

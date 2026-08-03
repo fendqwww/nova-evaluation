@@ -8,6 +8,10 @@ import {
   type CalendarDay,
 } from "@/shared/lib/calendar-day";
 import { isMealSlot } from "@/features/nutrition/lib/meal-slot";
+import {
+  quickTemplateFoodDraft,
+  type QuickMealTemplate,
+} from "@/features/nutrition/lib/quick-templates";
 import type {
   MealSlot,
   NutritionEntryItem,
@@ -281,6 +285,41 @@ export async function applyTemplate(
   );
 
   return created.map(toEntryItem);
+}
+
+/**
+ * Apply a curated preset (see lib/quick-templates.ts): find-or-create the food
+ * it names in the user's own catalogue, then log it.
+ *
+ * A repeat application of the same preset must not pile up duplicate foods
+ * named "Овсянка" — the first application creates the row, every later one
+ * reuses it, including any macros the user has since corrected on it. Only an
+ * *active* food is reused; an archived one with the same name is left alone
+ * and a fresh row is created instead, the same rule createEntry's food lookup
+ * would otherwise silently violate by resurrecting a retired food.
+ */
+export async function applyQuickTemplate(
+  userId: string,
+  preset: QuickMealTemplate,
+  mealSlot: MealSlot,
+  day: CalendarDay,
+): Promise<NutritionEntryItem> {
+  const existing = await db.nutritionFood.findFirst({
+    where: { userId, name: preset.name, archivedAt: null },
+  });
+
+  const food =
+    existing ??
+    (await db.nutritionFood.create({
+      data: { userId, ...quickTemplateFoodDraft(preset) },
+    }));
+
+  const entry = await db.nutritionEntry.create({
+    data: { userId, foodId: food.id, mealSlot, day: dayToDate(day), amountG: preset.amountG },
+    include: { food: true },
+  });
+
+  return toEntryItem(entry);
 }
 
 // ---------------------------------------------------------------------------

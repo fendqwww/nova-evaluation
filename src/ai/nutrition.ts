@@ -3,6 +3,7 @@ import { generateStructured, GeminiError } from "@/ai/gemini";
 import { requireAiBudget, recordAiUsage } from "@/ai/limits";
 import { FOOD_PROMPT } from "@/ai/prompts";
 import { foodAnalysisSchema, FOOD_ANALYSIS_JSON_SCHEMA, type FoodAnalysis } from "@/ai/types";
+import type { CalendarDay } from "@/shared/lib/calendar-day";
 import type { PlanId } from "@/features/settings/types";
 
 /**
@@ -18,11 +19,12 @@ import type { PlanId } from "@/features/settings/types";
 export async function analyzeFoodPhoto(
   userId: string,
   plan: PlanId,
+  today: CalendarDay,
   image: { base64Data: string; mimeType: string },
 ): Promise<FoodAnalysis> {
   // Throws AiLimitExceededError before a single token is spent — a request
   // that will be refused must never reach the model.
-  await requireAiBudget(userId, plan);
+  await requireAiBudget(userId, plan, today);
 
   const raw = await generateStructured({
     systemInstruction: FOOD_PROMPT,
@@ -41,6 +43,6 @@ export async function analyzeFoodPhoto(
     );
   }
 
-  await recordAiUsage(userId, "food");
+  await recordAiUsage(userId, "food", today);
   return result.data;
 }

@@ -1,11 +1,13 @@
 "use server";
 
 import { db } from "@/server/db";
-import { requireUserId } from "@/server/auth/current-user";
+import { requireUserContext } from "@/server/auth/current-user";
+import { todayIn } from "@/shared/lib/calendar-day";
 import {
   countArchived,
   getSettings,
 } from "@/features/settings/server/settings.repository";
+import { getAiUsageStatus } from "@/ai/limits";
 import type { SettingsSnapshot } from "@/features/settings/types";
 
 /**
@@ -24,7 +26,7 @@ import type { SettingsSnapshot } from "@/features/settings/types";
 export async function getSettingsSnapshot(
   rawInitData: string | undefined,
 ): Promise<SettingsSnapshot> {
-  const userId = await requireUserId(rawInitData);
+  const { userId, timezone } = await requireUserContext(rawInitData);
 
   const [user, settings, archiveCount] = await Promise.all([
     db.user.findUniqueOrThrow({
@@ -42,6 +44,12 @@ export async function getSettingsSnapshot(
     getSettings(userId),
     countArchived(userId),
   ]);
+
+  // Needs the plan the previous step resolved, so it cannot join the
+  // Promise.all above it. The day is the user's own — the budget renews per
+  // local day, so a card that read a UTC day would be wrong for half the
+  // evening in every zone east of London.
+  const usage = await getAiUsageStatus(userId, settings.plan, todayIn(timezone));
 
   const telegramName = [user.firstName, user.lastName].filter(Boolean).join(" ");
 
@@ -61,5 +69,6 @@ export async function getSettingsSnapshot(
     },
     settings,
     archiveCount,
+    aiUsage: { used: usage.used, limit: usage.limit },
   };
 }
