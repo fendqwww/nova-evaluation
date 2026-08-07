@@ -1,4 +1,5 @@
 import type { CalendarDay } from "@/shared/lib/calendar-day";
+import type { AppearanceAnalysis } from "@/ai/types";
 
 /**
  * Which part of the body a routine, photo or goal is about.
@@ -114,6 +115,17 @@ export interface CarePhotoItem {
   width: number;
   height: number;
   createdAt: string;
+  /**
+   * The stored AI reading, or null if this photo has never been analysed.
+   *
+   * Carried in the snapshot unlike `imageData`: an analysis is a couple of
+   * kilobytes of text against a ten-kilobyte thumbnail that already travels
+   * here, and having it up front is what lets the gallery mark analysed photos
+   * and the viewer open on a result instead of on a button.
+   */
+  analysis: AppearanceAnalysis | null;
+  /** ISO timestamp of that analysis. Null whenever `analysis` is null. */
+  analyzedAt: string | null;
 }
 
 /** One photo's full-resolution bytes, fetched on demand. */

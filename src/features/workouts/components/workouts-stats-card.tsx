@@ -50,8 +50,8 @@ export function WorkoutsStatsCard({
       <EmptyState
         className="py-10"
         icon={<BarChart3 className="h-5 w-5" />}
-        title="Статистики пока нет"
-        description="Отметьте первую тренировку — и здесь появятся объём, регулярность и календарь."
+        title="Прогресс ещё не измерен"
+        description="Заверши первую тренировку — Nova начнёт считать объём, регулярность и календарь."
       />
     );
   }

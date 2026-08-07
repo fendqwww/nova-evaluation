@@ -81,7 +81,7 @@ export function RoutinesList({
           className="py-8"
           icon={<Sparkles className="h-5 w-5" />}
           title="В этой зоне пока пусто"
-          description="Добавьте процедуру — она появится в списке на сегодня."
+          description="Добавь процедуру — она встанет в список на сегодня."
         />
       ) : (
         <div className="flex flex-col gap-2.5">
@@ -169,7 +169,7 @@ function RoutinePresets({
       <EmptyState
         icon={<Sparkles className="h-5 w-5" />}
         title="Ухода пока нет"
-        description="Начните с готовой процедуры — всё можно поменять перед сохранением."
+        description="Начни с готовой процедуры — всё можно поменять перед сохранением."
       />
 
       <div className="flex flex-col gap-2">

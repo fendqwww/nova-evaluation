@@ -217,8 +217,8 @@ export function WorkoutsView() {
       {isError && (
         <EmptyState
           icon={<Dumbbell className="h-5 w-5" />}
-          title="Не удалось загрузить тренировки"
-          description="Проверьте соединение и попробуйте снова."
+          title="Тренировки не загрузились"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить
@@ -231,8 +231,8 @@ export function WorkoutsView() {
         <EmptyState
           className="py-12"
           icon={<Dumbbell className="h-5 w-5" />}
-          title="У тебя пока нет тренировок"
-          description="Составьте программу один раз — дальше останется отмечать подходы и следить за прогрессом."
+          title="Программы пока нет"
+          description="Составь её один раз — дальше останется отмечать подходы, а прогресс Nova посчитает сама."
           action={
             <Button size="lg" onClick={openCreate}>
               Создать тренировку
@@ -312,7 +312,7 @@ export function WorkoutsView() {
                   }
                   description={
                     query.trim()
-                      ? "Попробуйте другой запрос или снимите фильтр."
+                      ? "Попробуй другой запрос или сними фильтр."
                       : filter === "today" && counts.all > 0
                         ? `В работе ${counts.all} ${pluralizeRu(counts.all, [
                             "тренировка",

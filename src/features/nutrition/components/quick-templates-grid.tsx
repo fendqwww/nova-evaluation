@@ -54,7 +54,7 @@ export function QuickTemplatesGrid({
                 <Zap className="h-3.5 w-3.5 shrink-0 text-accent" />
               </div>
               <span className="numeric text-caption text-subtle-foreground">
-                {isPending ? "Добавляем..." : `${formatCalories(calories)} · ${MEAL_SLOT_LABELS[template.mealSlot]}`}
+                {isPending ? "Добавляем…" : `${formatCalories(calories)} · ${MEAL_SLOT_LABELS[template.mealSlot]}`}
               </span>
             </button>
           );

@@ -100,8 +100,8 @@ export function NutritionStatsCard({
       <EmptyState
         className="py-10"
         icon={<BarChart3 className="h-5 w-5" />}
-        title="Статистики пока нет"
-        description="Запишите первый приём пищи — и здесь появятся калории, макросы и вода за неделю."
+        title="Неделя пока пустая"
+        description="Запиши первый приём пищи — здесь появятся калории, макросы и вода за семь дней."
       />
     );
   }

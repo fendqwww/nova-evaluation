@@ -132,13 +132,13 @@ export function CareGoalFormModal({
               value={note}
               maxLength={GOAL_NOTE_MAX}
               onChange={(event) => setNote(event.target.value)}
-              placeholder="Что именно хотите изменить и как это проверить"
+              placeholder="Что именно хочешь изменить и как это проверить"
             />
           </div>
 
           {mutation.isError && (
             <p className="text-caption text-destructive">
-              Не удалось сохранить. Попробуйте ещё раз.
+              Не удалось сохранить. Попробуй ещё раз.
             </p>
           )}
 
@@ -148,7 +148,7 @@ export function CareGoalFormModal({
             disabled={!parsed.success || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Сохраняем..." : goal ? "Сохранить" : "Создать цель"}
+            {mutation.isPending ? "Сохраняем…" : goal ? "Сохранить" : "Создать цель"}
           </Button>
         </div>
       </ModalContent>

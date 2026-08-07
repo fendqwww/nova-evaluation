@@ -160,8 +160,8 @@ export function GoalsView() {
       {isError && (
         <EmptyState
           icon={<Target className="h-5 w-5" />}
-          title="Не удалось загрузить цели"
-          description="Проверьте соединение и попробуйте снова."
+          title="Цели не загрузились"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить
@@ -174,8 +174,8 @@ export function GoalsView() {
         <EmptyState
           className="py-12"
           icon={<Target className="h-5 w-5" />}
-          title="У тебя пока нет целей"
-          description="Большие результаты начинаются с первой."
+          title="С чего начнём"
+          description="Цель — это то, к чему Nova привяжет твои привычки, тренировки и задачи. Сформулируй первую."
           action={
             <Button size="lg" onClick={openCreate}>
               Создать цель
@@ -203,7 +203,7 @@ export function GoalsView() {
               title={query.trim() ? "Ничего не найдено" : "Здесь пока пусто"}
               description={
                 query.trim()
-                  ? "Попробуйте другой запрос или снимите фильтр."
+                  ? "Попробуй другой запрос или сними фильтр."
                   : "В этом фильтре нет целей."
               }
               action={

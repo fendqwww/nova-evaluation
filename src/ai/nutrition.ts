@@ -38,7 +38,7 @@ export async function analyzeFoodPhoto(
     throw new GeminiError(
       "invalid_response",
       `Food analysis failed validation: ${result.error.message}`,
-      "Не удалось распознать фото. Попробуйте другое или заполните продукт вручную.",
+      "Не удалось распознать фото. Попробуй другое или заполни продукт вручную.",
       true,
     );
   }

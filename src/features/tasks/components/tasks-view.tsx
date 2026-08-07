@@ -140,8 +140,8 @@ export function TasksView() {
       {isError && (
         <EmptyState
           icon={<ListTodo className="h-5 w-5" />}
-          title="Не удалось загрузить задачи"
-          description="Проверьте соединение и попробуйте снова."
+          title="Задачи не загрузились"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить
@@ -154,8 +154,8 @@ export function TasksView() {
         <EmptyState
           className="py-12"
           icon={<ListTodo className="h-5 w-5" />}
-          title="У тебя пока нет задач"
-          description="Один маленький шаг сегодня — уже прогресс."
+          title="Список пуст"
+          description="Запиши то, что висит в голове. Один закрытый пункт сегодня — уже движение."
           action={
             <Button size="lg" onClick={openCreate}>
               Создать задачу
@@ -189,7 +189,7 @@ export function TasksView() {
               }
               description={
                 query.trim()
-                  ? "Попробуйте другой запрос или снимите фильтр."
+                  ? "Попробуй другой запрос или сними фильтр."
                   : filter === "open" || filter === "today"
                     ? "Ни одной активной задачи не осталось."
                     : "В этом фильтре нет задач."
@@ -292,7 +292,7 @@ export function TasksView() {
                           disabled={clearCompleted.isPending}
                           onClick={() => clearCompleted.mutate({ rawInitData })}
                         >
-                          {clearCompleted.isPending ? "Удаляем..." : "Удалить"}
+                          {clearCompleted.isPending ? "Удаляем…" : "Удалить"}
                         </Button>
                       </div>
                     </div>
@@ -300,7 +300,7 @@ export function TasksView() {
 
                   {clearCompleted.isError && (
                     <p className="text-caption text-destructive">
-                      Не удалось очистить. Попробуйте ещё раз.
+                      Не удалось очистить. Попробуй ещё раз.
                     </p>
                   )}
                 </div>

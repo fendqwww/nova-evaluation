@@ -293,7 +293,7 @@ export function HabitDetailModal({
                     disabled={removeHabit.isPending}
                     onClick={() => removeHabit.mutate({ rawInitData, habitId })}
                   >
-                    {removeHabit.isPending ? "Удаляем..." : "Удалить"}
+                    {removeHabit.isPending ? "Удаляем…" : "Удалить"}
                   </Button>
                 </div>
               </div>
@@ -301,7 +301,7 @@ export function HabitDetailModal({
 
             {(archive.isError || removeHabit.isError) && (
               <p className="text-caption text-destructive">
-                Не удалось выполнить действие. Попробуйте ещё раз.
+                Не удалось выполнить действие. Попробуй ещё раз.
               </p>
             )}
           </div>

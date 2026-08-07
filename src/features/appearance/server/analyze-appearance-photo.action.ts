@@ -4,6 +4,7 @@ import { z } from "zod";
 import { requireUserContext } from "@/server/auth/current-user";
 import { todayIn } from "@/shared/lib/calendar-day";
 import { getSettings } from "@/features/settings/server/settings.repository";
+import { savePhotoAnalysis } from "@/features/appearance/server/appearance.repository";
 import { analyzeAppearancePhoto } from "@/ai/appearance";
 import { GeminiError } from "@/ai/gemini";
 import { AiLimitExceededError } from "@/ai/limits";
@@ -15,6 +16,12 @@ const APPEARANCE_PHOTO_MAX_CHARS = 1_500_000;
 const analyzeAppearancePhotoInputSchema = z.object({
   rawInitData: z.string().min(1).optional(),
   imageData: imageDataUrlSchema(APPEARANCE_PHOTO_MAX_CHARS),
+  /**
+   * The row to attach the result to. Optional because the add-photo modal
+   * analyses an image that has no row yet — there the result travels back to
+   * the client and is written with the photo itself.
+   */
+  photoId: z.string().min(1).optional(),
 });
 
 export type AnalyzeAppearancePhotoInput = z.input<typeof analyzeAppearancePhotoInputSchema>;
@@ -36,7 +43,7 @@ export type AnalyzeAppearancePhotoResult =
 export async function analyzeAppearancePhotoAction(
   input: AnalyzeAppearancePhotoInput,
 ): Promise<AnalyzeAppearancePhotoResult> {
-  const { rawInitData, imageData } = analyzeAppearancePhotoInputSchema.parse(input);
+  const { rawInitData, imageData, photoId } = analyzeAppearancePhotoInputSchema.parse(input);
   // The user's own calendar day, because the AI budget renews per day in their
   // timezone rather than at UTC midnight — see src/ai/limits.ts.
   const { userId, timezone } = await requireUserContext(rawInitData);
@@ -55,6 +62,16 @@ export async function analyzeAppearancePhotoAction(
       todayIn(timezone),
       parseImageDataUrl(imageData),
     );
+
+    // Persist before returning, so the budget this call just spent buys a
+    // result that survives closing the modal. A photo that isn't the caller's
+    // simply doesn't match, and the analysis still travels back to them.
+    // Refreshing the section is the caller's job, the same as every other
+    // mutation here — the client invalidates its appearance query.
+    if (photoId) {
+      await savePhotoAnalysis(userId, photoId, analysis);
+    }
+
     return { ok: true, analysis };
   } catch (error) {
     if (error instanceof AiLimitExceededError) {
@@ -64,6 +81,6 @@ export async function analyzeAppearancePhotoAction(
       return { ok: false, reason: "error", message: error.userMessage };
     }
     console.error("[analyzeAppearancePhotoAction] unexpected failure", error);
-    return { ok: false, reason: "error", message: "Не удалось проанализировать фото. Попробуйте ещё раз." };
+    return { ok: false, reason: "error", message: "Не удалось проанализировать фото. Попробуй ещё раз." };
   }
 }

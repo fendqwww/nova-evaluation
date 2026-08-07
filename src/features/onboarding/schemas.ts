@@ -54,7 +54,7 @@ export const OCCUPATION_OPTIONS = OCCUPATION_VALUES.map((value) => ({
 }));
 
 export const onboardingProfileSchema = z.object({
-  name: z.string().trim().min(1, "Введите имя").max(60, "Слишком длинное имя"),
+  name: z.string().trim().min(1, "Введи имя").max(60, "Слишком длинное имя"),
   age: z.coerce.number().int().min(10, "Минимум 10 лет").max(120, "Максимум 120 лет"),
   heightCm: z.coerce
     .number()
@@ -69,7 +69,7 @@ export const onboardingProfileSchema = z.object({
   gender: z.enum(GENDER_VALUES),
   primaryGoal: z.enum(PRIMARY_GOAL_VALUES),
   occupation: z.enum(OCCUPATION_VALUES),
-  timezone: z.string().min(1, "Выберите часовой пояс"),
+  timezone: z.string().min(1, "Выбери часовой пояс"),
   // Not a question the flow asks. Every profile is created on Nova Blue and
   // the user re-picks it later in Профиль → Внешний вид, so the value is
   // carried silently with a default instead of gating completion on it.

@@ -3,10 +3,11 @@ import type { PlanId } from "@/features/settings/types";
 /**
  * The three NOVA tiers, as the subscription screen renders them.
  *
- * Presentation only. There is no billing and no gate that reads `plan` to
- * refuse a section, and the screen says so plainly rather than implying a
- * paywall that does not exist. When payments land, this file stays the copy
- * and the enforcement goes next to the features it limits, not here.
+ * Presentation only. No gate reads this file — enforcement lives next to the
+ * feature it limits, and today that is exactly one place (see below). When a
+ * payment provider lands, this file stays the copy; the grant stays in
+ * server/subscription.repository.ts and the checkout becomes a new caller of
+ * it.
  *
  * The one number here that *is* enforced is FREE's daily AI allowance, and it
  * is enforced in src/ai/limits.ts rather than from this file — this is the
@@ -55,12 +56,15 @@ export const PLAN_LIST: Plan[] = [
     price: 299,
     tone: "blue",
     inherits: "free",
+    // Не список новых функций: всё это есть и во FREE, просто в пределах
+    // дневного лимита. PLUS снимает лимит — это единственное, что тариф
+    // реально меняет, и обещать здесь что-то ещё значит продавать несуществующее.
     features: [
-      { text: "Безлимитный AI Coach", included: true },
-      { text: "Анализ еды по фото", included: true },
-      { text: "Автоматический расчёт КБЖУ", included: true },
-      { text: "Анализ внешности", included: true },
-      { text: "Расширенная аналитика", included: true },
+      { text: "Безлимитный AI Coach — без дневного лимита", included: true },
+      { text: "Анализ еды по фото без ограничений", included: true },
+      { text: "Анализ внешности без ограничений", included: true },
+      { text: "Ежедневный AI-разбор дня", included: true },
+      { text: "Приоритетная поддержка", included: true },
     ],
   },
   {

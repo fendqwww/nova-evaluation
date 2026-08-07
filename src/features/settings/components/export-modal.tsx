@@ -83,7 +83,7 @@ export function ExportModal({
         <ModalHeader>
           <ModalTitle>Экспорт данных</ModalTitle>
           <ModalDescription>
-            Один JSON-файл со всем, что Nova хранит о вашем аккаунте.
+            Один JSON-файл со всем, что Nova хранит о твоём аккаунте.
           </ModalDescription>
         </ModalHeader>
 
@@ -105,7 +105,7 @@ export function ExportModal({
 
           {exportError && (
             <p className="text-caption text-destructive">
-              Не удалось собрать файл. Попробуйте ещё раз.
+              Не удалось собрать файл. Попробуй ещё раз.
             </p>
           )}
 

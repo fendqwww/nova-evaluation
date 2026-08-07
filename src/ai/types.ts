@@ -105,8 +105,52 @@ export const FOOD_ANALYSIS_JSON_SCHEMA = {
 // Appearance-photo analysis
 // ---------------------------------------------------------------------------
 
+/**
+ * Facial structure, read descriptively.
+ *
+ * The point of this block is that a styling recommendation has to be grounded
+ * in something: "боковой пробор" is noise on its own and useful once it
+ * follows from an observed face shape. So these are neutral descriptors a
+ * stylist would use — never a rating, never a comparison to anyone else, and
+ * never a judgement about the person. The prompt holds that line; the schema
+ * just gives it somewhere to put the answer.
+ */
+export const appearanceFaceSchema = z.object({
+  /** "Овальная, с мягкой линией челюсти." */
+  shape: z.string().trim().max(200),
+  /** Balance of the upper/middle/lower thirds. */
+  proportions: z.string().trim().max(200),
+  /** Stated as an observation, not a defect — near-perfect symmetry is rare. */
+  symmetry: z.string().trim().max(200),
+  /** Eyes, brows, nose, lips, jaw, cheekbones — one observation each. */
+  features: z.array(z.string().trim().min(1).max(200)).max(6),
+});
+
+export type AppearanceFace = z.infer<typeof appearanceFaceSchema>;
+
+/** How a single observed zone is doing — drives the chip colour in the UI. */
+export const APPEARANCE_ZONE_STATES = ["good", "neutral", "attention"] as const;
+export type AppearanceZoneState = (typeof APPEARANCE_ZONE_STATES)[number];
+
+/**
+ * A per-area reading: T-зона, под глазами, щёки, волосы, борода.
+ *
+ * Free-form `zone` rather than a fixed union — what is worth commenting on
+ * depends entirely on the photo, and a closed list would either be too long to
+ * steer the model with or would silently drop the interesting observation.
+ */
+export const appearanceZoneSchema = z.object({
+  zone: z.string().trim().min(1).max(60),
+  state: z.enum(APPEARANCE_ZONE_STATES),
+  note: z.string().trim().min(1).max(200),
+});
+
+export type AppearanceZone = z.infer<typeof appearanceZoneSchema>;
+
 export const appearanceAnalysisSchema = z.object({
   isAnalyzable: z.boolean(),
+  face: appearanceFaceSchema,
+  zones: z.array(appearanceZoneSchema).max(8),
   strengths: z.array(z.string().trim().min(1).max(200)).max(5),
   weaknesses: z.array(z.string().trim().min(1).max(200)).max(5),
   recommendations: z.array(z.string().trim().min(1).max(200)).max(5),
@@ -123,6 +167,8 @@ export const APPEARANCE_ANALYSIS_JSON_SCHEMA = {
   additionalProperties: false,
   required: [
     "isAnalyzable",
+    "face",
+    "zones",
     "strengths",
     "weaknesses",
     "recommendations",
@@ -134,6 +180,56 @@ export const APPEARANCE_ANALYSIS_JSON_SCHEMA = {
     isAnalyzable: {
       type: "boolean",
       description: "false, если на фото не видно лицо/тело достаточно чётко.",
+    },
+    face: {
+      type: "object",
+      description:
+        "Описание черт лица. Если лицо не видно — пустые строки и пустой список.",
+      additionalProperties: false,
+      required: ["shape", "proportions", "symmetry", "features"],
+      properties: {
+        shape: {
+          type: "string",
+          description:
+            "Форма лица нейтральным описанием: овальная, круглая, квадратная, вытянутая, сердцевидная, ромбовидная — и линия челюсти.",
+        },
+        proportions: {
+          type: "string",
+          description:
+            "Соотношение верхней, средней и нижней третей лица — что длиннее, что короче, насколько сбалансировано.",
+        },
+        symmetry: {
+          type: "string",
+          description:
+            "Наблюдение о симметрии. Полная симметрия — редкость, пиши это как факт, а не как недостаток.",
+        },
+        features: {
+          type: "array",
+          description:
+            "До шести наблюдений о конкретных чертах: глаза, брови, нос, губы, скулы, линия челюсти. По одному наблюдению на черту.",
+          items: { type: "string" },
+        },
+      },
+    },
+    zones: {
+      type: "array",
+      description:
+        "До восьми зон, разобранных по отдельности: T-зона, щёки, под глазами, губы, волосы, борода. Только то, что реально видно на фото.",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        required: ["zone", "state", "note"],
+        properties: {
+          zone: { type: "string", description: "Название зоны, например «под глазами»." },
+          state: {
+            type: "string",
+            enum: ["good", "neutral", "attention"],
+            description:
+              "good — зона в хорошем состоянии; neutral — норма без замечаний; attention — стоит поработать.",
+          },
+          note: { type: "string", description: "Одно конкретное наблюдение по этой зоне." },
+        },
+      },
     },
     strengths: {
       type: "array",

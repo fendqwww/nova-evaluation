@@ -45,7 +45,7 @@ export const calendarDaySchema = z
 export const foodNameSchema = z
   .string()
   .trim()
-  .min(1, "Введите название")
+  .min(1, "Введи название")
   .max(FOOD_NAME_MAX, "Слишком длинное название");
 
 /** What the create/edit food form collects. */
@@ -96,12 +96,12 @@ export const templateDraftSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Введите название")
+    .min(1, "Введи название")
     .max(TEMPLATE_NAME_MAX, "Слишком длинное название"),
   mealSlot: mealSlotSchema,
   items: z
     .array(templateItemDraftSchema)
-    .min(1, "Добавьте хотя бы один продукт")
+    .min(1, "Добавь хотя бы один продукт")
     .max(TEMPLATE_ITEMS_MAX, "Слишком много продуктов"),
 });
 

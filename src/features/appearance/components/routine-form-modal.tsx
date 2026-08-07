@@ -206,7 +206,7 @@ export function RoutineFormModal({
 
           {mutation.isError && (
             <p className="text-caption text-destructive">
-              Не удалось сохранить. Попробуйте ещё раз.
+              Не удалось сохранить. Попробуй ещё раз.
             </p>
           )}
 
@@ -216,7 +216,7 @@ export function RoutineFormModal({
             disabled={!parsed.success || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Сохраняем..." : routine ? "Сохранить" : "Создать процедуру"}
+            {mutation.isPending ? "Сохраняем…" : routine ? "Сохранить" : "Создать процедуру"}
           </Button>
         </div>
       </ModalContent>

@@ -153,7 +153,7 @@ export function SleepLogModal({
           </label>
 
           {hasError && (
-            <p className="text-caption text-destructive">Не удалось сохранить. Попробуйте ещё раз.</p>
+            <p className="text-caption text-destructive">Не удалось сохранить. Попробуй ещё раз.</p>
           )}
 
           <div className="flex gap-2">
@@ -165,7 +165,7 @@ export function SleepLogModal({
                 disabled={isPending || isDeleting}
                 onClick={() => void remove()}
               >
-                {isDeleting ? "..." : <Trash2 className="h-4 w-4" />}
+                {isDeleting ? "…" : <Trash2 className="h-4 w-4" />}
               </Button>
             )}
             <Button
@@ -174,7 +174,7 @@ export function SleepLogModal({
               disabled={!isValid || isPending || isDeleting}
               onClick={() => void save()}
             >
-              {isPending ? "Сохраняем..." : "Сохранить"}
+              {isPending ? "Сохраняем…" : "Сохранить"}
             </Button>
           </div>
         </div>

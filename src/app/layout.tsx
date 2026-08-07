@@ -4,8 +4,6 @@ import type { Metadata } from "next";
 // Same typeface, same --font-geist-* variables globals.css already binds to.
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
-import { TelegramProvider } from "@/components/providers/telegram-provider";
-import { QueryProvider } from "@/components/providers/query-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -23,10 +21,15 @@ export default function RootLayout({
       lang="en"
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
+      {/*
+        Providers deliberately do NOT live here. TelegramProvider withholds
+        its children until the Mini App SDK has settled, which would leave the
+        public marketing pages with no server-rendered HTML — fatal for SEO,
+        link previews and LCP. Each route group that actually needs the
+        Telegram session mounts them itself: (app) and onboarding.
+      */}
       <body className="flex min-h-full flex-col bg-background text-foreground">
-        <QueryProvider>
-          <TelegramProvider>{children}</TelegramProvider>
-        </QueryProvider>
+        {children}
       </body>
     </html>
   );

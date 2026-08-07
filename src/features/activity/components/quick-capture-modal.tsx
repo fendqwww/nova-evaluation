@@ -85,7 +85,7 @@ export function QuickCaptureModal({
             }}
           />
           {mutation.isError && (
-            <p className="text-caption text-destructive">Не удалось сохранить. Попробуйте ещё раз.</p>
+            <p className="text-caption text-destructive">Не удалось сохранить. Попробуй ещё раз.</p>
           )}
           <Button
             className="w-full"
@@ -93,7 +93,7 @@ export function QuickCaptureModal({
             disabled={mutation.isPending || !title.trim()}
             onClick={handleSubmit}
           >
-            {mutation.isPending ? "Сохраняем..." : copy.cta}
+            {mutation.isPending ? "Сохраняем…" : copy.cta}
           </Button>
         </div>
       </ModalContent>

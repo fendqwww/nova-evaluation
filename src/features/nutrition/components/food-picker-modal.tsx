@@ -53,7 +53,7 @@ export function FoodPickerModal({
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Найти продукт..."
+              placeholder="Поиск продукта"
               className="pl-10"
             />
           </div>
@@ -65,8 +65,8 @@ export function FoodPickerModal({
               title={trimmed ? "Ничего не найдено" : "В каталоге пока пусто"}
               description={
                 trimmed
-                  ? "Создайте новый продукт с таким названием."
-                  : "Добавьте свой первый продукт, чтобы начать вести дневник."
+                  ? "Создай новый продукт с таким названием."
+                  : "Добавь первый продукт — дальше он всегда под рукой."
               }
               action={
                 <Button onClick={() => onCreateNew(trimmed)}>

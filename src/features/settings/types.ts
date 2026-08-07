@@ -83,7 +83,14 @@ export interface UserSettingsItem {
   unitSystem: UnitSystem;
   notifications: NotificationSettings;
   ai: AiSettings;
+  /** Already resolved for expiry — a lapsed paid tier reads as "free" here. */
   plan: PlanId;
+  /**
+   * ISO instant the current paid period ends. Null on FREE and on a paid tier
+   * granted with no end date; never a date in the past, because a period that
+   * is over has already resolved the plan back down to FREE.
+   */
+  planUntil: string | null;
 }
 
 /**
@@ -98,6 +105,13 @@ export interface SettingsAccount {
   name: string;
   telegramName: string;
   username: string | null;
+  /**
+   * The numeric Telegram id. Shown on the subscription screen and carried in
+   * the support message, because it is the one handle every account has — a
+   * user with no @username still has to be findable when they write in to buy
+   * PLUS.
+   */
+  telegramId: string;
   photoUrl: string | null;
   /** IANA zone, the authority for every calendar day in the app. */
   timezone: string;

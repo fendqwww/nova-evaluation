@@ -292,7 +292,7 @@ export function GoalDetailModal({
 
             {(addStep.isError || removeStep.isError) && (
               <p className="text-caption text-destructive">
-                Не удалось обновить шаги. Попробуйте ещё раз.
+                Не удалось обновить шаги. Попробуй ещё раз.
               </p>
             )}
           </div>
@@ -345,7 +345,7 @@ export function GoalDetailModal({
                     disabled={removeGoal.isPending}
                     onClick={() => removeGoal.mutate({ rawInitData, goalId })}
                   >
-                    {removeGoal.isPending ? "Удаляем..." : "Удалить"}
+                    {removeGoal.isPending ? "Удаляем…" : "Удалить"}
                   </Button>
                 </div>
               </div>
@@ -353,7 +353,7 @@ export function GoalDetailModal({
 
             {removeGoal.isError && (
               <p className="text-caption text-destructive">
-                Не удалось удалить. Попробуйте ещё раз.
+                Не удалось удалить. Попробуй ещё раз.
               </p>
             )}
           </div>

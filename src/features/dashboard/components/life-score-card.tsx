@@ -8,11 +8,14 @@ import { CircularProgress } from "@/shared/ui/circular-progress";
 import { LifeScoreBreakdownModal } from "@/features/dashboard/components/life-score-breakdown-modal";
 import type { LifeScoreResult } from "@/features/life-score/types";
 
+// Читается как вывод, а не как оценка: индекс уже показан цифрой, и строка
+// под ним должна говорить, что эта цифра значит сегодня. Обращение на «ты» —
+// как во всём приложении и в промпте коуча.
 function scoreLabel(score: number): string {
-  if (score >= 80) return "Отличное состояние";
-  if (score >= 60) return "Хорошее состояние";
+  if (score >= 80) return "Форма держится";
+  if (score >= 60) return "Ровный день";
   if (score >= 40) return "Есть куда расти";
-  return "Начните с малого";
+  return "День только начинается";
 }
 
 /**

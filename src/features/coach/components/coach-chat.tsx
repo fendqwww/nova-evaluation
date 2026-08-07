@@ -82,7 +82,7 @@ export function CoachChat({
           disabled={isLoadingEarlier}
           onClick={onLoadEarlier}
         >
-          {isLoadingEarlier ? "Загружаем..." : "Показать более ранние"}
+          {isLoadingEarlier ? "Загружаем…" : "Показать более ранние"}
         </Button>
       )}
 

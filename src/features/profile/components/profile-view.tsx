@@ -63,8 +63,8 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
       {isError && (
         <EmptyState
           icon={<Sparkles className="h-5 w-5" />}
-          title="Не удалось загрузить профиль"
-          description="Проверьте соединение и попробуйте снова."
+          title="Профиль не загрузился"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить

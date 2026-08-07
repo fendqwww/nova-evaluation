@@ -74,14 +74,14 @@ export function PhotoCompareModal({
           )}
 
           <PhotoStrip
-            label="Выберите «до»"
+            label="Выбери «до»"
             photos={inArea}
             selectedId={before.id}
             today={today}
             onSelect={setBeforeId}
           />
           <PhotoStrip
-            label="Выберите «после»"
+            label="Выбери «после»"
             photos={inArea}
             selectedId={after.id}
             today={today}

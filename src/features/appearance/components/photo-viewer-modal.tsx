@@ -19,15 +19,8 @@ import { formatDay, type CalendarDay } from "@/shared/lib/calendar-day";
 import { areaLabel } from "@/features/appearance/lib/areas";
 import { usePhotoImage } from "@/features/appearance/hooks/use-photo-image";
 import { analyzeAppearancePhotoAction } from "@/features/appearance/server/analyze-appearance-photo.action";
+import { AppearanceAnalysisCard } from "@/features/appearance/components/appearance-analysis-card";
 import type { CarePhotoItem } from "@/features/appearance/types";
-
-const ANALYSIS_SECTIONS = [
-  { key: "strengths", label: "Сильные стороны" },
-  { key: "weaknesses", label: "Точки роста" },
-  { key: "recommendations", label: "Рекомендации" },
-  { key: "care", label: "Уход" },
-  { key: "style", label: "Стиль" },
-] as const;
 
 /**
  * One photo at full size.
@@ -43,12 +36,15 @@ export function PhotoViewerModal({
   open,
   onOpenChange,
   onDelete,
+  onAnalyzed,
 }: {
   photo: CarePhotoItem | null;
   today: CalendarDay;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDelete: (photoId: string) => Promise<unknown>;
+  /** Refetch the section once an analysis has been written to the row. */
+  onAnalyzed?: () => Promise<unknown> | void;
 }) {
   const rawInitData = useRawInitData();
   const [confirming, setConfirming] = useState(false);
@@ -57,15 +53,24 @@ export function PhotoViewerModal({
 
   const analyze = useMutation({
     mutationFn: () =>
-      analyzeAppearancePhotoAction({ rawInitData, imageData: imageData ?? photo!.thumbData }),
+      analyzeAppearancePhotoAction({
+        rawInitData,
+        imageData: imageData ?? photo!.thumbData,
+        // Attaching it to the row is what makes the result outlive this modal.
+        photoId: photo!.id,
+      }),
     onSuccess: (result) => {
       setLimitInfo(result.ok || result.reason !== "limit" ? null : { used: result.used, limit: result.limit });
+      // The photo now carries an analysis, so the section snapshot is stale.
+      if (result.ok) void onAnalyzed?.();
     },
   });
 
   if (!photo) return null;
 
-  const analysis = analyze.data?.ok ? analyze.data.analysis : null;
+  // A stored analysis wins until this session produces a fresher one, so
+  // reopening a photo shows its reading immediately instead of an empty button.
+  const analysis = analyze.data?.ok ? analyze.data.analysis : photo.analysis;
   const analyzeErrorMessage = analyze.data && !analyze.data.ok && analyze.data.reason === "error"
     ? analyze.data.message
     : null;
@@ -97,17 +102,19 @@ export function PhotoViewerModal({
 
           {photo.note && <p className="text-caption text-muted-foreground">{photo.note}</p>}
 
-          {!analysis && (
-            <Button
-              variant="secondary"
-              className="w-full"
-              disabled={analyze.isPending || isPending}
-              onClick={() => analyze.mutate()}
-            >
-              <Sparkles className="h-4 w-4" />
-              {analyze.isPending ? "Анализируем..." : "Анализ фото"}
-            </Button>
-          )}
+          <Button
+            variant="secondary"
+            className="w-full"
+            disabled={analyze.isPending || isPending}
+            onClick={() => analyze.mutate()}
+          >
+            <Sparkles className="h-4 w-4" />
+            {analyze.isPending
+              ? "Анализируем…"
+              : analysis
+                ? "Проанализировать заново"
+                : "Анализ фото"}
+          </Button>
 
           {limitInfo && (
             <Card elevation="inset">
@@ -122,43 +129,7 @@ export function PhotoViewerModal({
             <p className="text-caption text-destructive">{analyzeErrorMessage}</p>
           )}
 
-          {analysis && (
-            <Card elevation="accent">
-              <div className="flex flex-col gap-3 p-3.5">
-                <div className="flex items-center gap-2 text-accent">
-                  <Sparkles className="h-3.5 w-3.5 shrink-0" />
-                  <span className="text-caption font-medium">
-                    Уверенность анализа — {Math.round(analysis.confidence * 100)}%
-                  </span>
-                </div>
-
-                {!analysis.isAnalyzable && (
-                  <p className="text-caption text-muted-foreground">
-                    На фото не получилось достаточно чётко разглядеть лицо или тело — попробуйте
-                    более освещённый и чёткий снимок.
-                  </p>
-                )}
-
-                {ANALYSIS_SECTIONS.map(({ key, label }) => {
-                  const items = analysis[key];
-                  if (items.length === 0) return null;
-
-                  return (
-                    <div key={key} className="flex flex-col gap-1">
-                      <p className="text-caption font-medium text-foreground">{label}</p>
-                      <ul className="flex flex-col gap-1">
-                        {items.map((item) => (
-                          <li key={item} className="text-caption text-muted-foreground">
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
-          )}
+          {analysis && <AppearanceAnalysisCard analysis={analysis} />}
 
           {confirming ? (
             <div className="flex flex-col gap-2 rounded-xl border border-destructive/30 bg-destructive-muted p-3">

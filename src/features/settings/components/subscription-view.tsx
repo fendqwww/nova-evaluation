@@ -11,6 +11,11 @@ import { useSettings } from "@/features/settings/hooks/use-settings";
 import { PlanCard } from "@/features/settings/components/plan-card";
 import { AiUsageCard } from "@/features/settings/components/ai-usage-card";
 import { PLAN_LIST } from "@/features/settings/lib/plans";
+import {
+  SUPPORT_USERNAME,
+  accountHandle,
+  planRequestLink,
+} from "@/features/settings/lib/support";
 
 /**
  * The NOVA tiers.
@@ -20,13 +25,18 @@ import { PLAN_LIST } from "@/features/settings/lib/plans";
  * wearing a costume. It also means the comparison is linkable, which is what a
  * pricing screen is for.
  *
- * Nothing here is enforced anywhere in the app. There is no billing, no
- * entitlement check and no feature that refuses to run on FREE — the notice at
- * the bottom says so, because a paywall screen that implies limits which do not
- * exist is the one kind of lie a settings section cannot afford.
+ * One thing here is genuinely enforced: FREE's daily AI allowance, in
+ * src/ai/limits.ts. PLUS and MAX lift it, which is why the AI budget card sits
+ * above the tiers rather than in the AI settings group — it is the thing being
+ * sold, so it belongs next to the price.
+ *
+ * There is no payment provider yet, and the tiers are sold by talking to us.
+ * The notice at the bottom says exactly that: a screen that promised checkout
+ * would be lying, and one that said "скоро" would be lying in the other
+ * direction, because the tier is real and can be activated today.
  */
 export function SubscriptionView() {
-  const { settings, aiUsage, isPending, isError, retry } = useSettings();
+  const { account, settings, aiUsage, isPending, isError, retry } = useSettings();
 
   return (
     <PageContainer className="flex flex-col gap-5">
@@ -44,8 +54,8 @@ export function SubscriptionView() {
             Подписка
           </h1>
           <p className="text-caption text-muted-foreground">
-            Nova работает целиком на бесплатном тарифе. Платные — про AI, который
-            видит и помнит.
+            Nova работает целиком на бесплатном тарифе. Платные снимают дневной лимит
+            AI — коуча, анализа еды и внешности.
           </p>
         </div>
       </header>
@@ -61,8 +71,8 @@ export function SubscriptionView() {
       {isError && (
         <EmptyState
           icon={<Sparkles className="h-5 w-5" />}
-          title="Не удалось загрузить тарифы"
-          description="Проверьте соединение и попробуйте снова."
+          title="Тарифы не загрузились"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить
@@ -71,22 +81,48 @@ export function SubscriptionView() {
         />
       )}
 
-      {!isPending && !isError && settings && aiUsage && (
+      {/* `account` joins the guard because the tier buttons and the contact
+          line both address the user by handle — all three fields come from the
+          same snapshot, so this narrows them together instead of leaving a
+          sentence that can render as "Ваш аккаунт для связи — ." */}
+      {!isPending && !isError && settings && aiUsage && account && (
         <>
           <AiUsageCard usage={aiUsage} />
 
           <div className="flex flex-col gap-4">
             {PLAN_LIST.map((plan) => (
-              <PlanCard key={plan.id} plan={plan} current={settings.plan} />
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                current={settings.plan}
+                planUntil={settings.planUntil}
+                // FREE is nobody's upgrade, so it gets no button. Every paid
+                // tier gets a link that already knows which tier it is asking
+                // for and which account is asking.
+                href={plan.id === "free" ? null : planRequestLink(plan.id, account)}
+              />
             ))}
           </div>
 
           <Card elevation="inset">
-            <p className="p-4 text-caption text-muted-foreground">
-              Оплата пока не подключена: деньги не списываются, тариф не меняется, а
-              все функции Nova доступны в рамках NOVA FREE. Когда подписки заработают,
-              вы увидите это здесь первым.
-            </p>
+            <div className="flex flex-col gap-2 p-4">
+              <p className="text-caption text-foreground">
+                PLUS доступен. Для активации свяжитесь с нами.
+              </p>
+              <p className="text-caption text-muted-foreground">
+                Автоматической оплаты пока нет: напишите{" "}
+                <a
+                  href={`https://t.me/${SUPPORT_USERNAME}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-accent underline underline-offset-2"
+                >
+                  @{SUPPORT_USERNAME}
+                </a>
+                , и мы включим тариф вручную сразу после оплаты. Ваш аккаунт для связи —{" "}
+                <span className="text-foreground">{accountHandle(account)}</span>.
+              </p>
+            </div>
           </Card>
         </>
       )}

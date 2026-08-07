@@ -40,7 +40,7 @@ export async function analyzeAppearancePhoto(
     throw new GeminiError(
       "invalid_response",
       `Appearance analysis failed validation: ${result.error.message}`,
-      "Не удалось разобрать фото. Попробуйте другое или другое освещение.",
+      "Не удалось разобрать фото. Попробуй другое фото или другой свет.",
       true,
     );
   }

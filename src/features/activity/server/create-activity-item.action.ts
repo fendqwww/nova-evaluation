@@ -8,7 +8,7 @@ import { createActivityItem } from "@/features/activity/server/activity.reposito
 const createActivityItemInputSchema = z.object({
   rawInitData: z.string().min(1).optional(),
   type: z.enum(["goal", "habit", "task"]),
-  title: z.string().trim().min(1, "Введите название").max(120, "Слишком длинное название"),
+  title: z.string().trim().min(1, "Введи название").max(120, "Слишком длинное название"),
 });
 
 export type CreateActivityItemInput = z.infer<typeof createActivityItemInputSchema>;

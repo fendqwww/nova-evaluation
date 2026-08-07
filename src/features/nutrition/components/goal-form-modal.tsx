@@ -85,11 +85,11 @@ export function GoalFormModal({
           </label>
 
           {hasError && (
-            <p className="text-caption text-destructive">Не удалось сохранить. Попробуйте ещё раз.</p>
+            <p className="text-caption text-destructive">Не удалось сохранить. Попробуй ещё раз.</p>
           )}
 
           <Button className="w-full" size="lg" disabled={!isValid || isPending} onClick={() => void save()}>
-            {isPending ? "Сохраняем..." : "Сохранить"}
+            {isPending ? "Сохраняем…" : "Сохранить"}
           </Button>
         </div>
       </ModalContent>

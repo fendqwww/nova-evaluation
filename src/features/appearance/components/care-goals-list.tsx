@@ -47,10 +47,10 @@ export function CareGoalsList({
       <EmptyState
         className="py-8"
         icon={<Target className="h-5 w-5" />}
-        title="Целей по внешности нет"
-        description="Цель задаёт направление, а процедуры — путь к ней."
+        title="Направление не задано"
+        description="Цель задаёт направление, процедуры — путь к ней. Начни с цели."
         action={
-          <Button onClick={onCreate}>
+          <Button size="lg" onClick={onCreate}>
             <Plus className="h-4 w-4" />
             Добавить цель
           </Button>

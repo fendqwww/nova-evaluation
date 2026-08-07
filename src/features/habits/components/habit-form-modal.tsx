@@ -98,7 +98,7 @@ export function HabitFormModal({
 
           {mutation.isError && (
             <p className="text-caption text-destructive">
-              Не удалось сохранить. Попробуйте ещё раз.
+              Не удалось сохранить. Попробуй ещё раз.
             </p>
           )}
 
@@ -109,7 +109,7 @@ export function HabitFormModal({
             onClick={() => mutation.mutate()}
           >
             {mutation.isPending
-              ? "Сохраняем..."
+              ? "Сохраняем…"
               : habit
                 ? "Сохранить"
                 : "Добавить привычку"}

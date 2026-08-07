@@ -389,7 +389,7 @@ export function WorkoutDetailModal({
                     disabled={removeWorkout.isPending}
                     onClick={() => removeWorkout.mutate({ rawInitData, workoutId })}
                   >
-                    {removeWorkout.isPending ? "Удаляем..." : "Удалить"}
+                    {removeWorkout.isPending ? "Удаляем…" : "Удалить"}
                   </Button>
                 </div>
               </div>
@@ -397,7 +397,7 @@ export function WorkoutDetailModal({
 
             {(archive.isError || removeWorkout.isError) && (
               <p className="text-caption text-destructive">
-                Не удалось выполнить действие. Попробуйте ещё раз.
+                Не удалось выполнить действие. Попробуй ещё раз.
               </p>
             )}
           </div>

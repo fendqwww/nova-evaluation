@@ -98,7 +98,7 @@ export function GoalFormModal({
 
           {mutation.isError && (
             <p className="text-caption text-destructive">
-              Не удалось сохранить. Попробуйте ещё раз.
+              Не удалось сохранить. Попробуй ещё раз.
             </p>
           )}
 
@@ -108,7 +108,7 @@ export function GoalFormModal({
             disabled={!isValid || mutation.isPending}
             onClick={() => mutation.mutate()}
           >
-            {mutation.isPending ? "Сохраняем..." : goal ? "Сохранить" : "Добавить цель"}
+            {mutation.isPending ? "Сохраняем…" : goal ? "Сохранить" : "Добавить цель"}
           </Button>
         </div>
       </ModalContent>

@@ -60,8 +60,8 @@ export function SleepView() {
       {isError && (
         <EmptyState
           icon={<Moon className="h-5 w-5" />}
-          title="Не удалось загрузить сон"
-          description="Проверьте соединение и попробуйте снова."
+          title="Сон не загрузился"
+          description="Проверь соединение — записи никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить

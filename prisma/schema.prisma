@@ -134,11 +134,20 @@ model UserSettings {
   aiDailyReport   Boolean @default(true)
   aiVisionEnabled Boolean @default(true)
 
-  // "free" | "plus" | "max". Written by nothing today — there is no billing —
-  // and read by the subscription screen to decide which tier is marked current.
-  // A column rather than a hardcoded "free" so wiring a payment provider later
-  // is an insert, not a schema change plus a rewrite of every read.
-  plan String @default("free")
+  // "free" | "plus" | "max". Written by activatePlan (see
+  // server/subscription.repository.ts) — today only from the manual admin
+  // endpoint, later from a payment provider's webhook, which is the whole
+  // reason the grant is one function rather than an UPDATE at the call site.
+  //
+  // planUntil is when the paid tier lapses; null means "no end date", which is
+  // what FREE always has and what a comped account may have. Expiry is applied
+  // on *read* (resolvePlan in lib/plan-status.ts), not by a scheduled job, so
+  // a lapsed subscription degrades to FREE the moment it is next looked at
+  // with nothing to run at midnight. planSince is kept for support ("since
+  // when has this account been PLUS?") and for future analytics.
+  plan      String    @default("free")
+  planSince DateTime?
+  planUntil DateTime?
 
   // One counter across every AI call that actually produced a result — Coach,
   // food-photo analysis, appearance-photo analysis alike (see src/ai/limits.ts,
@@ -825,6 +834,18 @@ model AppearancePhoto {
   /// Pixel dimensions of the full image, so a viewer can reserve space for it.
   width     Int
   height    Int
+
+  /// The AI reading of this photo, as JSON matching appearanceAnalysisSchema
+  /// (src/ai/types.ts). A String, not a Json column, for the same reason
+  /// CoachMessage.cardJson is: the SQLite connector has no Json type.
+  ///
+  /// Stored rather than recomputed because an analysis costs a call from the
+  /// user's daily AI budget — without this, closing the viewer threw the
+  /// result away and reopening the photo charged for it again.
+  analysisJson String?
+  /// When that analysis was produced, so the viewer can offer a refresh on a
+  /// stale reading without having to parse the JSON to find out.
+  analyzedAt   DateTime?
 
   createdAt DateTime @default(now())
 

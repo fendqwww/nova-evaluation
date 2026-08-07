@@ -80,7 +80,7 @@ export function ClearDataModal({
           <ModalDescription>
             {pending
               ? "Это действие нельзя отменить."
-              : "Выберите, что удалить. Остальные разделы не затрагиваются."}
+              : "Выбери, что удалить. Остальные разделы не затрагиваются."}
           </ModalDescription>
         </ModalHeader>
 

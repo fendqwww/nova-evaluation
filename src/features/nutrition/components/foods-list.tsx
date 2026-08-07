@@ -45,7 +45,7 @@ export function FoodsList({
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Найти продукт..."
+          placeholder="Поиск продукта"
           className="flex-1"
         />
         <Button size="icon" aria-label="Новый продукт" onClick={onCreate}>
@@ -75,10 +75,10 @@ export function FoodsList({
         <EmptyState
           className="py-10"
           icon={<Apple className="h-5 w-5" />}
-          title="Здесь пока пусто"
-          description="Добавьте продукт вручную или создайте его прямо из дневника при первом добавлении."
+          title="Своих продуктов пока нет"
+          description="Добавь продукт вручную или создай прямо из дневника — дальше он всегда под рукой."
           action={
-            <Button onClick={onCreate}>
+            <Button size="lg" onClick={onCreate}>
               <Plus className="h-4 w-4" />
               Новый продукт
             </Button>

@@ -72,6 +72,7 @@ export function AppearanceView() {
     deleteRoutine,
     createPhoto,
     deletePhoto,
+    refresh,
     createGoal,
     updateGoal,
     setGoalCompleted,
@@ -87,7 +88,11 @@ export function AppearanceView() {
   const [menuRoutine, setMenuRoutine] = useState<CareRoutineItem | null>(null);
 
   const [photoAddOpen, setPhotoAddOpen] = useState(false);
-  const [viewingPhoto, setViewingPhoto] = useState<CarePhotoItem | null>(null);
+  // The id, not the object: analysing a photo writes to its row, and a held
+  // copy would keep rendering the pre-analysis version after the refetch lands.
+  const [viewingPhotoId, setViewingPhotoId] = useState<string | null>(null);
+  const viewingPhoto = photos.find((photo) => photo.id === viewingPhotoId) ?? null;
+  const setViewingPhoto = (photo: CarePhotoItem | null) => setViewingPhotoId(photo?.id ?? null);
   const [compareArea, setCompareArea] = useState<CareArea | null>(null);
 
   const [goalFormOpen, setGoalFormOpen] = useState(false);
@@ -180,8 +185,8 @@ export function AppearanceView() {
       {isError && (
         <EmptyState
           icon={<Sparkles className="h-5 w-5" />}
-          title="Не удалось загрузить раздел"
-          description="Проверьте соединение и попробуйте снова."
+          title="Раздел не загрузился"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить
@@ -213,7 +218,7 @@ export function AppearanceView() {
                   className="py-10"
                   icon={<Sparkles className="h-5 w-5" />}
                   title="Ухода пока нет"
-                  description="Добавьте первую процедуру — она появится в списке на каждый день."
+                  description="Добавь первую процедуру — она встанет в список на каждый день."
                   action={
                     <Button size="lg" onClick={() => setTab("routines")}>
                       Настроить уход
@@ -376,6 +381,7 @@ export function AppearanceView() {
         open={viewingPhoto !== null}
         onOpenChange={(next) => !next && setViewingPhoto(null)}
         onDelete={deletePhoto}
+        onAnalyzed={refresh}
       />
 
       <PhotoCompareModal

@@ -6,13 +6,13 @@ export const GOAL_NOTE_MAX = 500;
 export const goalTitleSchema = z
   .string()
   .trim()
-  .min(1, "Введите название")
+  .min(1, "Введи название")
   .max(GOAL_TITLE_MAX, "Слишком длинное название");
 
 export const goalStepTitleSchema = z
   .string()
   .trim()
-  .min(1, "Введите шаг")
+  .min(1, "Введи шаг")
   .max(GOAL_TITLE_MAX, "Слишком длинный шаг");
 
 // An out-of-range component ("2026-02-30") produces an Invalid Date rather

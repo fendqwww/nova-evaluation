@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Home, Target, Repeat, ListTodo, HeartPulse, Sparkles, User } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { TelegramProvider } from "@/components/providers/telegram-provider";
+import { QueryProvider } from "@/components/providers/query-provider";
 import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 
 // Active state is derived from the route inside BottomNavigation, so this
@@ -42,6 +44,14 @@ const navItems: BottomNavigationItem[] = [
   },
 ];
 
+// The Telegram session boots here rather than in the root layout, so the
+// public marketing pages never pay for (or wait on) the Mini App SDK.
 export default function AppLayout({ children }: { children: ReactNode }) {
-  return <AppShell navItems={navItems}>{children}</AppShell>;
+  return (
+    <QueryProvider>
+      <TelegramProvider>
+        <AppShell navItems={navItems}>{children}</AppShell>
+      </TelegramProvider>
+    </QueryProvider>
+  );
 }

@@ -67,6 +67,6 @@ export async function analyzeFoodPhotoAction(
       return { ok: false, reason: "error", message: error.userMessage };
     }
     console.error("[analyzeFoodPhotoAction] unexpected failure", error);
-    return { ok: false, reason: "error", message: "Не удалось проанализировать фото. Попробуйте ещё раз." };
+    return { ok: false, reason: "error", message: "Не удалось проанализировать фото. Попробуй ещё раз." };
   }
 }

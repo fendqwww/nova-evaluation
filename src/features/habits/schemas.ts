@@ -10,7 +10,7 @@ export const EVERY_WEEKDAY_MASK = 0b1111111;
 export const habitTitleSchema = z
   .string()
   .trim()
-  .min(1, "Введите название")
+  .min(1, "Введи название")
   .max(HABIT_TITLE_MAX, "Слишком длинное название");
 
 export const habitNoteSchema = z
@@ -36,7 +36,7 @@ export const habitScheduleSchema = z.discriminatedUnion("kind", [
     weekdayMask: z
       .number()
       .int()
-      .min(1, "Выберите хотя бы один день")
+      .min(1, "Выбери хотя бы один день")
       .max(EVERY_WEEKDAY_MASK, "Некорректные дни"),
   }),
   z.object({

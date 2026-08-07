@@ -39,7 +39,7 @@ export function AiGroup({
           icon={<Sparkles className="h-4 w-4" />}
           tone="ai"
           label="AI Coach"
-          hint="Разбор дня и ответы на основе ваших данных"
+          hint="Разбор дня и ответы на основе твоих данных"
           trailing={
             <Switch
               checked={ai.coachEnabled}
@@ -83,7 +83,7 @@ export function AiGroup({
       {!ai.coachEnabled && (
         <Card elevation="inset">
           <p className="p-3.5 text-caption text-muted-foreground">
-            AI Coach выключен. Nova не отправляет ваши данные в Gemini API, а раздел
+            AI Coach выключен. Nova не отправляет твои данные в Gemini API, а раздел
             «Коуч» показывает, как включить его обратно.
           </p>
         </Card>

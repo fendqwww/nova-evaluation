@@ -27,8 +27,8 @@ export function SleepHistoryList({
       <EmptyState
         className="py-10"
         icon={<History className="h-5 w-5" />}
-        title="История пока пуста"
-        description="Здесь появится каждая записанная ночь — время сна, часы и качество."
+        title="Ночей пока нет"
+        description="Каждая записанная ночь останется здесь — время, часы и качество сна."
       />
     );
   }

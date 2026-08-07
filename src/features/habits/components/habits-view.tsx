@@ -159,8 +159,8 @@ export function HabitsView() {
       {isError && (
         <EmptyState
           icon={<Repeat className="h-5 w-5" />}
-          title="Не удалось загрузить привычки"
-          description="Проверьте соединение и попробуйте снова."
+          title="Привычки не загрузились"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить
@@ -173,8 +173,8 @@ export function HabitsView() {
         <EmptyState
           className="py-12"
           icon={<Repeat className="h-5 w-5" />}
-          title="У тебя пока нет привычек"
-          description="Регулярность важнее интенсивности. Начните с одной."
+          title="Здесь начинается регулярность"
+          description="Одна привычка, которую ты правда будешь делать, меняет больше, чем пять идеальных. Начни с неё."
           action={
             <Button size="lg" onClick={openCreate}>
               Создать привычку
@@ -208,7 +208,7 @@ export function HabitsView() {
               }
               description={
                 query.trim()
-                  ? "Попробуйте другой запрос или снимите фильтр."
+                  ? "Попробуй другой запрос или сними фильтр."
                   : filter === "today" && counts.all > 0
                     ? `Осталось ${counts.all} ${pluralizeRu(counts.all, [
                         "привычка",

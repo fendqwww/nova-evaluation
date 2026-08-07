@@ -86,8 +86,8 @@ export function SleepStatsCard({ logs, today }: { logs: SleepLogItem[]; today: C
       <EmptyState
         className="py-10"
         icon={<BarChart3 className="h-5 w-5" />}
-        title="Статистики пока нет"
-        description="Запишите первую ночь — и здесь появятся часы сна, качество и недельный график."
+        title="Сон ещё не измерен"
+        description="Запиши первую ночь — Nova начнёт считать часы, качество и недельный ритм."
       />
     );
   }

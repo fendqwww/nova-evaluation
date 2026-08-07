@@ -16,7 +16,7 @@ export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
 export const taskTitleSchema = z
   .string()
   .trim()
-  .min(1, "Введите название")
+  .min(1, "Введи название")
   .max(TASK_TITLE_MAX, "Слишком длинное название");
 
 /**

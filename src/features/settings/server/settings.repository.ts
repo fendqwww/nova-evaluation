@@ -8,6 +8,7 @@ import {
   THEME_MODES,
   UNIT_SYSTEMS,
 } from "@/features/settings/schemas";
+import { isPaidPlan, resolvePlan } from "@/features/settings/lib/plan-status";
 import type {
   AiSettings,
   ArchiveItem,
@@ -72,6 +73,7 @@ export const DEFAULT_SETTINGS: UserSettingsItem = {
     vision: true,
   },
   plan: "free",
+  planUntil: null,
 };
 
 /**
@@ -101,6 +103,7 @@ interface SettingsRow {
   aiDailyReport: boolean;
   aiVisionEnabled: boolean;
   plan: string;
+  planUntil: Date | null;
 }
 
 function toSettingsItem(row: SettingsRow): UserSettingsItem {
@@ -122,7 +125,30 @@ function toSettingsItem(row: SettingsRow): UserSettingsItem {
       dailyReport: row.aiDailyReport,
       vision: row.aiVisionEnabled,
     },
-    plan: toUnion<PlanId>(row.plan, PLANS, DEFAULT_SETTINGS.plan),
+    ...resolvePlanFields(row),
+  };
+}
+
+/**
+ * The tier this account is actually on, expiry already applied.
+ *
+ * The one place a stored plan becomes a usable one, which is what makes a
+ * lapsed subscription impossible to miss: src/ai/limits.ts reads its ceiling
+ * from `settings.plan`, and it only ever sees the resolved value. There is no
+ * second path to the column, so there is no way for an expired PLUS to keep
+ * an unlimited AI budget.
+ *
+ * `planUntil` is carried through only while it still applies — a date in the
+ * past belongs to a tier that is over, and shipping it to the client would
+ * render "активен до" under an account that is back on FREE.
+ */
+function resolvePlanFields(row: SettingsRow): { plan: PlanId; planUntil: string | null } {
+  const stored = toUnion<PlanId>(row.plan, PLANS, DEFAULT_SETTINGS.plan);
+  const plan = resolvePlan(stored, row.planUntil);
+
+  return {
+    plan,
+    planUntil: isPaidPlan(plan) && row.planUntil ? row.planUntil.toISOString() : null,
   };
 }
 
@@ -799,7 +825,7 @@ export async function buildExport(userId: string): Promise<Record<string, unknow
       updatedAt: memory.updatedAt.toISOString(),
     })),
     notes: [
-      "Файл содержит данные, которые Nova хранит о вашем аккаунте.",
+      "Файл содержит данные, которые Nova хранит о твоём аккаунте.",
       "Фото прогресса не включены: экспортируются только их даты, подписи и размеры.",
       "Производные показатели (стрики, Life Score, проценты) не включены — они считаются из этих данных заново.",
       "Импорт этого файла обратно в приложение пока не поддерживается.",

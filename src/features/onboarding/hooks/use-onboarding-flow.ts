@@ -151,6 +151,6 @@ export function useOnboardingFlow(session: ResolvedSession) {
     back,
     finish,
     isSubmitting: mutation.isPending,
-    submitError: mutation.isError ? "Не удалось сохранить. Попробуйте ещё раз." : null,
+    submitError: mutation.isError ? "Не удалось сохранить. Попробуй ещё раз." : null,
   };
 }

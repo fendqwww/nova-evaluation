@@ -35,7 +35,7 @@ export const workoutCategorySchema = z.enum(WORKOUT_CATEGORIES);
 export const workoutTitleSchema = z
   .string()
   .trim()
-  .min(1, "Введите название")
+  .min(1, "Введи название")
   .max(WORKOUT_TITLE_MAX, "Слишком длинное название");
 
 const optionalText = (max: number, message: string) =>
@@ -81,7 +81,7 @@ export const workoutExerciseDraftSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(1, "Введите название упражнения")
+    .min(1, "Введи название упражнения")
     .max(EXERCISE_NAME_MAX, "Слишком длинное название"),
   targetSets: z.number().int().min(1, "Минимум 1 подход").max(SETS_MAX, "Слишком много подходов"),
   targetReps: z.number().int().min(1, "Минимум 1 повторение").max(REPS_MAX, "Слишком много повторений"),

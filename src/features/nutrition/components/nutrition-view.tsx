@@ -200,8 +200,8 @@ export function NutritionView() {
       {isError && (
         <EmptyState
           icon={<Salad className="h-5 w-5" />}
-          title="Не удалось загрузить дневник питания"
-          description="Проверьте соединение и попробуйте снова."
+          title="Дневник не загрузился"
+          description="Проверь соединение — записи никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить
@@ -223,8 +223,8 @@ export function NutritionView() {
                 <EmptyState
                   className="py-10"
                   icon={<Salad className="h-5 w-5" />}
-                  title="Дневник пока пуст"
-                  description="Добавьте первый продукт — калории и БЖУ посчитаются автоматически."
+                  title="День ещё не записан"
+                  description="Добавь первый приём пищи — калории и БЖУ Nova посчитает сама."
                   action={
                     <Button size="lg" onClick={() => openPicker("breakfast")}>
                       Добавить продукт

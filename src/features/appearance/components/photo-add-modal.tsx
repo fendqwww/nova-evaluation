@@ -2,11 +2,16 @@
 
 import { useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { useRawInitData } from "@tma.js/sdk-react";
 import { ImagePlus } from "lucide-react";
 import Image from "next/image";
 import { Modal, ModalContent, ModalHeader, ModalTitle } from "@/shared/ui/modal";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
+import { Switch } from "@/shared/ui/switch";
+import type { AppearanceAnalysis } from "@/ai/types";
+import { analyzeAppearancePhotoAction } from "@/features/appearance/server/analyze-appearance-photo.action";
+import { AppearanceAnalysisCard } from "@/features/appearance/components/appearance-analysis-card";
 import { cn } from "@/shared/lib/cn";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
 import { AREA_OPTIONS } from "@/features/appearance/lib/icons";
@@ -42,25 +47,66 @@ export function PhotoAddModal({
   gender: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (draft: PhotoDraft) => Promise<unknown>;
+  /** Returns the new row's id, which the analysis is then attached to. */
+  onCreate: (draft: PhotoDraft) => Promise<{ photoId: string }>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const rawInitData = useRawInitData();
 
   const [area, setArea] = useState<CareArea>(defaultArea);
   const [note, setNote] = useState("");
   const [prepared, setPrepared] = useState<PreparedPhoto | null>(null);
+  const [analyzeAfterSave, setAnalyzeAfterSave] = useState(true);
+  const [analysis, setAnalysis] = useState<AppearanceAnalysis | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const prepare = useMutation({
     mutationFn: (file: File) => preparePhoto(file),
     onSuccess: setPrepared,
   });
 
+  /**
+   * Save, then analyse the row that was just written.
+   *
+   * In that order, and attached to the new photo's id, so the reading survives
+   * this modal — the analysis is charged against the daily AI budget, and
+   * throwing it away on close was the whole reason it was invisible before.
+   * A failed analysis never fails the save: the photo is already stored, and
+   * the message says so rather than implying the photo was lost.
+   */
   const save = useMutation({
     mutationFn: async () => {
       if (!prepared) throw new Error("NO_PHOTO");
-      return onCreate({ ...prepared, area, day, note: note.trim() === "" ? null : note });
+      const created = await onCreate({
+        ...prepared,
+        area,
+        day,
+        note: note.trim() === "" ? null : note,
+      });
+
+      if (!analyzeAfterSave) return null;
+
+      const result = await analyzeAppearancePhotoAction({
+        rawInitData,
+        imageData: prepared.imageData,
+        photoId: created.photoId,
+      });
+
+      if (result.ok) return result.analysis;
+      setAnalysisError(
+        result.reason === "limit"
+          ? `Фото сохранено. Анализы на сегодня закончились (${result.used} из ${result.limit}).`
+          : `Фото сохранено, но анализ не удался. ${result.message}`,
+      );
+      return null;
     },
-    onSuccess: () => onOpenChange(false),
+    onSuccess: (result) => {
+      // Analysed photos keep the modal open on their result; a plain save has
+      // nothing more to show and closes the way it always did.
+      if (result) setAnalysis(result);
+      else if (!analysisError) onOpenChange(false);
+    },
   });
 
   const areaOptions = AREA_OPTIONS.filter(
@@ -107,7 +153,7 @@ export function PhotoAddModal({
               <span className="flex flex-col items-center gap-2 text-subtle-foreground">
                 <ImagePlus className="h-6 w-6" />
                 <span className="text-caption">
-                  {prepare.isPending ? "Обрабатываем..." : "Выбрать или снять фото"}
+                  {prepare.isPending ? "Обрабатываем…" : "Выбрать или снять фото"}
                 </span>
               </span>
             )}
@@ -157,23 +203,52 @@ export function PhotoAddModal({
             aria-label="Заметка к фото"
           />
 
+          <label className="flex items-start justify-between gap-3 rounded-xl border border-border bg-black/20 p-3">
+            <span className="flex flex-col gap-0.5">
+              <span className="text-caption font-medium text-foreground">
+                Разобрать фото через AI
+              </span>
+              <span className="text-caption text-subtle-foreground">
+                Черты лица, состояние кожи и волос по зонам, рекомендации по уходу и
+                стилю.
+              </span>
+            </span>
+            <Switch
+              checked={analyzeAfterSave}
+              onCheckedChange={setAnalyzeAfterSave}
+              aria-label="Разобрать фото через AI"
+            />
+          </label>
+
           <p className="text-caption text-subtle-foreground">
-            Фото хранится только в вашем аккаунте и никуда не отправляется.
+            {analyzeAfterSave
+              ? "Фото хранится в твоём аккаунте. Для разбора оно один раз отправляется в AI и там не сохраняется."
+              : "Фото хранится только в твоём аккаунте и никуда не отправляется."}
           </p>
 
           {save.isError && (
             <p className="text-caption text-destructive">
-              Не удалось сохранить. Попробуйте ещё раз.
+              Не удалось сохранить. Попробуй ещё раз.
             </p>
           )}
+
+          {analysisError && <p className="text-caption text-warning">{analysisError}</p>}
+
+          {analysis && <AppearanceAnalysisCard analysis={analysis} />}
 
           <Button
             className="w-full"
             size="lg"
             disabled={prepared === null || save.isPending}
-            onClick={() => save.mutate()}
+            onClick={() => (analysis || analysisError ? onOpenChange(false) : save.mutate())}
           >
-            {save.isPending ? "Сохраняем..." : "Сохранить фото"}
+            {save.isPending
+              ? analyzeAfterSave
+                ? "Сохраняем и разбираем…"
+                : "Сохраняем…"
+              : analysis || analysisError
+                ? "Готово"
+                : "Сохранить фото"}
           </Button>
         </div>
       </ModalContent>

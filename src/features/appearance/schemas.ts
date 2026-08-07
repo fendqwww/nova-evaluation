@@ -66,7 +66,7 @@ export const careScheduleSchema = z.discriminatedUnion("kind", [
     weekdayMask: z
       .number()
       .int()
-      .min(1, "Выберите хотя бы один день")
+      .min(1, "Выбери хотя бы один день")
       .max(EVERY_WEEKDAY_MASK, "Некорректные дни"),
   }),
   z.object({
@@ -82,7 +82,7 @@ export const careScheduleSchema = z.discriminatedUnion("kind", [
 export const stepTitleSchema = z
   .string()
   .trim()
-  .min(1, "Введите название шага")
+  .min(1, "Введи название шага")
   .max(STEP_TITLE_MAX, "Слишком длинное название");
 
 /**
@@ -112,7 +112,7 @@ export const routineDraftSchema = z.object({
   title: z
     .string()
     .trim()
-    .min(1, "Введите название")
+    .min(1, "Введи название")
     .max(ROUTINE_TITLE_MAX, "Слишком длинное название"),
   note: routineNoteSchema,
   area: careAreaSchema,
@@ -134,7 +134,7 @@ export const careGoalDraftSchema = z.object({
   title: z
     .string()
     .trim()
-    .min(1, "Введите название")
+    .min(1, "Введи название")
     .max(GOAL_TITLE_MAX, "Слишком длинное название"),
   note: goalNoteSchema,
   area: careAreaSchema,

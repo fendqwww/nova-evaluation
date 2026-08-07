@@ -49,8 +49,8 @@ export function ReportsView() {
       {isError && (
         <EmptyState
           icon={<BarChart3 className="h-5 w-5" />}
-          title="Не удалось загрузить отчёт"
-          description="Проверьте соединение и попробуйте снова."
+          title="Отчёт не загрузился"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить

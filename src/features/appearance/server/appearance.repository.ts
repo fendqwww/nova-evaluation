@@ -1,5 +1,6 @@
 import "server-only";
 import { db } from "@/server/db";
+import { appearanceAnalysisSchema, type AppearanceAnalysis } from "@/ai/types";
 import {
   addDays,
   dateToDay,
@@ -413,19 +414,60 @@ export async function listPhotos(
       width: true,
       height: true,
       createdAt: true,
+      analysisJson: true,
+      analyzedAt: true,
     },
   });
 
-  return photos.map((photo) => ({
-    id: photo.id,
-    area: toArea(photo.category),
-    day: dateToDay(photo.day),
-    note: photo.note,
-    thumbData: photo.thumbData,
-    width: photo.width,
-    height: photo.height,
-    createdAt: photo.createdAt.toISOString(),
-  }));
+  return photos.map((photo) => {
+    const analysis = parseStoredAnalysis(photo.analysisJson);
+    return {
+      id: photo.id,
+      area: toArea(photo.category),
+      day: dateToDay(photo.day),
+      note: photo.note,
+      thumbData: photo.thumbData,
+      width: photo.width,
+      height: photo.height,
+      createdAt: photo.createdAt.toISOString(),
+      analysis,
+      // Kept consistent with `analysis`: a row whose JSON no longer validates
+      // has no analysis to date, so it must not claim one either.
+      analyzedAt: analysis ? (photo.analyzedAt?.toISOString() ?? null) : null,
+    };
+  });
+}
+
+/**
+ * Read one stored analysis back, tolerating rows written by an older shape.
+ *
+ * Validated rather than cast: `analysisJson` is a plain String column, and
+ * analyses written before a field was added to appearanceAnalysisSchema would
+ * otherwise reach the UI missing it and crash on render. A row that no longer
+ * fits is treated as un-analysed, which costs one re-analysis and never a
+ * broken screen.
+ */
+function parseStoredAnalysis(raw: string | null): AppearanceAnalysis | null {
+  if (!raw) return null;
+  try {
+    const parsed = appearanceAnalysisSchema.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Attach an analysis to a photo the user owns. Returns false if it isn't theirs. */
+export async function savePhotoAnalysis(
+  userId: string,
+  photoId: string,
+  analysis: AppearanceAnalysis,
+): Promise<boolean> {
+  const { count } = await db.appearancePhoto.updateMany({
+    where: { id: photoId, userId },
+    data: { analysisJson: JSON.stringify(analysis), analyzedAt: new Date() },
+  });
+  return count > 0;
 }
 
 export async function getPhotoImage(userId: string, photoId: string): Promise<string | null> {

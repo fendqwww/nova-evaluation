@@ -178,7 +178,7 @@ export function FoodFormModal({
               >
                 <Camera className="h-4 w-4" />
                 {analyzePhoto.isPending
-                  ? "Анализируем фото..."
+                  ? "Анализируем фото…"
                   : analysis
                     ? "Сканировать другое фото"
                     : "Сканировать фото еды"}
@@ -279,11 +279,11 @@ export function FoodFormModal({
           </div>
 
           {hasError && (
-            <p className="text-caption text-destructive">Не удалось сохранить. Попробуйте ещё раз.</p>
+            <p className="text-caption text-destructive">Не удалось сохранить. Попробуй ещё раз.</p>
           )}
 
           <Button className="w-full" size="lg" disabled={!isValid || isPending} onClick={() => void save()}>
-            {isPending ? "Сохраняем..." : food ? "Сохранить" : "Добавить в каталог"}
+            {isPending ? "Сохраняем…" : food ? "Сохранить" : "Добавить в каталог"}
           </Button>
         </div>
       </ModalContent>

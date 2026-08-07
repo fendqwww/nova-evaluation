@@ -50,7 +50,7 @@ export function CareHistoryList({
         className="py-8"
         icon={<History className="h-5 w-5" />}
         title="История пока пуста"
-        description="Здесь появятся фото, достигнутые цели и серии выполнения."
+        description="Здесь останутся фото, достигнутые цели и серии выполнения."
       />
     );
   }

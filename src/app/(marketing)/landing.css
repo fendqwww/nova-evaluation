@@ -1,0 +1,331 @@
+/*
+ * NOVA — public marketing surface.
+ *
+ * Everything here is scoped under `.nova-landing`. The app's design tokens
+ * (globals.css) are a themeable, dual-mode system with six accent palettes;
+ * the landing is the opposite — one fixed, always-dark brand look that must
+ * render identically for every visitor. Keeping the two palettes in separate
+ * namespaces means the landing can never be recoloured by a user's saved
+ * accent, and adding to it can never shift a pixel inside the product.
+ */
+
+.nova-landing {
+  --nova-bg: #050505;
+  /* The brand gradient's two ends, plus a lighter violet for small accents
+     (icons, inline emphasis) that would read muddy at the base purple. The
+     four *pillar* hues are not here: they are data colours, they are validated
+     as a set against this surface, and they live with the data in
+     features/landing/constants.ts. */
+  --nova-purple: #8b5cf6;
+  --nova-purple-bright: #a78bfa;
+  --nova-blue: #3b82f6;
+
+  --nova-text: #ffffff;
+  /* Three steps of quiet, not one grey reused at three opacities — body copy
+     stays comfortably readable while labels recede. */
+  --nova-text-muted: rgba(255, 255, 255, 0.66);
+  --nova-text-subtle: rgba(255, 255, 255, 0.44);
+  --nova-text-faint: rgba(255, 255, 255, 0.28);
+
+  --nova-hairline: rgba(255, 255, 255, 0.09);
+  --nova-hairline-strong: rgba(255, 255, 255, 0.16);
+  --nova-glass: rgba(255, 255, 255, 0.026);
+  --nova-glass-strong: rgba(255, 255, 255, 0.05);
+
+  --nova-ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  background-color: var(--nova-bg);
+  color: var(--nova-text);
+  /* The landing owns its own type rhythm; -webkit-font-smoothing keeps the
+     large light-weight headlines from looking heavy on macOS. */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------------------------------------------------------------- type --- */
+
+/*
+ * Fluid scale. One clamp() per role replaces a ladder of breakpoint variants,
+ * so a headline is never stuck at an awkward size between two breakpoints —
+ * it tracks the viewport continuously from 320px to 1920px.
+ */
+.nova-display {
+  font-size: clamp(3rem, 11vw, 8.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  font-weight: 600;
+}
+
+.nova-h1 {
+  font-size: clamp(2.25rem, 6.2vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.042em;
+  font-weight: 600;
+}
+
+.nova-h2 {
+  font-size: clamp(1.875rem, 4.6vw, 3.25rem);
+  line-height: 1.08;
+  letter-spacing: -0.036em;
+  font-weight: 600;
+}
+
+.nova-h3 {
+  font-size: clamp(1.25rem, 2.2vw, 1.625rem);
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  font-weight: 550;
+}
+
+.nova-lead {
+  font-size: clamp(1.0625rem, 1.55vw, 1.3125rem);
+  line-height: 1.55;
+  letter-spacing: -0.014em;
+  font-weight: 400;
+  color: var(--nova-text-muted);
+}
+
+.nova-body {
+  font-size: clamp(0.9375rem, 1.1vw, 1.0625rem);
+  line-height: 1.62;
+  letter-spacing: -0.011em;
+  color: var(--nova-text-muted);
+}
+
+.nova-eyebrow {
+  font-size: 0.75rem;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--nova-text-subtle);
+}
+
+.nova-numeric {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: -0.035em;
+}
+
+/* --------------------------------------------------------------- brand --- */
+
+/* The one gradient the brand owns: purple into blue, always at 135°, so every
+   accented headline, rule and glow reads as the same light source. */
+.nova-gradient-text {
+  background-image: linear-gradient(
+    135deg,
+    var(--nova-purple-bright) 0%,
+    var(--nova-purple) 38%,
+    var(--nova-blue) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* A clipped gradient crops descenders on tight line-heights; the padding is
+     reclaimed with an equal negative margin so layout is untouched. */
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+.nova-gradient-bg {
+  background-image: linear-gradient(135deg, var(--nova-purple) 0%, var(--nova-blue) 100%);
+}
+
+/* --------------------------------------------------------------- glass --- */
+
+/*
+ * One material, two weights — the same discipline the app uses. A card sitting
+ * in the flow gets `nova-glass`; chrome floating over scrolling content gets
+ * `nova-glass-panel` and a heavier blur. Both degrade to a solid tint where
+ * backdrop-filter is unsupported, so nothing renders as unreadable.
+ */
+.nova-glass {
+  position: relative;
+  background-color: var(--nova-glass);
+  border: 1px solid var(--nova-hairline);
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.045) 0%,
+    transparent 45%
+  );
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .nova-glass {
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+}
+
+.nova-glass-panel {
+  background-color: rgba(5, 5, 5, 0.72);
+  border-color: var(--nova-hairline);
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .nova-glass-panel {
+    background-color: rgba(5, 5, 5, 0.6);
+    backdrop-filter: blur(22px) saturate(180%);
+    -webkit-backdrop-filter: blur(22px) saturate(180%);
+  }
+}
+
+/* The hairline of light along a card's top edge — what separates a lit surface
+   from a flat rectangle with a border. */
+.nova-edge::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.22) 25%,
+    rgba(255, 255, 255, 0.22) 75%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Hover lift for interactive cards. Transform + border only — never a
+   box-shadow transition, which forces paint on every frame. */
+.nova-lift {
+  transition:
+    transform 320ms var(--nova-ease),
+    border-color 320ms var(--nova-ease),
+    background-color 320ms var(--nova-ease);
+  will-change: transform;
+}
+
+.nova-lift:hover {
+  transform: translateY(-4px);
+  border-color: var(--nova-hairline-strong);
+  background-color: var(--nova-glass-strong);
+}
+
+/* ---------------------------------------------------------------- glow --- */
+
+/*
+ * Ambient light. These are large, heavily-blurred radial fields sitting behind
+ * content at low opacity — the "soft glow" of the brief. They are always
+ * `pointer-events: none` and aria-hidden at the call site.
+ */
+.nova-glow {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(80px);
+  z-index: 0;
+}
+
+.nova-glow-purple {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, transparent 70%);
+}
+
+.nova-glow-blue {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.42) 0%, transparent 70%);
+}
+
+/* --------------------------------------------------------- backgrounds --- */
+
+/* Technical grid, faded out toward the edges so it never reads as a border. */
+.nova-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 64px 64px;
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 20%, transparent 78%);
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, #000 20%, transparent 78%);
+}
+
+/* A single hairline rule that fades at both ends — used between sections
+   instead of a hard border, which would cut the page into boxes. */
+.nova-rule {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--nova-hairline-strong) 50%,
+    transparent
+  );
+}
+
+/* --------------------------------------------------------------- motion --- */
+
+@keyframes nova-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Opacity only, deliberately: these elements carry an 80–90px blur, and
+   animating `transform` on them would force the browser to re-run the blur on
+   every frame. Opacity alone composites on the GPU. */
+@keyframes nova-breathe {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+@keyframes nova-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes nova-dash {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+.nova-animate-float {
+  animation: nova-float 7s ease-in-out infinite;
+}
+
+.nova-animate-breathe {
+  animation: nova-breathe 8s ease-in-out infinite;
+}
+
+/* The light that travels along the connector lines in the "how it works"
+   diagram, and across the AI Coach card's top edge. */
+.nova-animate-sweep {
+  animation: nova-sweep 2.6s var(--nova-ease) infinite;
+}
+
+.nova-animate-dash {
+  animation: nova-dash 1s linear infinite;
+}
+
+/*
+ * Accessibility: honour a reduced-motion preference by stripping the ambient
+ * loops entirely. Framer Motion's entrance animations are gated separately via
+ * useReducedMotion() in the components.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .nova-landing *,
+  .nova-landing *::before,
+  .nova-landing *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Anchor navigation must clear the fixed header. */
+.nova-landing [id] {
+  scroll-margin-top: 6rem;
+}

@@ -74,7 +74,7 @@ export function RegionModal({
       await onSave(draft);
       onOpenChange(false);
     } catch {
-      setError("Не удалось сохранить. Попробуйте ещё раз.");
+      setError("Не удалось сохранить. Попробуй ещё раз.");
     }
   }
 

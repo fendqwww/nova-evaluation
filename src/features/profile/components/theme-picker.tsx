@@ -67,7 +67,7 @@ export function ThemePicker({ current }: { current: ThemeValue }) {
 
       {mutation.isError && (
         <p className="text-caption text-destructive">
-          Не удалось сохранить тему. Попробуйте ещё раз.
+          Не удалось сохранить тему. Попробуй ещё раз.
         </p>
       )}
     </div>

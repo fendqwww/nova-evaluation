@@ -182,7 +182,7 @@ export function TaskDetailModal({
                     disabled={removeTask.isPending}
                     onClick={() => removeTask.mutate({ rawInitData, taskId })}
                   >
-                    {removeTask.isPending ? "Удаляем..." : "Удалить"}
+                    {removeTask.isPending ? "Удаляем…" : "Удалить"}
                   </Button>
                 </div>
               </div>
@@ -190,7 +190,7 @@ export function TaskDetailModal({
 
             {removeTask.isError && (
               <p className="text-caption text-destructive">
-                Не удалось удалить. Попробуйте ещё раз.
+                Не удалось удалить. Попробуй ещё раз.
               </p>
             )}
           </div>

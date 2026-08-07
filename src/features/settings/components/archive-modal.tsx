@@ -62,7 +62,7 @@ export function ArchiveModal({
     try {
       await restore(item.kind, item.id);
     } catch {
-      setError("Не удалось восстановить. Попробуйте ещё раз.");
+      setError("Не удалось восстановить. Попробуй ещё раз.");
     }
   }
 
@@ -76,7 +76,7 @@ export function ArchiveModal({
       setError(
         cause instanceof Error && cause.message.includes("FOOD_IN_USE")
           ? "Продукт нельзя удалить: он уже записан в дневнике питания. Он останется в архиве, чтобы прошлые дни не потеряли название."
-          : "Не удалось удалить. Попробуйте ещё раз.",
+          : "Не удалось удалить. Попробуй ещё раз.",
       );
     }
   }
@@ -87,7 +87,7 @@ export function ArchiveModal({
         <ModalHeader>
           <ModalTitle>Архив</ModalTitle>
           <ModalDescription>
-            То, что вы перестали вести. История сохранена — можно вернуть в любой
+            То, что ты перестал вести. История сохранена — вернуть можно в любой
             момент.
           </ModalDescription>
         </ModalHeader>
@@ -102,8 +102,8 @@ export function ArchiveModal({
           {isError && (
             <EmptyState
               icon={<Archive className="h-5 w-5" />}
-              title="Не удалось загрузить архив"
-              description="Проверьте соединение и попробуйте снова."
+              title="Архив не загрузился"
+              description="Проверь соединение — ничего не потеряно."
               action={
                 <Button variant="secondary" onClick={retry}>
                   Повторить
@@ -117,7 +117,7 @@ export function ArchiveModal({
               className="py-8"
               icon={<Archive className="h-5 w-5" />}
               title="Архив пуст"
-              description="Сюда попадают привычки, тренировки, продукты и процедуры, которые вы убрали из активных."
+              description="Сюда попадают привычки, тренировки, продукты и процедуры, которые ты убрал из активных."
             />
           )}
 

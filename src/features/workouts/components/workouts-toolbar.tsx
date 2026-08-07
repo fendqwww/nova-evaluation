@@ -43,7 +43,7 @@ export function WorkoutsToolbar({
           <input
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Тренировка или упражнение"
+            placeholder="Поиск тренировки или упражнения"
             aria-label="Поиск по тренировкам и упражнениям"
             className="h-10 w-full rounded-xl border border-border bg-input pl-9 pr-9 text-body text-foreground transition-[border-color,box-shadow] duration-200 placeholder:text-subtle-foreground focus-visible:border-accent-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-soft"
           />

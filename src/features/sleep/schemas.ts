@@ -11,7 +11,7 @@ export const calendarDaySchema = z
 
 export const sleepTimeSchema = z
   .string()
-  .regex(TIME_PATTERN, "Введите время в формате ЧЧ:ММ");
+  .regex(TIME_PATTERN, "Введи время в формате ЧЧ:ММ");
 
 export const sleepQualitySchema = z.number().int().min(1, "Оцените ночь").max(5, "Оцените ночь");
 

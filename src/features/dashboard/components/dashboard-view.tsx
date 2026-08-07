@@ -29,8 +29,8 @@ export function DashboardView() {
     return (
       <EmptyState
         icon={<Sparkles className="h-5 w-5" />}
-        title="Не удалось загрузить дашборд"
-        description="Проверьте соединение и попробуйте снова."
+        title="Дашборд не загрузился"
+        description="Проверь соединение — данные никуда не делись."
         action={
           <Button variant="secondary" onClick={() => refetch()}>
             Повторить

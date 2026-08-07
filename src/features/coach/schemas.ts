@@ -9,7 +9,7 @@ export const COACH_HISTORY_PAGE = 20;
 export const coachQuestionSchema = z
   .string()
   .trim()
-  .min(1, "Введите вопрос")
+  .min(1, "Введи вопрос")
   .max(COACH_QUESTION_MAX, "Слишком длинный вопрос");
 
 export const coachIntentSchema = z.enum(COACH_INTENT_IDS);

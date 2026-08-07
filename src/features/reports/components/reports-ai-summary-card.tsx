@@ -78,7 +78,7 @@ export function ReportsAiSummaryCard({
         )}
         {hasError && (
           <p className="text-caption text-destructive">
-            Не удалось получить ответ от Gemini. Попробуйте ещё раз.
+            Не удалось получить ответ от Gemini. Попробуй ещё раз.
           </p>
         )}
 
@@ -91,7 +91,7 @@ export function ReportsAiSummaryCard({
             onClick={() => void refresh()}
           >
             <RefreshCw className={cn("h-3.5 w-3.5", isGenerating && "animate-spin")} />
-            {isGenerating ? "Спрашиваем Gemini..." : "Обновить с помощью AI"}
+            {isGenerating ? "Спрашиваем Gemini…" : "Обновить с помощью AI"}
           </Button>
         )}
       </div>

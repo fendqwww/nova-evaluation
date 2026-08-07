@@ -183,7 +183,7 @@ export function WorkoutFormModal({
 
           {mutation.isError && (
             <p className="text-caption text-destructive">
-              Не удалось сохранить. Попробуйте ещё раз.
+              Не удалось сохранить. Попробуй ещё раз.
             </p>
           )}
 
@@ -194,7 +194,7 @@ export function WorkoutFormModal({
             onClick={() => mutation.mutate()}
           >
             {mutation.isPending
-              ? "Сохраняем..."
+              ? "Сохраняем…"
               : workout
                 ? "Сохранить"
                 : "Создать тренировку"}

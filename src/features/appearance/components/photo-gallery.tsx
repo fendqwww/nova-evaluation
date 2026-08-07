@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Camera, GitCompare } from "lucide-react";
+import { Camera, GitCompare, Sparkles } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { cn } from "@/shared/lib/cn";
@@ -43,8 +43,8 @@ export function PhotoGallery({
       <div className="flex flex-col gap-4 py-2">
         <EmptyState
           icon={<Camera className="h-5 w-5" />}
-          title="Фотографий пока нет"
-          description="Снимок раз в неделю при одном и том же свете — и через месяц разницу будет видно."
+          title="Точки отсчёта пока нет"
+          description="Снимок раз в неделю при одном и том же свете — через месяц разницу будет видно."
           action={
             <Button size="lg" onClick={onAdd}>
               Добавить фото
@@ -117,6 +117,17 @@ export function PhotoGallery({
                 <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-3 text-left text-[0.625rem] font-medium text-white">
                   {photo.day.slice(-2).replace(/^0/, "")}.{photo.day.slice(5, 7)}
                 </span>
+                {/* Which photos already carry an AI reading. Without it, the
+                    only way to find out is to open each one in turn. */}
+                {photo.analysis && (
+                  <span
+                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/55 backdrop-blur-sm"
+                    title="Фото проанализировано"
+                  >
+                    <Sparkles className="h-3 w-3 text-accent-light" />
+                    <span className="sr-only">Фото проанализировано</span>
+                  </span>
+                )}
               </button>
             ))}
           </div>

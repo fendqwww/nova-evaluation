@@ -49,7 +49,7 @@ export function AboutStep({ defaults, onNext, onBack, isSubmitting }: AboutStepP
           disabled={!gender || isSubmitting}
           onClick={() => gender && onNext({ age, heightCm, weightKg, gender })}
         >
-          {isSubmitting ? "Сохраняем..." : "Продолжить"}
+          {isSubmitting ? "Сохраняем…" : "Продолжить"}
         </Button>
       }
     >

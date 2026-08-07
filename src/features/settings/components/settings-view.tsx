@@ -129,8 +129,8 @@ export function SettingsView() {
       {isError && (
         <EmptyState
           icon={<Sparkles className="h-5 w-5" />}
-          title="Не удалось загрузить настройки"
-          description="Проверьте соединение и попробуйте снова."
+          title="Настройки не загрузились"
+          description="Проверь соединение — данные никуда не делись."
           action={
             <Button variant="secondary" onClick={retry}>
               Повторить

@@ -195,7 +195,7 @@ export function WorkoutSessionModal({
                   saveNote.mutate({ rawInitData, sessionId, note: note.trim() })
                 }
               >
-                {saveNote.isPending ? "Сохраняем..." : "Сохранить заметку"}
+                {saveNote.isPending ? "Сохраняем…" : "Сохранить заметку"}
               </Button>
             )}
           </div>
@@ -252,7 +252,7 @@ export function WorkoutSessionModal({
                     disabled={removeSession.isPending}
                     onClick={() => removeSession.mutate({ rawInitData, sessionId })}
                   >
-                    {removeSession.isPending ? "Удаляем..." : "Удалить"}
+                    {removeSession.isPending ? "Удаляем…" : "Удалить"}
                   </Button>
                 </div>
               </div>
@@ -260,7 +260,7 @@ export function WorkoutSessionModal({
 
             {(saveNote.isError || removeSession.isError) && (
               <p className="text-caption text-destructive">
-                Не удалось выполнить действие. Попробуйте ещё раз.
+                Не удалось выполнить действие. Попробуй ещё раз.
               </p>
             )}
           </div>

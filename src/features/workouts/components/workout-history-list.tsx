@@ -39,8 +39,8 @@ export function WorkoutHistoryList({
       <EmptyState
         className="py-10"
         icon={<History className="h-5 w-5" />}
-        title="История пока пуста"
-        description="Здесь появятся все выполненные тренировки — с подходами, весом и объёмом."
+        title="Тренировок пока нет"
+        description="Каждая завершённая тренировка останется здесь — с подходами, весом и объёмом."
       />
     );
   }

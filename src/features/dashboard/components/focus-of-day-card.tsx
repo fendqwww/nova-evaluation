@@ -18,8 +18,8 @@ export function FocusOfDayCard({
           <p className="mb-2 text-label uppercase text-muted-foreground">Фокус дня</p>
           <EmptyState
             icon={<Target className="h-5 w-5" />}
-            title="Пока нет фокуса на сегодня"
-            description="Добавьте цель — и Nova будет напоминать о ней здесь каждый день."
+            title="Фокус не выбран"
+            description="Поставь цель — и Nova будет держать её перед глазами каждый день."
             action={
               <Button size="sm" variant="secondary" onClick={onCreateGoal}>
                 Добавить цель
