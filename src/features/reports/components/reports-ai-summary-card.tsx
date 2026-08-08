@@ -31,12 +31,15 @@ export function ReportsAiSummaryCard({
 }) {
   const [answer, setAnswer] = useState(summary);
   const [isFromGemini, setFromGemini] = useState(false);
-  const [limitInfo, setLimitInfo] = useState<{ used: number; limit: number } | null>(null);
+  // The sentence, not the numbers: the server knows which window ran out and
+  // when it comes back, and composing that here would be a second, poorer copy
+  // of features/usage/lib/format.ts.
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const [hasError, setError] = useState(false);
 
   async function refresh() {
     setError(false);
-    setLimitInfo(null);
+    setLimitMessage(null);
     const result = await onGenerate();
 
     if (result.ok) {
@@ -44,7 +47,7 @@ export function ReportsAiSummaryCard({
       setFromGemini(true);
       return;
     }
-    if (result.reason === "limit") setLimitInfo({ used: result.used, limit: result.limit });
+    if (result.reason === "limit") setLimitMessage(result.message);
     else setError(true);
   }
 
@@ -64,16 +67,15 @@ export function ReportsAiSummaryCard({
               ? "от Gemini"
               : aiUsage.limit === null
                 ? "без ограничений"
-                : `сегодня осталось ${remaining} из ${aiUsage.limit}`}
+                : `осталось ${remaining} из ${aiUsage.limit}`}
           </span>
         </div>
 
         <CoachAnswerBody answer={answer} />
 
-        {limitInfo && (
+        {limitMessage && (
           <p className="text-caption text-muted-foreground">
-            Дневной лимит AI-запросов исчерпан ({limitInfo.used} из {limitInfo.limit}). Он обновится
-            завтра, а NOVA PLUS снимает его совсем — «Профиль» → «Подписка».
+            {limitMessage} Тарифы — «Профиль» → «Подписка».
           </p>
         )}
         {hasError && (

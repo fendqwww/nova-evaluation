@@ -31,6 +31,11 @@ import type { ResolvedSession } from "@/features/auth/server/resolve-session.act
  * ("about"), which is what stopped that stretch reading as a medical intake.
  */
 export const ONBOARDING_SCENE_IDS = [
+  // Согласие — до первого вопроса о человеке. Порядок здесь юридический, а не
+  // сценарный: всё, что идёт следом, является обработкой персональных данных,
+  // в том числе данных о здоровье, и основание для неё должно существовать
+  // раньше первого введённого символа. См. ConsentStep.
+  "consent",
   "name",
   "greeting",
   "occupation",

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
-import { NAV_LINKS, TELEGRAM_SUPPORT_URL } from "../constants";
+import { NAV_LINKS, TELEGRAM_APP_URL } from "../constants";
 import { NovaMark } from "./nova-mark";
 
 /**
@@ -66,13 +66,14 @@ export function LandingNav() {
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Кнопка в шапке — вход в продукт, поэтому основной бот. */}
             <a
-              href={TELEGRAM_SUPPORT_URL}
+              href={TELEGRAM_APP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="hidden rounded-full border border-(--nova-hairline-strong) bg-white/[0.03] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors duration-200 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--nova-purple) sm:inline-flex"
             >
-              Получить доступ
+              Начать бесплатно
             </a>
 
             <button
@@ -112,7 +113,7 @@ export function LandingNav() {
                 </motion.a>
               ))}
               <motion.a
-                href={TELEGRAM_SUPPORT_URL}
+                href={TELEGRAM_APP_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setMenuOpen(false)}
@@ -121,7 +122,7 @@ export function LandingNav() {
                 transition={{ delay: 0.06 * NAV_LINKS.length + 0.05, duration: 0.4 }}
                 className="nova-gradient-bg mt-8 inline-flex h-13 items-center justify-center rounded-full text-[0.9375rem] font-medium text-white"
               >
-                Получить доступ
+                Начать бесплатно
               </motion.a>
             </div>
           </motion.div>

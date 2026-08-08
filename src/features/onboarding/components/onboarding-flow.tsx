@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useOnboardingFlow } from "@/features/onboarding/hooks/use-onboarding-flow";
 import { WelcomeStep } from "@/features/onboarding/components/steps/welcome-step";
 import { ReadyStep } from "@/features/onboarding/components/steps/ready-step";
+import { ConsentStep } from "@/features/onboarding/components/steps/consent-step";
 import { NameStep } from "@/features/onboarding/components/steps/name-step";
 import { GreetingStep } from "@/features/onboarding/components/steps/greeting-step";
 import { OccupationStep } from "@/features/onboarding/components/steps/occupation-step";
@@ -60,6 +61,9 @@ export function OnboardingFlow({ session }: { session: ResolvedSession }) {
             transition={sceneTransition}
             className="flex min-h-0 flex-1 flex-col"
           >
+            {/* Без onBack: назад с первой сцены некуда, а «пропустить»
+                согласие нельзя по смыслу. */}
+            {sceneId === "consent" && <ConsentStep onNext={() => next()} />}
             {sceneId === "name" && (
               <NameStep defaultValue={values.name ?? ""} onNext={next} onBack={onBack} />
             )}

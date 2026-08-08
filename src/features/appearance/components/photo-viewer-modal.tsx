@@ -48,7 +48,10 @@ export function PhotoViewerModal({
 }) {
   const rawInitData = useRawInitData();
   const [confirming, setConfirming] = useState(false);
-  const [limitInfo, setLimitInfo] = useState<{ used: number; limit: number } | null>(null);
+  // Written server-side (features/usage/lib/format.ts), because FREE's single
+  // appearance analysis never comes back and every other tier's does — a
+  // difference two numbers cannot express.
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const { imageData, isPending } = usePhotoImage(open && photo ? photo.id : null);
 
   const analyze = useMutation({
@@ -60,7 +63,7 @@ export function PhotoViewerModal({
         photoId: photo!.id,
       }),
     onSuccess: (result) => {
-      setLimitInfo(result.ok || result.reason !== "limit" ? null : { used: result.used, limit: result.limit });
+      setLimitMessage(result.ok || result.reason !== "limit" ? null : result.message);
       // The photo now carries an analysis, so the section snapshot is stale.
       if (result.ok) void onAnalyzed?.();
     },
@@ -116,11 +119,10 @@ export function PhotoViewerModal({
                 : "Анализ фото"}
           </Button>
 
-          {limitInfo && (
+          {limitMessage && (
             <Card elevation="inset">
               <p className="p-3.5 text-caption text-muted-foreground">
-                Бесплатные анализы закончились ({limitInfo.used} из {limitInfo.limit}). Оформите
-                NOVA PLUS, чтобы снять ограничение — раздел «Настройки» → «Подписка».
+                {limitMessage} Тарифы — «Настройки» → «Подписка».
               </p>
             </Card>
           )}

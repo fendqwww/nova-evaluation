@@ -9,9 +9,10 @@ import { PageContainer } from "@/shared/ui/page-container";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { useSettings } from "@/features/settings/hooks/use-settings";
 import { PlanCard } from "@/features/settings/components/plan-card";
-import { AiUsageCard } from "@/features/settings/components/ai-usage-card";
+import { AiUsageCard } from "@/features/usage/components/ai-usage-card";
 import { PLAN_LIST } from "@/features/settings/lib/plans";
 import {
+  SUPPORT_LINK,
   SUPPORT_USERNAME,
   accountHandle,
   planRequestLink,
@@ -25,10 +26,11 @@ import {
  * wearing a costume. It also means the comparison is linkable, which is what a
  * pricing screen is for.
  *
- * One thing here is genuinely enforced: FREE's daily AI allowance, in
- * src/ai/limits.ts. PLUS and MAX lift it, which is why the AI budget card sits
- * above the tiers rather than in the AI settings group — it is the thing being
- * sold, so it belongs next to the price.
+ * What is genuinely enforced here are the three AI allowances, in
+ * features/usage — every number on the tier cards below is formatted from the
+ * same ceilings the server checks. That is why the usage card sits above the
+ * tiers rather than in the AI settings group: it is the thing being sold, so it
+ * belongs next to the price.
  *
  * There is no payment provider yet, and the tiers are sold by talking to us.
  * The notice at the bottom says exactly that: a screen that promised checkout
@@ -36,7 +38,7 @@ import {
  * direction, because the tier is real and can be activated today.
  */
 export function SubscriptionView() {
-  const { account, settings, aiUsage, isPending, isError, retry } = useSettings();
+  const { account, settings, usage, isPending, isError, retry } = useSettings();
 
   return (
     <PageContainer className="flex flex-col gap-5">
@@ -54,8 +56,8 @@ export function SubscriptionView() {
             Подписка
           </h1>
           <p className="text-caption text-muted-foreground">
-            Nova работает целиком на бесплатном тарифе. Платные снимают дневной лимит
-            AI — коуча, анализа еды и внешности.
+            Nova работает целиком на бесплатном тарифе. Платные расширяют лимиты AI —
+            коуча, анализа еды и внешности.
           </p>
         </div>
       </header>
@@ -85,9 +87,9 @@ export function SubscriptionView() {
           line both address the user by handle — all three fields come from the
           same snapshot, so this narrows them together instead of leaving a
           sentence that can render as "Ваш аккаунт для связи — ." */}
-      {!isPending && !isError && settings && aiUsage && account && (
+      {!isPending && !isError && settings && usage && account && (
         <>
-          <AiUsageCard usage={aiUsage} />
+          <AiUsageCard usage={usage} />
 
           <div className="flex flex-col gap-4">
             {PLAN_LIST.map((plan) => (
@@ -97,9 +99,9 @@ export function SubscriptionView() {
                 current={settings.plan}
                 planUntil={settings.planUntil}
                 // FREE is nobody's upgrade, so it gets no button. Every paid
-                // tier gets a link that already knows which tier it is asking
-                // for and which account is asking.
-                href={plan.id === "free" ? null : planRequestLink(plan.id, account)}
+                // tier gets a link that opens the support bot already on the
+                // payment branch — the bot resolves who is asking by itself.
+                href={plan.id === "free" ? null : planRequestLink(plan.id)}
               />
             ))}
           </div>
@@ -110,9 +112,9 @@ export function SubscriptionView() {
                 PLUS доступен. Для активации свяжитесь с нами.
               </p>
               <p className="text-caption text-muted-foreground">
-                Автоматической оплаты пока нет: напишите{" "}
+                Автоматической оплаты пока нет: напишите в{" "}
                 <a
-                  href={`https://t.me/${SUPPORT_USERNAME}`}
+                  href={SUPPORT_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-medium text-accent underline underline-offset-2"

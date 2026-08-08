@@ -4,6 +4,7 @@ import { Camera, FileText, Sparkles } from "lucide-react";
 import { Card } from "@/shared/ui/card";
 import { Switch } from "@/shared/ui/switch";
 import { SettingsGroup, SettingsRow } from "@/features/settings/components/settings-group";
+import { AiConsentNotice } from "@/features/legal/components/ai-consent-notice";
 import type { AiSettings } from "@/features/settings/types";
 
 /**
@@ -79,6 +80,11 @@ export function AiGroup({
           }
         />
       </SettingsGroup>
+
+      {/* Отсутствие согласия объясняется раньше выключенного коуча: без него
+          переключатели вообще не включатся, и сообщение про «выключен» было бы
+          ответом не на тот вопрос. Ничего не рендерит, когда согласие есть. */}
+      <AiConsentNotice />
 
       {!ai.coachEnabled && (
         <Card elevation="inset">

@@ -3,8 +3,8 @@
 import { z } from "zod";
 import { db } from "@/server/db";
 import { resolveIdentity } from "@/server/auth/identity";
-import { resetDailyAiUsage } from "@/ai/limits";
 import { onboardingProfileSchema } from "@/features/onboarding/schemas";
+import { getConsentState } from "@/features/legal/server";
 
 const completeOnboardingInputSchema = z.object({
   rawInitData: z.string().min(1).optional(),
@@ -22,7 +22,21 @@ export async function completeOnboarding(input: CompleteOnboardingInput) {
   // from a freshly verified initData, same as resolveSession.
   const identity = resolveIdentity(rawInitData);
 
-  const user = await db.user.update({
+  const user = await db.user.findUniqueOrThrow({
+    where: { telegramId: identity.telegramId },
+    select: { id: true },
+  });
+
+  // Профиль — это возраст, рост, вес и пол, то есть данные о состоянии
+  // здоровья. Записать их без действующего согласия нельзя, и проверять это
+  // должен сервер: экран согласия стоит первым в потоке, но server action —
+  // публичная точка входа, и «первым в потоке» её не защищает.
+  const consents = await getConsentState(user.id);
+  if (!consents.satisfied) {
+    throw new Error("CONSENT_REQUIRED");
+  }
+
+  await db.user.update({
     where: { telegramId: identity.telegramId },
     data: {
       onboardingCompletedAt: new Date(),
@@ -36,12 +50,14 @@ export async function completeOnboarding(input: CompleteOnboardingInput) {
     select: { id: true },
   });
 
-  // Finishing the flow is the one moment the app promises a fresh start, and
-  // the Coach is the first screen that start leads to. Restarting onboarding
-  // deliberately keeps every row the account already has (see
-  // restartOnboarding), so without this a returning user landed on a
-  // brand-new-looking app that immediately told them their AI was spent.
-  await resetDailyAiUsage(user.id);
+  // Finishing onboarding used to clear the AI counter here, on the argument
+  // that a fresh-looking app should not open by saying the budget is spent.
+  // That argument dies with the monthly allowance: restarting onboarding keeps
+  // every row the account already has (see restartOnboarding), so a reset here
+  // would be a button inside the app that refills a paid allowance — and the
+  // FREE appearance analysis, which is granted once per *account*, would be
+  // granted again on every lap through the flow. The counters now survive
+  // onboarding exactly as the rest of the account does.
 
   return { success: true } as const;
 }

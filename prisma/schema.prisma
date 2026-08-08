@@ -43,6 +43,9 @@ model User {
   appearancePhotos   AppearancePhoto[]
   appearanceGoals    AppearanceGoal[]
   sleepLogs          SleepLog[]
+  supportTickets     SupportTicket[]
+  usage              UserUsage[]
+  consents           UserConsent[]
 }
 
 // gender/primaryGoal/occupation are validated against a zod union in
@@ -149,25 +152,13 @@ model UserSettings {
   planSince DateTime?
   planUntil DateTime?
 
-  // One counter across every AI call that actually produced a result — Coach,
-  // food-photo analysis, appearance-photo analysis alike (see src/ai/limits.ts,
-  // the single place that reads and increments it). A single column rather than
-  // one per feature because the product's limit is one shared budget, not three
-  // separate ones that would have to be explained separately on the pricing
-  // screen.
-  //
-  // aiUsageCount is the lifetime total, kept for analytics and never compared
-  // against a ceiling. What the FREE plan is actually limited by is
-  // aiUsageToday, which counts only the calls made on aiUsageDay — the user's
-  // own local calendar day. A lifetime ceiling was the previous design and it
-  // made "лимит исчерпан" a permanent state an account could never leave,
-  // which is exactly what it looked like to a user who had just finished
-  // onboarding.
-  aiUsageCount Int       @default(0)
-  aiUsageToday Int       @default(0)
-  // UTC midnight of the local day aiUsageToday belongs to, same convention as
-  // HabitLog.date. Null until the account's first AI call.
-  aiUsageDay   DateTime?
+  // AI usage used to live here as one shared daily counter (aiUsageCount /
+  // aiUsageToday / aiUsageDay). It has moved to UserUsage, one row per user per
+  // month, split per feature — because the three AI surfaces do not cost the
+  // same: a Vision call on a 1 MB photo is worth many Coach turns, and one
+  // shared ceiling could only ever be set low enough for the most expensive of
+  // them. The columns are dropped rather than kept in sync, so there is exactly
+  // one place a limit is counted.
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -918,4 +909,293 @@ model SleepLog {
 
   @@unique([userId, day])
   @@index([userId, day])
+}
+
+/* ----------------------------------------------------------------- legal --- */
+
+// Одно согласие одного пользователя — и доказательство того, что оно было
+// дано.
+//
+// Это не настройка и не флаг. Часть 1 статьи 9 152-ФЗ возлагает на оператора
+// обязанность доказать, что согласие получено, а часть 4 той же статьи требует
+// от согласия конкретного состава сведений. Доказать можно только то, что
+// записано: кто (userId), на что (consentId), в какой редакции (version),
+// когда (acceptedAt) и откуда (source). Булево поле «согласился» не отвечает ни
+// на один из этих вопросов через полгода после спора.
+//
+// Ключевые решения:
+//
+//   - `version` — день последней правки документов, которые это согласие
+//     подтверждает (см. consentVersion в features/legal/constants.ts). Именно
+//     сравнение сохранённой версии с текущей заставляет пользователя принять
+//     новую редакцию заново, вместо того чтобы молча считать старое согласие
+//     годным для нового текста.
+//   - `revokedAt` вместо удаления строки. Отзыв согласия — это событие, у
+//     которого есть дата, и удаление записи стёрло бы вместе с ним и
+//     доказательство законности обработки за прошлый период. Отозванное
+//     согласие остаётся строкой с проставленной датой отзыва.
+//   - Уникальность по (userId, consentId): одна текущая запись на согласие,
+//     переакцепт новой редакции переписывает версию и дату. История редакций
+//     здесь не ведётся сознательно — актуален всегда последний акцепт, а
+//     сами тексты версионируются в коде.
+model UserConsent {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// "terms" | "personal-data" | "ai-transfer" — см. CONSENT_IDS. String, а не
+  /// enum, по той же причине, что и все категориальные колонки в этом файле:
+  /// коннектор SQLite не поддерживает enum.
+  consentId String
+  /// Версия документов на момент акцепта, "YYYY-MM-DD".
+  version   String
+
+  acceptedAt DateTime  @default(now())
+  /// Проставляется при отзыве. Строка остаётся — см. заметку выше.
+  revokedAt  DateTime?
+
+  /// Где это произошло: "onboarding" | "reconsent" | "settings". Нужно, чтобы
+  /// ответить на вопрос «в какой момент интерфейса человек это подтвердил».
+  source String @default("onboarding")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, consentId])
+  @@index([userId])
+}
+
+/* ----------------------------------------------------------------- usage --- */
+
+// What one account has spent on AI in one month, per feature.
+//
+// This is the only thing standing between NOVA and an unbounded Gemini bill, so
+// the shape is chosen for how it is *enforced*, not for how it reads:
+//
+//   - One row per (userId, periodMonth). The month is the billing period the
+//     paid tiers are sold in, so the counter and the subscription renew on the
+//     same boundary. A month that was never used has no row at all — absence is
+//     zero, which is what makes a new account free to create lazily.
+//   - Three counters rather than one shared budget. A Vision call on a 1 MB
+//     photo costs a large multiple of a Coach turn, and a single ceiling would
+//     have to be set low enough for the most expensive of the three, which is
+//     what makes "20 запросов" simultaneously too few for chat and too many for
+//     photos.
+//   - Every counter is only ever moved by a conditional UPDATE that carries the
+//     ceiling in its WHERE clause (see features/usage/server/usage.repository.ts).
+//     That is what makes the limit hold under concurrency: two simultaneous
+//     requests cannot both read "19 used" and both proceed, because the second
+//     UPDATE matches zero rows. A read-then-write check would let a user spend
+//     as many calls as they can open connections.
+//
+// foodWeekKey / foodWeekUsed are the one non-monthly window: FREE gets one food
+// analysis per *week*, which is the difference between a feature someone can
+// try and a daily habit paid for by us. The key is the Monday of that week
+// ("2026-08-03"), and it is deliberately queried across rows rather than read
+// from the current month's row alone — a week that straddles a month boundary
+// touches two rows, and summing by key is what keeps it exactly one analysis
+// instead of one per month. A stored key that is not the current week reads as
+// zero, so the window resets itself with nothing to run on a schedule — the
+// same convention every day-scoped table in this file uses.
+//
+// Nothing here is derived and nothing is a cache: a counter is the fact. The
+// lifetime free appearance analysis is the one figure summed on read
+// (across every month row), because it is a promise about the account rather
+// than about a period.
+model UserUsage {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// "YYYY-MM" of the user's *local* calendar month — the same timezone
+  /// authority (Profile.timezone) every day-scoped column resolves through.
+  periodMonth String
+
+  foodAnalysesUsed       Int @default(0)
+  appearanceAnalysesUsed Int @default(0)
+  coachMessagesUsed      Int @default(0)
+
+  /// Monday of the week foodWeekUsed counts, as "YYYY-MM-DD". Null until the
+  /// account's first food analysis.
+  foodWeekKey  String?
+  foodWeekUsed Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, periodMonth])
+  @@index([userId, foodWeekKey])
+}
+
+// A food photo that has already been read, keyed by the bytes themselves.
+//
+// The cheapest Gemini call is the one that is never made. Re-sending the same
+// photo is not a hypothetical: the food form is a modal that can be reopened,
+// a failed save is retried with the same image, and a user photographing the
+// same packaged breakfast every morning sends bytes that differ only if the
+// camera moved. Every one of those used to be a fresh Vision call.
+//
+// Keyed by a SHA-256 of the image bytes, not by user: identical bytes are
+// literally the same file, so a hit can only ever return the macros of the
+// photo that was sent. Nothing here identifies who sent it — there is no
+// userId column on purpose, which is also what makes the cache safe to share.
+//
+// `result` is a FoodAnalysis as JSON in a String, the same choice
+// CoachMessage.payload makes and for the same reason: the SQLite connector has
+// no Json type, and the shape is validated by zod on the way out, so a schema
+// change degrades to a cache miss rather than to a crash.
+//
+// Rows expire by age on read and are swept on write (see
+// features/nutrition/server/food-analysis-cache.repository.ts), so the table
+// stays bounded with nothing scheduled.
+model FoodAnalysisCache {
+  id        String   @id @default(cuid())
+  imageHash String   @unique
+  result    String
+  /// How many times this row saved a Gemini call. Analytics only — it is what
+  /// makes the cache's value measurable rather than assumed.
+  hits      Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+/* --------------------------------------------------------------- support --- */
+
+// One request for help, opened from the support bot (@nova_support_bot, see
+// src/shared/config/support.ts). The bot is a separate Telegram bot from the
+// one that signs the Mini App's initData — this table is the only thing the
+// two share, and they share it in one direction: a ticket may point at a User,
+// a User never has to have a ticket.
+//
+// Two departures from the conventions the rest of this file follows, both
+// deliberate:
+//
+//   1. `id` is an autoincrementing Int rather than a cuid. The ticket number
+//      the user quotes ("NOVA-000042") has to be short, sequential and
+//      collision-free under concurrent /start commands, and SQLite's rowid
+//      already is exactly that. Deriving it from a cuid would need a second
+//      counter table and a transaction around every insert to get a weaker
+//      guarantee. ticketNumber is stored rather than computed on read so the
+//      number stays stable if the id strategy ever changes (see
+//      features/support/lib/ticket-number.ts).
+//   2. `screenshots` is a JSON array of Telegram file_ids in a String, not a
+//      relation and not a scalar list — the SQLite connector supports neither
+//      scalar lists nor enums (the same constraint that makes every
+//      categorical column in this file a String). file_ids are opaque handles
+//      Telegram resolves on demand, so no image bytes are stored here; that
+//      is the same reason AppearancePhoto's inline data: URI is *not* the
+//      model to copy for this.
+//
+// userId is nullable and SetNull on delete: a ticket outlives the account that
+// opened it, because "почему у меня удалились данные" is a question support
+// still has to be able to read after the account is gone.
+model SupportTicket {
+  id           Int    @id @default(autoincrement())
+  ticketNumber String @unique
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Copied from the Telegram update rather than read through `user`, and kept
+  // even when userId is set. Support has to be able to reach the person from
+  // the ticket alone, and a username the user changed after opening it would
+  // otherwise silently rewrite the history of the conversation.
+  telegramId String
+  username   String?
+  firstName  String
+
+  // One of SUPPORT_CATEGORIES — validated by a zod union in
+  // src/features/support/schemas.ts, String for the SQLite reason above.
+  category    String
+  message     String
+  // JSON string: `["AgACAgIAAx…", …]`. Read through parseScreenshots(), which
+  // degrades a malformed value to an empty list instead of throwing inside a
+  // webhook handler.
+  screenshots String @default("[]")
+
+  // NEW | IN_PROGRESS | ANSWERED | CLOSED — see TICKET_STATUSES.
+  status String @default("NEW")
+  // Which admin took it. Their Telegram id, not a User row: support staff are
+  // not necessarily app users.
+  assignedTo String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  closedAt  DateTime?
+
+  messages SupportMessage[]
+
+  // The two queries the admin side runs: the open queue, newest first, and
+  // one user's history.
+  @@index([status, createdAt])
+  @@index([telegramId, createdAt])
+}
+
+// Everything said after the ticket was opened, both directions.
+//
+// The ticket's own `message` is the opening description and stays on the
+// ticket — it is what the category was chosen for. This table is the thread
+// that follows, and it exists so a reply is auditable: who answered, when, and
+// with what. Without it "ANSWERED" would be a status with no evidence behind
+// it.
+model SupportMessage {
+  id       String        @id @default(cuid())
+  ticketId Int
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  // "user" | "support".
+  author           String
+  authorTelegramId String
+  text             String
+
+  createdAt DateTime @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+// Where a Telegram conversation currently is, and how fast it is going.
+//
+// A webhook handler is stateless — every update arrives at a fresh invocation
+// with no memory of the last one — so the multi-step flow (category →
+// описание → скриншоты → отправка) cannot hold its progress in a module-level
+// Map. It would be lost on the next deploy, and wrong immediately on any
+// deployment with more than one instance. The same argument applies to the
+// rate limiter: an in-memory counter is a rate limit per instance, which is
+// not a rate limit.
+//
+// Keyed by telegramId rather than by a generated id: there is exactly one live
+// conversation per Telegram account, and making that the primary key is what
+// lets every handler upsert into it without first reading it.
+//
+// Admins share this table. An admin who tapped "Ответить" is in step
+// `awaiting_reply` with activeTicketId set — the same machine the user's flow
+// runs on, because it is the same question: "what does the next message from
+// this chat mean?"
+model SupportSession {
+  telegramId String @id
+
+  // idle | awaiting_message | awaiting_screenshot | awaiting_reply — see
+  // SESSION_STEPS in src/features/support/schemas.ts.
+  step String @default("idle")
+
+  // The ticket being drafted. Null until a category is picked.
+  draftCategory    String?
+  draftMessage     String?
+  draftScreenshots String  @default("[]")
+
+  // The ticket an admin is replying to, or the user's most recent one.
+  activeTicketId Int?
+
+  // Fixed-window rate limiting. `windowStartedAt` is when the current window
+  // opened and `windowCount` how many messages landed in it; a window older
+  // than the limit's span is treated as a new empty one on read, so nothing
+  // has to run on a schedule to reset it. blockedUntil is the cooldown a
+  // flooder is put into — a timestamp rather than a flag, so it expires by
+  // itself.
+  windowStartedAt DateTime  @default(now())
+  windowCount     Int       @default(0)
+  blockedUntil    DateTime?
+
+  updatedAt DateTime @updatedAt
 }

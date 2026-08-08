@@ -1,19 +1,21 @@
+import { formatAllowance } from "@/features/usage/lib/format";
 import type { PlanId } from "@/features/settings/types";
 
 /**
- * The three NOVA tiers, as the subscription screen renders them.
+ * The three NOVA tiers, as the subscription screen and the landing both render
+ * them.
  *
- * Presentation only. No gate reads this file — enforcement lives next to the
- * feature it limits, and today that is exactly one place (see below). When a
- * payment provider lands, this file stays the copy; the grant stays in
+ * Presentation only — no gate reads this file; enforcement lives in
+ * features/usage. But the AI lines are *generated* from the very ceilings that
+ * gate enforces (formatAllowance), rather than typed out beside them. That is
+ * the difference between copy that has to be kept in sync and copy that cannot
+ * drift: the previous version of this file promised "20 запросов в день" while
+ * the landing promised "10 запросов в месяц" and the server enforced neither
+ * number for the feature the user was actually looking at.
+ *
+ * When a payment provider lands, this file stays the copy: the grant stays in
  * server/subscription.repository.ts and the checkout becomes a new caller of
  * it.
- *
- * The one number here that *is* enforced is FREE's daily AI allowance, and it
- * is enforced in src/ai/limits.ts rather than from this file — this is the
- * copy, that is the ceiling. They have to be changed together, which is why
- * the number is spelled out in the feature line instead of hidden behind a
- * vague "с ограничениями".
  */
 export interface PlanFeature {
   text: string;
@@ -34,6 +36,25 @@ export interface Plan {
   inherits: PlanId | null;
 }
 
+/**
+ * The three AI lines every tier carries, written from its own ceilings.
+ *
+ * Same three lines in the same order on all three cards, because the tiers
+ * differ in exactly these numbers and a reader comparing them should be able to
+ * compare rows rather than hunt through three differently-worded lists.
+ */
+export function planAiFeatureLines(plan: PlanId): string[] {
+  return [
+    `AI Coach — ${formatAllowance(plan, "coach")}`,
+    `Анализ еды по фото — ${formatAllowance(plan, "food")}`,
+    `Анализ внешности — ${formatAllowance(plan, "appearance")}`,
+  ];
+}
+
+function aiFeatures(plan: PlanId): PlanFeature[] {
+  return planAiFeatureLines(plan).map((text) => ({ text, included: true }));
+}
+
 export const PLAN_LIST: Plan[] = [
   {
     id: "free",
@@ -46,7 +67,7 @@ export const PLAN_LIST: Plan[] = [
       { text: "Цели, привычки, задачи", included: true },
       { text: "Тренировки, питание, сон, внешность", included: true },
       { text: "Life Score и аналитика дня", included: true },
-      { text: "AI Coach, анализ еды и внешности — 20 запросов в день", included: true },
+      ...aiFeatures("free"),
     ],
   },
   {
@@ -56,13 +77,11 @@ export const PLAN_LIST: Plan[] = [
     price: 299,
     tone: "blue",
     inherits: "free",
-    // Не список новых функций: всё это есть и во FREE, просто в пределах
-    // дневного лимита. PLUS снимает лимит — это единственное, что тариф
-    // реально меняет, и обещать здесь что-то ещё значит продавать несуществующее.
+    // Не список новых функций: всё это есть и во FREE, просто в узких рамках.
+    // PLUS расширяет лимиты — это то, что тариф реально меняет, и обещать
+    // здесь что-то ещё значит продавать несуществующее.
     features: [
-      { text: "Безлимитный AI Coach — без дневного лимита", included: true },
-      { text: "Анализ еды по фото без ограничений", included: true },
-      { text: "Анализ внешности без ограничений", included: true },
+      ...aiFeatures("plus"),
       { text: "Ежедневный AI-разбор дня", included: true },
       { text: "Приоритетная поддержка", included: true },
     ],
@@ -75,10 +94,9 @@ export const PLAN_LIST: Plan[] = [
     tone: "purple",
     inherits: "plus",
     features: [
+      ...aiFeatures("max"),
       { text: "Ранний доступ ко всем новым функциям", included: true },
-      { text: "Будущие AI-функции", included: true },
-      { text: "Voice AI", included: true },
-      { text: "Новые Vision-модули", included: true },
+      { text: "Новые Vision-модули и будущие AI-функции", included: true },
       { text: "Значок MAX", included: true },
     ],
   },

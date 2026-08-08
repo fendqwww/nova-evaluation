@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { TELEGRAM_SUPPORT_URL } from "../constants";
+import { TELEGRAM_APP_URL } from "../constants";
 import { AppMockup } from "./app-mockup";
 import { CtaButton } from "./cta-button";
 import { Glow } from "./section";
@@ -69,7 +69,8 @@ export function HeroSection() {
             {...rise(0.32)}
             className="mt-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center"
           >
-            <CtaButton href={TELEGRAM_SUPPORT_URL} external className="w-full sm:w-auto">
+            {/* Главная кнопка страницы — в приложение, а не в поддержку. */}
+            <CtaButton href={TELEGRAM_APP_URL} external className="w-full sm:w-auto">
               Начать бесплатно
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
             </CtaButton>

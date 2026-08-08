@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { env } from "@/shared/config/env";
+import { constantTimeEqual } from "@/shared/lib/constant-time-equal";
 import { PLANS } from "@/features/settings/schemas";
 import {
   activatePlan,
@@ -12,8 +13,9 @@ import {
 /**
  * Turn a paid tier on by hand, for the window before payments exist.
  *
- * The whole manual flow ends here: someone messages @nheavyy from the
- * subscription screen, pays however we agreed, and this is the one call that
+ * The whole manual flow ends here: someone taps "Получить PLUS" on the
+ * subscription screen, which opens the support bot on the payment branch and
+ * files a ticket; they pay however we agreed, and this is the one call that
  * grants them PLUS. It is deliberately an HTTP endpoint rather than a script
  * or a server action — a script only works against a local database, and a
  * server action would have to be reachable from a screen, which would mean
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
     return new NextResponse("Not found", { status: 404 });
   }
 
-  if (!timingSafeEqual(request.headers.get("x-admin-secret") ?? "", secret)) {
+  if (!constantTimeEqual(request.headers.get("x-admin-secret") ?? "", secret)) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }
 
@@ -76,21 +78,4 @@ export async function POST(request: Request) {
   const grant = await activatePlan(target.userId, plan, days, "manual");
 
   return NextResponse.json({ ok: true, user: target, ...grant });
-}
-
-/**
- * Constant-time string comparison.
- *
- * A plain `===` on a secret leaks its length and its matching prefix through
- * timing. That is a thin attack over the internet, but this is the one door in
- * the app that hands out paid tiers, and comparing safely costs nothing.
- */
-function timingSafeEqual(a: string, b: string): boolean {
-  if (a.length !== b.length) return false;
-
-  let diff = 0;
-  for (let index = 0; index < a.length; index += 1) {
-    diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
-  }
-  return diff === 0;
 }

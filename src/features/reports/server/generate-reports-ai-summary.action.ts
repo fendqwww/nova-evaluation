@@ -6,8 +6,9 @@ import { buildCoachAnalysis } from "@/features/coach/server/build-coach-analysis
 import { composeAnswer } from "@/features/coach/lib/compose";
 import { getSettings } from "@/features/settings/server/settings.repository";
 import { listCoachMemories } from "@/features/coach/server/coach-memory.repository";
-import { askCoachModel } from "@/ai/coach";
-import { getAiUsageStatus } from "@/ai/limits";
+import { askCoachModel, isCoachModelEnabled } from "@/ai/coach";
+import { consumeCoachMessage, refundCoachMessage } from "@/features/usage/server";
+import { hasAiConsent } from "@/features/legal/server";
 import type { CoachAnswer } from "@/features/coach/types";
 
 const REPORT_QUESTION =
@@ -22,9 +23,12 @@ export type GenerateReportsAiSummaryInput = z.input<typeof inputSchema>;
  * The deterministic brief (composeAnswer("brief", ...)) is what get-reports
  * loads by default — free, instant, always available. This is the same
  * upgrade path the Coach chat takes (see ask-coach.action.ts), reused rather
- * than duplicated: one canned question through askCoachModel, budget-checked
- * up front so a FREE user out of usage gets an honest "limit" reason instead
- * of a spent call that returns null anyway.
+ * than duplicated: one canned question through askCoachModel, spending from
+ * the same Coach allowance because it is the same model call.
+ *
+ * Unlike the chat, this one surfaces the limit instead of silently shipping the
+ * draft — the draft is already on screen here, so falling back to it would look
+ * like a button that does nothing.
  *
  * Deliberately not written to CoachMessage history — a report refresh is not
  * a conversation turn, and mixing the two would pad the Coach's chat with
@@ -32,7 +36,7 @@ export type GenerateReportsAiSummaryInput = z.input<typeof inputSchema>;
  */
 export type GenerateReportsAiSummaryResult =
   | { ok: true; summary: CoachAnswer }
-  | { ok: false; reason: "limit"; used: number; limit: number }
+  | { ok: false; reason: "limit"; message: string; used: number; limit: number }
   | { ok: false; reason: "unavailable" };
 
 export async function generateReportsAiSummaryAction(
@@ -44,9 +48,22 @@ export async function generateReportsAiSummaryAction(
   const settings = await getSettings(userId);
   const analysis = await buildCoachAnalysis(userId, timezone);
 
-  const usage = await getAiUsageStatus(userId, settings.plan, analysis.today);
-  if (!usage.allowed) {
-    return { ok: false, reason: "limit", used: usage.used, limit: usage.limit ?? 0 };
+  // Нет согласия на трансграничную передачу — карточка остаётся с
+  // детерминированной сводкой, которая уже на экране, и говорит «недоступно».
+  if (!isCoachModelEnabled() || !(await hasAiConsent(userId))) {
+    return { ok: false, reason: "unavailable" };
+  }
+
+  const usage = { userId, plan: settings.plan, today: analysis.today };
+  const permission = await consumeCoachMessage(usage);
+  if (!permission.success) {
+    return {
+      ok: false,
+      reason: "limit",
+      message: permission.message,
+      used: permission.used,
+      limit: permission.limit,
+    };
   }
 
   const draft = composeAnswer("brief", analysis);
@@ -59,10 +76,11 @@ export async function generateReportsAiSummaryAction(
     // also why the result is never written to CoachMessage.
     history: [],
     memories,
-    userId,
-    plan: settings.plan,
   });
-  if (!fromModel) return { ok: false, reason: "unavailable" };
+  if (!fromModel) {
+    await refundCoachMessage(usage);
+    return { ok: false, reason: "unavailable" };
+  }
 
   return { ok: true, summary: fromModel.answer };
 }

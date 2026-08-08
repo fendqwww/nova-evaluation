@@ -133,10 +133,10 @@ function toSettingsItem(row: SettingsRow): UserSettingsItem {
  * The tier this account is actually on, expiry already applied.
  *
  * The one place a stored plan becomes a usable one, which is what makes a
- * lapsed subscription impossible to miss: src/ai/limits.ts reads its ceiling
+ * lapsed subscription impossible to miss: features/usage reads its ceilings
  * from `settings.plan`, and it only ever sees the resolved value. There is no
  * second path to the column, so there is no way for an expired PLUS to keep
- * an unlimited AI budget.
+ * a PLUS-sized AI allowance.
  *
  * `planUntil` is carried through only while it still applies — a date in the
  * past belongs to a tier that is over, and shipping it to the client would

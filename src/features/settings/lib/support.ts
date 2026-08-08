@@ -1,40 +1,62 @@
-import { PLAN_LABELS } from "@/features/settings/lib/plans";
+import {
+  TELEGRAM_SUPPORT_BOT_USERNAME,
+  TELEGRAM_SUPPORT_URL,
+  supportDeepLink,
+} from "@/shared/config/support";
 import type { PlanId } from "@/features/settings/types";
 import type { SettingsAccount } from "@/features/settings/types";
 
 /**
  * Buying a tier by talking to a human, until a payment provider is wired.
  *
- * The whole purchase flow is one deep link: it opens the support chat with the
- * message already written, so the user sends it in one tap and we receive
- * something we can act on without a round of "what's your username?". That
- * matters more than it looks — a manual activation costs one message each way
- * only if the first message already identifies the account and the tier.
+ * This used to open a chat with a personal account and a `?text=` draft the
+ * user had to send themselves. It now opens the support bot with a deep-link
+ * payload, which is better in the two ways that were the point of the draft:
+ *
+ *   - The bot already knows who is writing. Telegram hands it the user's id
+ *     and username with the very first update, so the "какой у вас аккаунт?"
+ *     round trip the pre-filled text existed to avoid is gone for good —
+ *     including for users with no @username, whose draft was the only thing
+ *     identifying them.
+ *   - The request becomes a ticket with a number instead of a message in
+ *     someone's personal inbox, so it survives that person being asleep.
+ *
+ * A person's handle also could not be revoked, reassigned, or answered by a
+ * second engineer. A bot can.
  */
 
-/** The account that activates PLUS by hand. */
-export const SUPPORT_USERNAME = "nheavyy";
+/** The account that activates a paid tier. A bot, not a person. */
+export const SUPPORT_USERNAME = TELEGRAM_SUPPORT_BOT_USERNAME;
+
+/** Plain link to the support bot, with no branch preselected. */
+export const SUPPORT_LINK = TELEGRAM_SUPPORT_URL;
 
 /**
  * The user's own handle, as support should search for it.
  *
  * Username first because it is what a chat shows, with the numeric Telegram id
  * as the fallback every account has — findPlanTarget accepts either, so
- * whichever ends up in the message is enough to activate from.
+ * whichever ends up in front of support is enough to activate from. Still
+ * rendered on the subscription screen: the bot knows this already, but the
+ * user seeing their own handle is how they know we will find them.
  */
 export function accountHandle(account: SettingsAccount): string {
   return account.username ? `@${account.username}` : `ID ${account.telegramId}`;
 }
 
 /**
- * A t.me link to the support chat with the request pre-filled.
+ * A link that opens the support bot already on the payment branch.
  *
- * `?text=` is what makes Telegram open the chat with a draft already in the
- * input. It is a draft, not a sent message — the user still reads it and taps
- * send, which is the right amount of friction for something that starts a
- * payment conversation.
+ * `?start=plan_plus` is delivered to the bot as `/start plan_plus`, which its
+ * user flow maps onto the "💳 Оплата" category (see categoryFromPayload in
+ * features/support/server/user-flow.ts). The user taps the button and is asked
+ * for their question directly, instead of being shown a seven-item menu that
+ * asks what they just told us by pressing "Получить PLUS".
+ *
+ * It no longer takes the account. The pre-filled draft needed it to spell out
+ * who was asking; the bot is told that by Telegram on the first update, so
+ * passing it here would be a parameter that exists only to be ignored.
  */
-export function planRequestLink(plan: PlanId, account: SettingsAccount): string {
-  const text = `Здравствуйте! Хочу оформить ${PLAN_LABELS[plan]}.\nМой аккаунт: ${accountHandle(account)}`;
-  return `https://t.me/${SUPPORT_USERNAME}?text=${encodeURIComponent(text)}`;
+export function planRequestLink(plan: PlanId): string {
+  return supportDeepLink(`plan_${plan}`);
 }

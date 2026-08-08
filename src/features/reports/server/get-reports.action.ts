@@ -5,7 +5,7 @@ import { addDays, todayIn } from "@/shared/lib/calendar-day";
 import { buildCoachAnalysis } from "@/features/coach/server/build-coach-analysis";
 import { composeAnswer } from "@/features/coach/lib/compose";
 import { getSettings } from "@/features/settings/server/settings.repository";
-import { getAiUsageStatus } from "@/ai/limits";
+import { checkCoachLimit } from "@/features/usage/server";
 import { listHabits } from "@/features/habits/server/habits.repository";
 import { listTasks } from "@/features/tasks/server/tasks.repository";
 import { listWorkouts, listSessions } from "@/features/workouts/server/workouts.repository";
@@ -62,7 +62,10 @@ export async function getReports(rawInitData: string | undefined): Promise<Repor
     sleepLogs,
   );
 
-  const aiUsage = await getAiUsageStatus(userId, settings.plan, today);
+  // The AI summary card spends from the Coach allowance — it is the same model
+  // call — so that is the counter it reports, rather than a combined figure
+  // that would not match what refreshing it actually costs.
+  const aiUsage = await checkCoachLimit({ userId, plan: settings.plan, today });
   const sleepWeek = sleepWeekStats(sleepLogs, today);
 
   return {

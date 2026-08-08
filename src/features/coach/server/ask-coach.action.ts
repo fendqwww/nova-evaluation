@@ -14,7 +14,9 @@ import {
   listCoachMemories,
   rememberCoachFacts,
 } from "@/features/coach/server/coach-memory.repository";
-import { askCoachModel } from "@/ai/coach";
+import { askCoachModel, isCoachModelEnabled } from "@/ai/coach";
+import { consumeCoachMessage, refundCoachMessage } from "@/features/usage/server";
+import { hasAiConsent } from "@/features/legal/server";
 import { composeAnswer } from "@/features/coach/lib/compose";
 import { detectIntent } from "@/features/coach/lib/intents";
 import type { CoachAnswer, CoachAskResult } from "@/features/coach/types";
@@ -57,23 +59,41 @@ export async function askCoachAction(input: AskCoachInput): Promise<CoachAskResu
   const resolvedIntent = intent ?? detectIntent(question);
   const draft = composeAnswer(resolvedIntent, analysis);
 
-  const [settings, history, memories] = await Promise.all([
+  const [settings, history, memories, aiAllowed] = await Promise.all([
     getSettings(userId),
     listRecentCoachMessages(userId, CONTEXT_TURNS),
     listCoachMemories(userId),
+    // Без согласия на трансграничную передачу коуч отвечает детерминированным
+    // черновиком — экран работает, ответ есть, наружу не уходит ничего.
+    hasAiConsent(userId),
   ]);
 
-  const fromModel = await askCoachModel(question, {
-    analysis,
-    draft,
-    history: history.messages,
-    memories,
-    userId,
-    plan: settings.plan,
-  });
+  const day = todayIn(timezone);
+  const usage = { userId, plan: settings.plan, today: day };
+
+  // A message is reserved before the model is called and given back if the
+  // model produced nothing — so a timeout costs the user nothing, and two
+  // simultaneous questions cannot both slip past the last unit of the month.
+  //
+  // Out of budget is not an error here: the Coach has a real answer in hand
+  // already (`draft`), so it ships that instead of refusing. That is the whole
+  // reason this feature never shows an "upgrade required" screen while the two
+  // Vision features do — they have nothing to fall back to.
+  const charged =
+    aiAllowed && isCoachModelEnabled() && (await consumeCoachMessage(usage)).success;
+
+  const fromModel = charged
+    ? await askCoachModel(question, {
+        analysis,
+        draft,
+        history: history.messages,
+        memories,
+      })
+    : null;
+
+  if (charged && !fromModel) await refundCoachMessage(usage);
 
   const answer: CoachAnswer = fromModel?.answer ?? draft;
-  const day = todayIn(timezone);
 
   const stored = await appendCoachMessage(userId, {
     role: "user",

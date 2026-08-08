@@ -1,3 +1,5 @@
+import { TELEGRAM_SUPPORT_HANDLE, TELEGRAM_SUPPORT_URL } from "@/shared/config/support";
+
 /**
  * The version string, the release history and where to ask for help.
  *
@@ -14,12 +16,13 @@ export const APP_STAGE = "MVP";
 /**
  * Where support goes.
  *
- * PLACEHOLDER — replace with the real support account before release. Kept as
- * a constant rather than inlined in the component so there is exactly one place
- * to change when it exists.
+ * Both names are aliases of the one channel constant in
+ * shared/config/support.ts — the settings row that renders them predates the
+ * support bot, and keeping the local names means the component did not have to
+ * change when the destination did.
  */
-export const SUPPORT_HANDLE = "@nova_support";
-export const SUPPORT_URL = "https://t.me/nova_support";
+export const SUPPORT_HANDLE = TELEGRAM_SUPPORT_HANDLE;
+export const SUPPORT_URL = TELEGRAM_SUPPORT_URL;
 
 /**
  * The changelog, newest first.
@@ -40,6 +43,26 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    day: "2026-08-08",
+    title: "Документы и согласия",
+    items: [
+      "Публичная оферта, Политика конфиденциальности, Согласие на обработку данных и Правила рекомендательных технологий — в приложении и на сайте одним текстом",
+      "Согласие запрашивается при первом запуске, до ввода данных о здоровье",
+      "AI-функции работают только при отдельном согласии на передачу данных в Google — его можно отозвать в один тап",
+      "Раздел «Документы и согласия» в настройках: что подтверждено, когда и в какой редакции",
+    ],
+  },
+  {
+    day: "2026-08-08",
+    title: "Лимиты AI и поддержка",
+    items: [
+      "Отдельные лимиты для коуча, анализа еды и анализа внешности вместо одного общего счётчика",
+      "Экран «AI Usage» в подписке: видно, что осталось по каждой функции",
+      "Повторное фото еды распознаётся из кэша — без нового запроса к AI",
+      "Поддержка и активация тарифов — через бота в Telegram",
+    ],
+  },
   {
     day: "2026-08-02",
     title: "Настройки",

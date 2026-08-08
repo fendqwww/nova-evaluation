@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRight } from "lucide-react";
-import { TELEGRAM_SUPPORT_URL } from "../constants";
+import { TELEGRAM_APP_URL } from "../constants";
 import { CtaButton } from "./cta-button";
 import { NovaMark } from "./nova-mark";
 import { Reveal, RevealItem } from "./reveal";
@@ -33,8 +33,10 @@ export function FinalCtaSection() {
         </RevealItem>
 
         <RevealItem className="mt-10 w-full sm:w-auto">
-          <CtaButton href={TELEGRAM_SUPPORT_URL} external className="w-full sm:w-auto">
-            Получить доступ
+          {/* «Бесплатный тариф, без карты» строкой выше — значит, кнопка ведёт
+              в приложение. Поддержка нужна только для платных тарифов. */}
+          <CtaButton href={TELEGRAM_APP_URL} external className="w-full sm:w-auto">
+            Открыть Nova
             <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
           </CtaButton>
         </RevealItem>

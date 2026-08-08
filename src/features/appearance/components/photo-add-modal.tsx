@@ -94,9 +94,11 @@ export function PhotoAddModal({
       });
 
       if (result.ok) return result.analysis;
+      // The photo is already saved either way — that is the sentence's first
+      // half, and it matters more than the reason the analysis did not run.
       setAnalysisError(
         result.reason === "limit"
-          ? `Фото сохранено. Анализы на сегодня закончились (${result.used} из ${result.limit}).`
+          ? `Фото сохранено. ${result.message}`
           : `Фото сохранено, но анализ не удался. ${result.message}`,
       );
       return null;

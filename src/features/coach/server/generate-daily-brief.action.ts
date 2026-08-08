@@ -14,7 +14,9 @@ import {
   listCoachMemories,
   rememberCoachFacts,
 } from "@/features/coach/server/coach-memory.repository";
-import { generateCoachBrief } from "@/ai/coach";
+import { generateCoachBrief, isCoachModelEnabled } from "@/ai/coach";
+import { consumeCoachMessage, refundCoachMessage } from "@/features/usage/server";
+import { hasAiConsent } from "@/features/legal/server";
 import type { CoachAnswer } from "@/features/coach/types";
 
 const inputSchema = z.object({ rawInitData: z.string().min(1).optional() });
@@ -56,6 +58,10 @@ export async function generateDailyBriefAction(
   const settings = await getSettings(userId);
   if (!settings.ai.dailyReport) return { ok: false };
 
+  // Разбор дня — единственный вызов модели, который пользователь не запускает
+  // сам, поэтому основание для него проверяется раньше всей остальной работы.
+  if (!(await hasAiConsent(userId))) return { ok: false };
+
   // Checked before the analysis, which is the expensive part: buildCoachAnalysis
   // reads every section of the app, and a brief that is already written makes
   // all of it wasted work. todayIn is the same derivation buildCoachAnalysis
@@ -75,6 +81,15 @@ export async function generateDailyBriefAction(
   const draft = composeAnswer("brief", analysis);
   const memories = await listCoachMemories(userId);
 
+  // The brief spends from the same Coach allowance a typed question does — it
+  // is the same model call on the same data. It can only ever cost one unit a
+  // day, because the result is cached by day and both lookups above run first.
+  const usage = { userId, plan: settings.plan, today: analysis.today };
+  if (!isCoachModelEnabled()) return { ok: false };
+
+  const permission = await consumeCoachMessage(usage);
+  if (!permission.success) return { ok: false };
+
   const fromModel = await generateCoachBrief({
     analysis,
     draft,
@@ -83,11 +98,12 @@ export async function generateDailyBriefAction(
     // briefing toward whatever the user happened to ask about last.
     history: [],
     memories,
-    userId,
-    plan: settings.plan,
   });
 
-  if (!fromModel) return { ok: false };
+  if (!fromModel) {
+    await refundCoachMessage(usage);
+    return { ok: false };
+  }
 
   await putCoachDailyBrief(userId, analysis.today, fromModel.answer);
   if (fromModel.memory.length > 0) {

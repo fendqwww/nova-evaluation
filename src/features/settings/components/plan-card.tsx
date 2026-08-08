@@ -148,7 +148,7 @@ export function PlanCard({
             </Button>
 
             <p className="text-center text-[0.6875rem] leading-relaxed text-subtle-foreground">
-              Откроется чат с @{SUPPORT_USERNAME} — активируем вручную после оплаты
+              Откроется бот @{SUPPORT_USERNAME} — активируем вручную после оплаты
             </p>
           </div>
         )}

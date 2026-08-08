@@ -1,3 +1,10 @@
+import { TELEGRAM_SUPPORT_URL } from "@/shared/config/support";
+import { TELEGRAM_APP_URL } from "@/shared/config/app-bot";
+import { LEGAL_DOCUMENTS } from "@/features/legal/documents";
+import { PLAN_LIST, planAiFeatureLines } from "@/features/settings/lib/plans";
+import { planRequestLink } from "@/features/settings/lib/support";
+import type { PlanId } from "@/features/settings/types";
+
 /**
  * Every piece of copy and every number the landing renders.
  *
@@ -7,12 +14,21 @@
  */
 
 /**
- * Support / access contact.
+ * Два адреса продукта, и они разные.
  *
- * PLACEHOLDER — swap for the real channel before launch. Every "получить
- * доступ" call to action on the page resolves to this one constant.
+ * TELEGRAM_APP_URL — основной бот, в котором открывается приложение. Сюда
+ * ведут все кнопки «Начать бесплатно»: и в шапке, и в герое, и в тарифе FREE,
+ * и в финальном блоке.
+ *
+ * TELEGRAM_SUPPORT_URL — бот поддержки. Сюда ведут только «Получить доступ» у
+ * платных тарифов (оплата пока ручная), ссылка в футере и контакты в
+ * документах.
+ *
+ * До разделения обе роли исполнял бот поддержки, и «Начать бесплатно»
+ * открывало чат обращений. Оба имени переэкспортируются из shared/config, а не
+ * объявляются здесь: лендинг — не источник правды об адресах бота.
  */
-export const TELEGRAM_SUPPORT_URL = "https://t.me/nova_support";
+export { TELEGRAM_SUPPORT_URL, TELEGRAM_APP_URL };
 
 export const NAV_LINKS: ReadonlyArray<{ label: string; href: string }> = [
   { label: "Возможности", href: "#how" },
@@ -123,8 +139,22 @@ export const COACH_CAPABILITIES: ReadonlyArray<CoachCapability> = [
 
 /* ------------------------------------------------------------ pricing --- */
 
+/**
+ * The pricing table is not written here. It is derived from the same
+ * PLAN_LIST the in-app subscription screen renders, whose AI lines are in turn
+ * generated from the ceilings features/usage actually enforces.
+ *
+ * This used to be its own hand-written list, and the result was a landing page
+ * that advertised a tier called PREMIUM at a price of "—" with "10 запросов к
+ * AI Coach в месяц", next to an app that sold NOVA PLUS at 299 ₽ with a
+ * completely different allowance. Three places describing the same product is
+ * two places to forget.
+ *
+ * What stays local is what is genuinely landing-only: the shorter tagline
+ * style, the non-AI feature lines, and which card is highlighted.
+ */
 export interface PricingTier {
-  id: string;
+  id: PlanId;
   name: string;
   tagline: string;
   price: string;
@@ -132,57 +162,38 @@ export interface PricingTier {
   features: ReadonlyArray<string>;
   featured: boolean;
   cta: string;
+  /** Opens the support bot already on the payment branch for this tier. */
+  href: string;
 }
 
-export const PRICING_TIERS: ReadonlyArray<PricingTier> = [
-  {
-    id: "free",
-    name: "FREE",
-    tagline: "Начать и почувствовать систему",
-    price: "0",
-    priceNote: "навсегда",
-    features: [
-      "Сон, питание, тренировки, привычки",
-      "Дневной Life Score",
-      "Базовые отчёты за неделю",
-      "10 запросов к AI Coach в месяц",
-    ],
-    featured: false,
-    cta: "Начать бесплатно",
-  },
-  {
-    id: "premium",
-    name: "PREMIUM",
-    tagline: "Для тех, кто ведёт систему каждый день",
-    price: "—",
-    priceNote: "цена скоро",
-    features: [
-      "Всё из FREE",
-      "Безлимитный AI Coach с памятью",
-      "AI Vision: анализ еды по фото",
-      "Глубокие отчёты и тренды",
-      "Персональные цели и планы",
-    ],
-    featured: true,
-    cta: "Получить доступ",
-  },
-  {
-    id: "max",
-    name: "MAX",
-    tagline: "Максимальная глубина анализа",
-    price: "—",
-    priceNote: "цена скоро",
-    features: [
-      "Всё из PREMIUM",
-      "AI Vision: отслеживание внешности",
-      "Приоритетная модель анализа",
-      "Расширенная история и экспорт",
-      "Ранний доступ к новым модулям",
-    ],
-    featured: false,
-    cta: "Получить доступ",
-  },
-];
+const LANDING_TAGLINES: Record<PlanId, string> = {
+  free: "Начать и почувствовать систему",
+  plus: "Для тех, кто ведёт систему каждый день",
+  max: "Максимальная глубина анализа",
+};
+
+/** Non-AI lines, per tier. The AI ones come from the plan itself. */
+const LANDING_EXTRAS: Record<PlanId, ReadonlyArray<string>> = {
+  free: ["Сон, питание, тренировки, привычки", "Дневной Life Score", "Отчёты за неделю"],
+  plus: ["Всё из FREE", "Ежедневный AI-разбор дня", "Приоритетная поддержка"],
+  max: ["Всё из PLUS", "Ранний доступ к новым модулям", "Значок MAX"],
+};
+
+export const PRICING_TIERS: ReadonlyArray<PricingTier> = PLAN_LIST.map((plan) => ({
+  id: plan.id,
+  // "NOVA PLUS" in the app, "PLUS" here — the word NOVA is already the logo at
+  // the top of this page, and repeating it three times in one table is noise.
+  name: plan.name.replace(/^NOVA\s+/, ""),
+  tagline: LANDING_TAGLINES[plan.id],
+  price: plan.price === 0 ? "0" : String(plan.price),
+  priceNote: plan.price === 0 ? "навсегда" : "₽ / месяц",
+  features: [...LANDING_EXTRAS[plan.id], ...planAiFeatureLines(plan.id)],
+  featured: plan.id === "plus",
+  cta: plan.price === 0 ? "Начать бесплатно" : "Получить доступ",
+  // FREE не требует разговора — он ведёт прямо в приложение. Платные пока
+  // включают вручную, поэтому их кнопка открывает поддержку на нужной ветке.
+  href: plan.price === 0 ? TELEGRAM_APP_URL : planRequestLink(plan.id),
+}));
 
 /* ---------------------------------------------------------------- faq --- */
 
@@ -220,23 +231,40 @@ export const FAQ_ITEMS: ReadonlyArray<FaqItem> = [
   {
     question: "Сколько это стоит?",
     answer:
-      "Базовый тариф бесплатный и останется бесплатным. Оплата PREMIUM и MAX пока не подключена — доступ выдаётся вручную через поддержку в Telegram.",
+      "Базовый тариф бесплатный и останется бесплатным: цели, привычки, тренировки, питание, сон и Life Score — целиком. Платные тарифы расширяют только лимиты AI: PLUS — 299 ₽ в месяц, MAX — 599 ₽ в месяц.",
+  },
+  {
+    question: "Что именно ограничено на бесплатном тарифе?",
+    answer:
+      "Только AI. Коуч — 20 сообщений в месяц, анализ еды по фото — один раз в неделю, анализ внешности — один бесплатный анализ. Всё остальное в приложении работает без ограничений и без счётчиков.",
   },
   {
     question: "Как получить доступ сейчас?",
     answer:
-      "Напиши в поддержку в Telegram — доступ откроют вручную. Оплата на этом этапе не требуется.",
+      "Автоматической оплаты пока нет: напиши боту поддержки в Telegram — тариф включат вручную. Кнопка «Получить доступ» открывает нужную ветку разговора сразу.",
   },
 ];
 
 /* ------------------------------------------------------------- footer --- */
 
+/**
+ * Ссылки на документы собираются из реестра, а не перечисляются здесь.
+ *
+ * Правила применения рекомендательных технологий обязаны быть в открытом
+ * доступе (статья 10.2-2 149-ФЗ), а форма согласия — доступна тому, кто уже его
+ * дал. Оба документа появились позже футера, и список, набранный руками,
+ * оставил бы их без единой ссылки на сайте: то, на что не ведёт ни одна
+ * ссылка, опубликованным не считается.
+ */
 export const FOOTER_LINKS: ReadonlyArray<{
   label: string;
   href: string;
   external: boolean;
 }> = [
-  { label: "Политика конфиденциальности", href: "/legal/privacy", external: false },
-  { label: "Публичная оферта", href: "/legal/offer", external: false },
+  ...LEGAL_DOCUMENTS.map((document) => ({
+    label: document.shortTitle,
+    href: document.path,
+    external: false,
+  })),
   { label: "Telegram", href: TELEGRAM_SUPPORT_URL, external: true },
 ];

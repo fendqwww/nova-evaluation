@@ -142,7 +142,7 @@ export function useSettings() {
     account: snapshot?.account ?? null,
     settings: snapshot?.settings ?? null,
     archiveCount: snapshot?.archiveCount ?? 0,
-    aiUsage: snapshot?.aiUsage ?? null,
+    usage: snapshot?.usage ?? null,
     isPending: query.isPending,
     isError: query.isError,
     retry: () => void query.refetch(),

@@ -87,7 +87,10 @@ export function FoodFormModal({
   const [hasError, setError] = useState(false);
 
   const [analysis, setAnalysis] = useState<FoodAnalysis | null>(null);
-  const [limitInfo, setLimitInfo] = useState<{ used: number; limit: number } | null>(null);
+  // The server writes this sentence (features/usage/lib/format.ts): it knows
+  // whether the weekly or the monthly allowance ran out and when it refills,
+  // and neither is something this modal can work out from two numbers.
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
 
   const analyzePhoto = useMutation({
     mutationFn: async (file: File) => {
@@ -100,7 +103,7 @@ export function FoodFormModal({
     },
     onSuccess: (result) => {
       if (result.ok) {
-        setLimitInfo(null);
+        setLimitMessage(null);
         setAnalysis(result.analysis);
         setName(result.analysis.name);
         const per100 = per100gFrom(result.analysis);
@@ -111,7 +114,7 @@ export function FoodFormModal({
         return;
       }
       if (result.reason === "limit") {
-        setLimitInfo({ used: result.used, limit: result.limit });
+        setLimitMessage(result.message);
       }
     },
   });
@@ -210,11 +213,10 @@ export function FoodFormModal({
                 </Card>
               )}
 
-              {limitInfo && (
+              {limitMessage && (
                 <Card elevation="inset">
                   <p className="p-3.5 text-caption text-muted-foreground">
-                    Бесплатные анализы закончились ({limitInfo.used} из {limitInfo.limit}). Оформите
-                    NOVA PLUS, чтобы снять ограничение — раздел «Настройки» → «Подписка».
+                    {limitMessage} Тарифы — «Настройки» → «Подписка».
                   </p>
                 </Card>
               )}

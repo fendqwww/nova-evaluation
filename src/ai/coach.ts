@@ -1,6 +1,5 @@
 import "server-only";
 import { generateStructured, isGeminiEnabled, GeminiError } from "@/ai/gemini";
-import { getAiUsageStatus, recordAiUsage } from "@/ai/limits";
 import { COACH_PROMPT, COACH_ASK_TASK, COACH_BRIEF_TASK } from "@/ai/prompts";
 import {
   COACH_ANSWER_JSON_SCHEMA,
@@ -17,7 +16,6 @@ import type {
   CoachMessageItem,
 } from "@/features/coach/types";
 import type { CoachMemoryWrite } from "@/features/coach/server/coach-memory.repository";
-import type { PlanId } from "@/features/settings/types";
 
 /**
  * Gemini as the analyst, never as the source.
@@ -38,14 +36,17 @@ import type { PlanId } from "@/features/settings/types";
  * previous conversations — plus a ranked list of what changed (see
  * lib/observations.ts), and the draft is explicitly a floor to beat.
  *
- * Neither entry point ever throws. No API key, a spent daily budget, a
- * timeout, a rate limit, a response that fails validation — every one of them
- * returns null, and the caller ships the composer's draft instead. The feature
- * is fully functional either way; the model is an upgrade to the thinking, not
- * a dependency. This is also why the Coach is the one AI surface that never
- * shows the user an "upgrade required" error for hitting the usage limit: it
- * has somewhere honest to fall back to, and food/appearance analysis do not
- * (see ai/limits.ts).
+ * Neither entry point ever throws. No API key, a timeout, a rate limit, a
+ * response that fails validation — every one of them returns null, and the
+ * caller ships the composer's draft instead. The feature is fully functional
+ * either way; the model is an upgrade to the thinking, not a dependency. This
+ * is also why the Coach is the one AI surface that never shows the user an
+ * "upgrade required" error for hitting the usage limit: it has somewhere honest
+ * to fall back to, and food/appearance analysis do not.
+ *
+ * Usage is not counted here. The caller reserves a unit through
+ * features/usage before calling in, and gives it back when this returns null —
+ * so a turn that produced nothing but a fallback draft costs the user nothing.
  */
 
 /** How many earlier turns travel with the question. */
@@ -93,17 +94,16 @@ export interface CoachModelRequest {
   history: CoachMessageItem[];
   /** What the Coach already knows about this person. */
   memories: CoachMemoryItem[];
-  userId: string;
-  plan: PlanId;
 }
 
 /**
  * A better answer to `question` than `draft`, or null.
  *
- * Null is a completely ordinary outcome — no key configured, no budget left
- * today, the network is down, the model took too long, the JSON did not
- * validate. Every one of them means the caller ships the draft it already has,
- * so there is no error path for the user to see and nothing to retry.
+ * Null is a completely ordinary outcome — no key configured, the network is
+ * down, the model took too long, the JSON did not validate. Every one of them
+ * means the caller ships the draft it already has, so there is no error path
+ * for the user to see and nothing to retry — and the caller refunds the unit it
+ * reserved, because nothing was produced.
  */
 export async function askCoachModel(
   question: string,
@@ -137,12 +137,6 @@ async function runCoachModel(
 ): Promise<CoachModelResult | null> {
   if (!isGeminiEnabled()) return null;
 
-  // Not allowed means "no budget left today" — Coach has a real fallback (the
-  // draft), so this degrades silently instead of surfacing an error, unlike
-  // the two analysis features that have nothing to fall back to.
-  const usage = await getAiUsageStatus(request.userId, request.plan, request.analysis.today);
-  if (!usage.allowed) return null;
-
   const priorTurns = request.history.slice(-HISTORY_TURNS).map((message) => ({
     role: message.role === "user" ? ("user" as const) : ("model" as const),
     text: message.text,
@@ -174,8 +168,6 @@ async function runCoachModel(
     // exactly what should reach a card and a stored payload.
     const answer = coachAnswerSchema.safeParse(raw);
     if (!answer.success) return null;
-
-    await recordAiUsage(request.userId, "coach", request.analysis.today);
 
     return { answer: answer.data, memory: parseMemory(raw) };
   } catch (error) {

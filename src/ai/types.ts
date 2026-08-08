@@ -21,14 +21,10 @@ export function parseImageDataUrl(dataUrl: string): { base64Data: string; mimeTy
   return { base64Data: base64Data ?? "", mimeType };
 }
 
-/**
- * Every surface that spends from the shared usage counter (see limits.ts).
- * Kept as one union here rather than three separate string literals scattered
- * across features, so adding a fourth AI feature later means widening this
- * one type and nothing else forgets about it.
- */
-export const AI_FEATURES = ["coach", "food", "appearance"] as const;
-export type AiFeature = (typeof AI_FEATURES)[number];
+// The union of AI surfaces used to live here, beside the shared counter it was
+// for. Both moved to features/usage (UsageFeature in its constants.ts), which
+// is where the limits, the counters and the labels now are — one name for a
+// feature rather than one in the AI layer and another in the product layer.
 
 // ---------------------------------------------------------------------------
 // Food-photo analysis

@@ -1,3 +1,5 @@
+import type { UsageSnapshot } from "@/features/usage/types";
+
 /**
  * Which palette the app paints itself in.
  *
@@ -120,24 +122,19 @@ export interface SettingsAccount {
   onboardingCompleted: boolean;
 }
 
-/**
- * Where the shared AI budget stands (see ai/limits.ts) — the same lifetime
- * counter Coach, food-photo and appearance-photo analysis all spend from.
- * `limit` is null for PLUS/MAX, which the display reads as "без ограничений"
- * rather than as a hidden ceiling.
- */
-export interface AiUsageStatus {
-  used: number;
-  limit: number | null;
-}
-
 /** One fetch of the Настройки screen. */
 export interface SettingsSnapshot {
   account: SettingsAccount;
   settings: UserSettingsItem;
   /** How much there is to restore, per kind — the badge on "Архив". */
   archiveCount: number;
-  aiUsage: AiUsageStatus;
+  /**
+   * Where each AI allowance stands (see features/usage). Three counters rather
+   * than the single shared one this used to carry: the tiers are sold per
+   * feature now, because a Vision call and a Coach turn do not cost the same
+   * and one shared number could not honestly price either.
+   */
+  usage: UsageSnapshot;
 }
 
 /**

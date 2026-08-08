@@ -7,7 +7,7 @@ import {
   countArchived,
   getSettings,
 } from "@/features/settings/server/settings.repository";
-import { getAiUsageStatus } from "@/ai/limits";
+import { getUserUsage } from "@/features/usage/server";
 import type { SettingsSnapshot } from "@/features/settings/types";
 
 /**
@@ -47,10 +47,14 @@ export async function getSettingsSnapshot(
   ]);
 
   // Needs the plan the previous step resolved, so it cannot join the
-  // Promise.all above it. The day is the user's own — the budget renews per
-  // local day, so a card that read a UTC day would be wrong for half the
-  // evening in every zone east of London.
-  const usage = await getAiUsageStatus(userId, settings.plan, todayIn(timezone));
+  // Promise.all above it. The day is the user's own — every allowance renews on
+  // their local boundary, so a card that read a UTC day would be wrong for half
+  // the evening in every zone east of London.
+  const usage = await getUserUsage({
+    userId,
+    plan: settings.plan,
+    today: todayIn(timezone),
+  });
 
   const telegramName = [user.firstName, user.lastName].filter(Boolean).join(" ");
 
@@ -71,6 +75,6 @@ export async function getSettingsSnapshot(
     },
     settings,
     archiveCount,
-    aiUsage: { used: usage.used, limit: usage.limit },
+    usage,
   };
 }

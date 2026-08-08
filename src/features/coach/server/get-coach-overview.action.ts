@@ -10,6 +10,7 @@ import { composeAnswer, composeSignals } from "@/features/coach/lib/compose";
 import { buildDailyReport } from "@/features/coach/lib/report";
 import { greetingFor } from "@/features/coach/lib/analyze";
 import { isCoachModelEnabled } from "@/ai/coach";
+import { hasAiConsent } from "@/features/legal/server";
 import type { CoachOverview } from "@/features/coach/types";
 
 /**
@@ -40,13 +41,16 @@ export async function getCoachOverview(
   if (!(await isCoachEnabled(userId))) return null;
 
   const analysis = await buildCoachAnalysis(userId, timezone);
-  const [history, aiBrief, settings] = await Promise.all([
+  const [history, aiBrief, settings, aiAllowed] = await Promise.all([
     listRecentCoachMessages(userId, COACH_HISTORY_PAGE),
     // Today's model-written briefing if it has already been generated. Reading
     // it is free; writing it is a Gemini call the screen makes separately (see
     // generate-daily-brief.action.ts), which is what keeps this a pure read.
     getCoachDailyBrief(userId, analysis.today),
     getSettings(userId),
+    // Без согласия на трансграничную передачу просить у экрана разбор незачем:
+    // generate-daily-brief всё равно откажет, и кнопка вела бы в пустоту.
+    hasAiConsent(userId),
   ]);
 
   return {
@@ -58,7 +62,8 @@ export async function getCoachOverview(
     // Whether it is worth *asking* for one. A screen that cannot get a model
     // brief — no key, the daily-report switch off, one already written — must
     // not fire a request that can only come back empty.
-    canWriteBrief: aiBrief === null && isCoachModelEnabled() && settings.ai.dailyReport,
+    canWriteBrief:
+      aiBrief === null && aiAllowed && isCoachModelEnabled() && settings.ai.dailyReport,
     signals: composeSignals(analysis),
     report: buildDailyReport(analysis),
     history: history.messages,

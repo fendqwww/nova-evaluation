@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { PRICING_TIERS, TELEGRAM_SUPPORT_URL } from "../constants";
+import { PRICING_TIERS } from "../constants";
 import { CtaButton } from "./cta-button";
 import { Eyebrow, Glow, Section } from "./section";
 import { Reveal, RevealItem } from "./reveal";
@@ -9,9 +9,15 @@ import { Reveal, RevealItem } from "./reveal";
 /**
  * Pricing.
  *
- * Payments are not wired up yet, so PREMIUM and MAX show "—" instead of an
- * invented number and every CTA resolves to the support channel. Showing a
- * price the checkout cannot take would be the one dishonest thing on the page.
+ * Every number on this table — the prices and the three AI allowances under
+ * each of them — comes from the same source the app enforces (see
+ * PRICING_TIERS). The page used to carry its own figures and a "цена скоро"
+ * placeholder while the app already sold the tiers at a real price.
+ *
+ * Checkout still does not exist, so the CTA opens the support bot on that
+ * tier's payment branch rather than a payment form, and the line under the
+ * table says so. A button that promised a checkout would be the one dishonest
+ * thing on the page.
  */
 export function PricingSection() {
   return (
@@ -28,8 +34,8 @@ export function PricingSection() {
         </RevealItem>
 
         <RevealItem as="p" className="nova-lead mt-6 max-w-[46ch]">
-          Оплата пока не подключена — доступ к PREMIUM и MAX открывается вручную через
-          поддержку.
+          Всё приложение бесплатно. Платные тарифы расширяют только лимиты AI —
+          коуча, анализа еды и внешности.
         </RevealItem>
 
         <RevealItem className="mt-14 w-full">
@@ -98,7 +104,7 @@ export function PricingSection() {
 
                 <div className="relative mt-8 pt-0 lg:mt-auto lg:pt-8">
                   <CtaButton
-                    href={TELEGRAM_SUPPORT_URL}
+                    href={tier.href}
                     external
                     variant={tier.featured ? "primary" : "secondary"}
                     className="w-full"
@@ -112,7 +118,12 @@ export function PricingSection() {
         </RevealItem>
 
         <RevealItem as="p" className="mt-8 text-[0.8125rem] text-(--nova-text-faint)">
-          Кнопка ведёт в Telegram-поддержку. Оплата на этом этапе не требуется.
+          Автоматической оплаты пока нет: кнопка открывает бота поддержки, тариф
+          включают вручную. Условия использования — в{" "}
+          <a href="/legal/offer" className="underline underline-offset-2 hover:text-white">
+            Публичной оферте
+          </a>
+          ; согласие на обработку данных запрашивается при первом входе в приложение.
         </RevealItem>
       </Reveal>
     </Section>

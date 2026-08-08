@@ -13,8 +13,6 @@ import {
   Languages,
   LifeBuoy,
   Ruler,
-  ScrollText,
-  Shield,
   Sparkles,
   Trash2,
 } from "lucide-react";
@@ -36,10 +34,9 @@ import { RegionModal } from "@/features/settings/components/region-modal";
 import { ArchiveModal } from "@/features/settings/components/archive-modal";
 import { ExportModal } from "@/features/settings/components/export-modal";
 import { ClearDataModal } from "@/features/settings/components/clear-data-modal";
-import { LegalModal } from "@/features/settings/components/legal-modal";
 import { ChangelogModal } from "@/features/settings/components/changelog-modal";
+import { LegalGroup } from "@/features/legal/components/legal-group";
 import { zoneLabel, zoneOffsetLabel } from "@/features/settings/lib/timezones";
-import { PRIVACY_POLICY, TERMS_OF_USE, type LegalDocument } from "@/features/settings/lib/legal";
 import { APP_STAGE, APP_VERSION, SUPPORT_HANDLE, SUPPORT_URL } from "@/features/settings/lib/about";
 import { PLAN_LABELS } from "@/features/settings/lib/plans";
 import {
@@ -91,7 +88,6 @@ export function SettingsView() {
   const [exportOpen, setExportOpen] = useState(false);
   const [clearOpen, setClearOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [legal, setLegal] = useState<LegalDocument | null>(null);
 
   // Modal state is seeded from props on mount and never re-synced, so every
   // open has to be a fresh mount — this key is what forces one. Same convention
@@ -223,20 +219,10 @@ export function SettingsView() {
             />
           </SettingsGroup>
 
-          <SettingsGroup title="Конфиденциальность">
-            <SettingsRow
-              icon={<Shield className="h-4 w-4" />}
-              tone="score"
-              label="Политика конфиденциальности"
-              hint="Что хранится и что уходит наружу"
-              onClick={() => setLegal(PRIVACY_POLICY)}
-            />
-            <SettingsRow
-              icon={<ScrollText className="h-4 w-4" />}
-              label="Пользовательское соглашение"
-              onClick={() => setLegal(TERMS_OF_USE)}
-            />
-          </SettingsGroup>
+          {/* Документы и согласия живут в features/legal — там же, где текст,
+              версии и запись акцепта, чтобы список в настройках не мог
+              разойтись с тем, что человек реально подтвердил. */}
+          <LegalGroup />
 
           <SettingsGroup title="О приложении">
             <SettingsRow
@@ -289,12 +275,6 @@ export function SettingsView() {
             dateFormat={settings.dateFormat}
           />
 
-          <LegalModal
-            document={legal}
-            open={legal !== null}
-            onOpenChange={(next) => !next && setLegal(null)}
-            dateFormat={settings.dateFormat}
-          />
         </>
       )}
     </PageContainer>

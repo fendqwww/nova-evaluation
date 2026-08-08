@@ -3,6 +3,7 @@ import { Home, Target, Repeat, ListTodo, HeartPulse, Sparkles, User } from "luci
 import { AppShell } from "@/components/app-shell";
 import { TelegramProvider } from "@/components/providers/telegram-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { ConsentGate } from "@/features/legal/components/consent-gate";
 import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 
 // Active state is derived from the route inside BottomNavigation, so this
@@ -46,11 +47,17 @@ const navItems: BottomNavigationItem[] = [
 
 // The Telegram session boots here rather than in the root layout, so the
 // public marketing pages never pay for (or wait on) the Mini App SDK.
+//
+// ConsentGate стоит внутри AppShell и снаружи всех экранов: обязательное
+// согласие — условие доступа ко всему приложению, а не к отдельной странице, и
+// проверка на каждом экране по отдельности означала бы один забытый экран.
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <QueryProvider>
       <TelegramProvider>
-        <AppShell navItems={navItems}>{children}</AppShell>
+        <AppShell navItems={navItems}>
+          <ConsentGate>{children}</ConsentGate>
+        </AppShell>
       </TelegramProvider>
     </QueryProvider>
   );
