@@ -390,7 +390,16 @@ export async function handleTicketAction(
     return;
   }
 
-  if (ticket.status === "CLOSED" && action.kind !== "close") {
+  // Закрытый тикет не принимает действий над собой — кроме повторного
+  // закрытия, которое безвредно.
+  //
+  // Выдача тарифа исключена намеренно: это действие не над тикетом, а над
+  // аккаунтом, и карточка для него — просто место, где под рукой оказался
+  // нужный человек. Обычный порядок как раз такой: ответили «оплатите по
+  // реквизитам», закрыли обращение, через час человек оплатил. Отказ «уже
+  // закрыто» в этот момент означал бы, что выдать тариф можно только тому,
+  // кого не успели дообслужить.
+  if (ticket.status === "CLOSED" && action.kind !== "close" && action.kind !== "grant") {
     await answerCallbackQuery(callbackQueryId, "Обращение уже закрыто.", true);
     return;
   }
@@ -438,6 +447,16 @@ export async function handleTicketAction(
           by: sender.telegramId,
           outcome,
         });
+        return;
+      }
+
+      default: {
+        // Та же защита, что и в роутере (handle-update.ts): новый вариант
+        // кнопки, забытый здесь, должен ломать сборку, а не тихо ничего не
+        // делать.
+        const unhandled: never = action;
+        logWarn("ticket_action_unhandled", { kind: JSON.stringify(unhandled) });
+        await answerCallbackQuery(callbackQueryId);
         return;
       }
     }

@@ -1,6 +1,6 @@
 import "server-only";
 import { RATE_LIMITED_MESSAGE, UNEXPECTED_ERROR_MESSAGE } from "../lib/format";
-import { parseCallback } from "../lib/callback";
+import { parseCallback, type SupportCallback } from "../lib/callback";
 import { logError, logInfo, logWarn } from "../lib/log";
 import type { TelegramCallbackQuery, TelegramMessage, TelegramUpdate, TelegramUser } from "../schemas";
 import { isSupportAdmin } from "./admins";
@@ -232,8 +232,27 @@ async function handleCallbackQuery(query: TelegramCallbackQuery): Promise<void> 
     case "take":
     case "reply":
     case "close":
+    case "grant":
       await handleTicketAction(sender, action, query.id, query.message?.message_id ?? null);
       return;
+
+    default: {
+      // Проверка полноты на этапе компиляции.
+      //
+      // Здесь была настоящая ошибка: в SupportCallback появился вариант
+      // "grant", а этот switch о нём не знал — нажатие на «Выдать PLUS»
+      // проваливалось мимо всех веток, функция молча заканчивалась, и кнопка
+      // просто ничего не делала. Ни ошибки, ни записи в журнале: снаружи это
+      // выглядело как «тариф не выдаётся», и найти причину можно было только
+      // чтением роутера.
+      //
+      // Присваивание `never` превращает такой пропуск в ошибку сборки:
+      // добавить вариант в тип и забыть про него здесь больше нельзя.
+      const unhandled: never = action;
+      logWarn("callback_unhandled", { kind: (unhandled as SupportCallback).kind });
+      await answerCallbackQuery(query.id);
+      return;
+    }
   }
 }
 
