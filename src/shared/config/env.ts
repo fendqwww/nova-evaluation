@@ -21,7 +21,18 @@ const optionalSecret = (minLength: number) =>
   );
 
 const envSchema = z.object({
-  DATABASE_URL: z.string().min(1),
+  // Проверяется протокол, а не только непустота: самая вероятная ошибка при
+  // первом деплое — забытая или скопированная из локальной разработки строка
+  // вида `file:./prisma/dev.db`. С ней сборка проходила бы, а приложение
+  // падало на первом запросе к базе где-то в глубине Prisma. Ошибка на старте
+  // с готовым текстом дешевле молчаливо сломанного прода.
+  DATABASE_URL: z
+    .string()
+    .min(1)
+    .refine((url) => url.startsWith("postgres://") || url.startsWith("postgresql://"), {
+      message:
+        "DATABASE_URL должен быть строкой PostgreSQL (postgres://…). Файловая база (file:…) на Vercel не работает: файловая система там только для чтения и живёт один запрос.",
+    }),
   TELEGRAM_BOT_TOKEN: z.string().min(1),
   // Optional, not required: every AI feature (Coach, food analysis, appearance
   // analysis) has a defined behavior for "no key configured" — Coach falls

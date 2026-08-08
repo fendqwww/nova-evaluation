@@ -1,16 +1,24 @@
 // Prisma 7: the connection URL no longer lives here — it's supplied via a
 // driver adapter (see prisma.config.ts for the CLI, src/server/db.ts for the
-// app). Migrating SQLite -> PostgreSQL means swapping the adapter package
-// (@prisma/adapter-better-sqlite3 -> @prisma/adapter-pg) and this `provider`
-// literal. That stays a small, contained change only if the schema never
-// uses `enum` or scalar list fields, since the SQLite connector supports
-// neither.
+// app).
+//
+// PostgreSQL, а не SQLite, и причина не в масштабе, а в том, где это
+// выполняется: Vercel — среда без собственного диска. Файловая система там
+// только для чтения и живёт ровно один запрос, поэтому файловая база не
+// «медленно работает», а не работает вовсе: первая же запись падает с
+// SQLITE_READONLY, а если бы прошла — следующий запрос попал бы в другой
+// контейнер с пустым файлом.
+//
+// Переход обошёлся заменой одного литерала и одного адаптера ровно потому,
+// что схема никогда не использовала `enum` и скалярные списки — их не
+// поддерживал SQLite-коннектор. Ограничение, написанное здесь год назад
+// «на всякий случай», окупилось целиком.
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {
