@@ -25,7 +25,19 @@ export type SupportCallback =
   | { kind: "cancel" }
   | { kind: "take"; ticketId: number }
   | { kind: "reply"; ticketId: number }
-  | { kind: "close"; ticketId: number };
+  | { kind: "close"; ticketId: number }
+  /**
+   * Выдать тариф автору тикета.
+   *
+   * Пользователь в payload не назван — только тикет. Это не экономия места:
+   * получатель берётся из строки тикета на сервере, поэтому подменить его,
+   * переслав карточку и подставив чужой id, невозможно. Кнопка говорит «выдать
+   * PLUS по обращению 42», а кому именно — знает база.
+   */
+  | { kind: "grant"; ticketId: number; plan: GrantablePlan; days: number };
+
+/** Тарифы, которые выдаются кнопкой. FREE — это отзыв, у него своя кнопка. */
+export type GrantablePlan = "plus" | "max";
 
 export const callbackData = {
   category: (category: SupportCategoryId): string => `cat:${category}`,
@@ -35,6 +47,8 @@ export const callbackData = {
   take: (ticketId: number): string => `tk:take:${ticketId}`,
   reply: (ticketId: number): string => `tk:reply:${ticketId}`,
   close: (ticketId: number): string => `tk:close:${ticketId}`,
+  grant: (ticketId: number, plan: GrantablePlan, days: number): string =>
+    `gr:${plan}:${days}:${ticketId}`,
 } as const;
 
 /** Anything unrecognised is null — the handler then answers the tap and stops. */
@@ -53,6 +67,21 @@ export function parseCallback(raw: string | undefined): SupportCallback | null {
     if (rest[0] === "send") return { kind: "submit" };
     if (rest[0] === "cancel") return { kind: "cancel" };
     return null;
+  }
+
+  if (prefix === "gr") {
+    const [plan, rawDays, rawTicket] = rest;
+    if (plan !== "plus" && plan !== "max") return null;
+
+    const days = Number.parseInt(rawDays ?? "", 10);
+    const ticketId = Number.parseInt(rawTicket ?? "", 10);
+
+    // Потолок в 3650 дней — тот же, что у HTTP-эндпоинта: срок больше десяти
+    // лет означает опечатку, а не щедрость.
+    if (!Number.isSafeInteger(days) || days <= 0 || days > 3650) return null;
+    if (!Number.isSafeInteger(ticketId) || ticketId <= 0) return null;
+
+    return { kind: "grant", ticketId, plan, days };
   }
 
   if (prefix === "tk") {

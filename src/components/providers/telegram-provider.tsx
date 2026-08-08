@@ -8,6 +8,25 @@ import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
 const APP_BACKGROUND = "#09090b";
 const isProduction = process.env.NODE_ENV === "production";
 
+/**
+ * Сколько ждать ответа клиента Telegram на запросы mount.
+ *
+ * Секунда — это заметно больше, чем занимает ответ у клиента, который вообще
+ * отвечает (десятки миллисекунд), и заметно меньше, чем терпит человек,
+ * смотрящий на загрузочный экран.
+ */
+const MOUNT_TIMEOUT_MS = 1000;
+
+/** Отклонить обещание, если оно не завершилось за отведённое время. */
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("TELEGRAM_MOUNT_TIMEOUT")), ms),
+    ),
+  ]);
+}
+
 export function TelegramProvider({ children }: { children: ReactNode }) {
   // Children (SessionBoundary in particular) read launch params on their
   // very first render. In real Telegram those are already in the URL
@@ -48,7 +67,22 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
 
         cleanup = init();
         try {
-          await Promise.all([miniApp.mount(), viewport.mount()]);
+          // ВАЖНО: с таймаутом, а не просто в try/catch.
+          //
+          // Здесь приложение переставало запускаться в Telegram Web на
+          // компьютере. `miniApp.mount()` и `viewport.mount()` спрашивают
+          // клиент через postMessage и ждут ответа — а веб-клиент на часть
+          // запросов не отвечает вовсе (не отклоняет, а молчит). Promise.all
+          // при этом не отклоняется, а зависает навсегда: catch не срабатывает,
+          // finally не выполняется, setIsReady никогда не вызывается — и
+          // пользователь смотрит на бесконечный загрузочный экран. На телефоне
+          // клиент отвечает, поэтому там всё работало.
+          //
+          // Таймаут превращает молчание в обычную неудачу. Всё, что ниже, —
+          // косметика (цвет шапки, CSS-переменные вьюпорта); приложение
+          // полностью работоспособно и без неё, поэтому ждать её дольше
+          // секунды незачем.
+          await withTimeout(Promise.all([miniApp.mount(), viewport.mount()]), MOUNT_TIMEOUT_MS);
           miniApp.ready();
           viewport.bindCssVars();
           viewport.expand();
@@ -59,6 +93,15 @@ export function TelegramProvider({ children }: { children: ReactNode }) {
           // Best-effort integration: older Telegram clients may not
           // support every method above. The app stays fully usable
           // without them.
+          //
+          // miniApp.ready() зовётся ещё раз в обход неудачного mount: это
+          // сигнал «можно убирать заставку», и без него Telegram Web оставляет
+          // свой спиннер поверх уже отрисованного приложения.
+          try {
+            miniApp.ready();
+          } catch {
+            // Клиент не поддерживает и этого — значит, заставки тоже нет.
+          }
         }
       } finally {
         setIsReady(true);

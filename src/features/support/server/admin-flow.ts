@@ -3,8 +3,13 @@ import { TICKETS_PAGE_SIZE } from "../constants";
 import {
   ADMIN_HELP_MESSAGE,
   NOT_ADMIN_MESSAGE,
+  PLAN_USAGE_MESSAGE,
   UNEXPECTED_ERROR_MESSAGE,
   formatHandle,
+  planGranted,
+  planRevoked,
+  planStatus,
+  planTargetNotFound,
   replyPrompt,
   replySent,
   statsCard,
@@ -18,13 +23,15 @@ import {
 } from "../lib/format";
 import {
   noKeyboard,
+  offersPlanGrant,
   ticketActionsAfterTakeKeyboard,
   ticketActionsKeyboard,
 } from "../lib/keyboards";
 import { logInfo, logWarn } from "../lib/log";
 import { parseTicketNumber } from "../lib/ticket-number";
-import type { SupportCallback } from "../lib/callback";
+import type { GrantablePlan, SupportCallback } from "../lib/callback";
 import { isSupportAdmin } from "./admins";
+import { findTarget, grantPlan, readPlan, revokePlan } from "./plan-grant";
 import { notifyAdmins } from "./notify-support";
 import { getSession, resetSession, startReply } from "./session.repository";
 import {
@@ -84,6 +91,9 @@ export async function handleAdminCommand(
     case "reply":
       await replyByCommand(sender, args);
       return true;
+    case "plan":
+      await planByCommand(sender, args);
+      return true;
     case "admin":
       await sendMessage(sender.chatId, ADMIN_HELP_MESSAGE);
       return true;
@@ -94,7 +104,101 @@ export async function handleAdminCommand(
 
 /** Whether a command name is one only admins may run. */
 export function isAdminCommand(command: string): boolean {
-  return ["tickets", "stats", "close", "reply", "admin"].includes(command);
+  return ["tickets", "stats", "close", "reply", "admin", "plan"].includes(command);
+}
+
+/* ------------------------------------------------------------- тарифы --- */
+
+/**
+ * /plan @user plus 30
+ *
+ * Три формы, потому что в разговоре о деньгах нужны все три: без тарифа —
+ * посмотреть, что у человека сейчас; с тарифом — выдать на месяц; с числом —
+ * на другой срок. `0` дней означает бессрочно.
+ *
+ * Порядок «сначала найти, потом выдать» здесь важнее, чем кажется: сообщение
+ * «пользователь не найден» должно приходить до того, как что-то записано, а
+ * не после.
+ */
+async function planByCommand(sender: Sender, args: string): Promise<void> {
+  const [handle, rawPlan, rawDays] = args.trim().split(/\s+/).filter(Boolean);
+
+  if (!handle) {
+    await sendMessage(sender.chatId, PLAN_USAGE_MESSAGE);
+    return;
+  }
+
+  const target = await findTarget(handle);
+  if (!target) {
+    await sendMessage(sender.chatId, planTargetNotFound(handle));
+    return;
+  }
+
+  // Без тарифа — это вопрос, а не команда.
+  if (!rawPlan) {
+    const current = await readPlan(target.userId);
+    await sendMessage(sender.chatId, planStatus(target, current.plan, current.until));
+    return;
+  }
+
+  const plan = rawPlan.toLowerCase();
+
+  if (plan === "free") {
+    await revokePlan(target, sender.telegramId);
+    await sendMessage(sender.chatId, planRevoked(target));
+    return;
+  }
+
+  if (plan !== "plus" && plan !== "max") {
+    await sendMessage(sender.chatId, PLAN_USAGE_MESSAGE);
+    return;
+  }
+
+  // Ноль — это «бессрочно», а не «на ноль дней»: срок в ноль дней не имеет
+  // смысла, и занимать им отдельное слово было бы расточительно.
+  const days = rawDays === undefined ? 30 : Number.parseInt(rawDays, 10);
+  if (!Number.isSafeInteger(days) || days < 0 || days > 3650) {
+    await sendMessage(sender.chatId, PLAN_USAGE_MESSAGE);
+    return;
+  }
+
+  const result = await grantPlan(target, plan, days === 0 ? null : days, sender.telegramId);
+  await sendMessage(
+    sender.chatId,
+    planGranted(result.target, result.plan, result.until, result.notified),
+  );
+}
+
+/**
+ * Кнопка «💎 PLUS 30д» под карточкой тикета.
+ *
+ * Получателя определяет тикет, а не payload кнопки — см. комментарий к
+ * `grant` в lib/callback.ts. Тикет при этом не закрывается автоматически:
+ * человек мог написать не только про оплату, и решать, ответили ему полностью
+ * или нет, должен тот, кто читал сообщение.
+ */
+async function grantByButton(
+  sender: Sender,
+  ticketId: number,
+  plan: GrantablePlan,
+  days: number,
+): Promise<string> {
+  const ticket = await findTicketById(ticketId);
+  if (!ticket) return "Тикет не найден";
+
+  const target = await findTarget(ticket.telegramId);
+  if (!target) {
+    await sendMessage(sender.chatId, planTargetNotFound(ticket.telegramId));
+    return "Аккаунт не найден";
+  }
+
+  const result = await grantPlan(target, plan, days, sender.telegramId);
+  await sendMessage(
+    sender.chatId,
+    planGranted(result.target, result.plan, result.until, result.notified),
+  );
+
+  return `${plan.toUpperCase()} выдан`;
 }
 
 /**
@@ -110,7 +214,11 @@ async function sendTicketQueue(sender: Sender): Promise<void> {
   await sendMessage(sender.chatId, ticketsHeader(total, tickets.length));
 
   for (const ticket of tickets) {
-    await sendMessage(sender.chatId, ticketListLine(ticket), ticketActionsKeyboard(ticket.id));
+    await sendMessage(
+      sender.chatId,
+      ticketListLine(ticket),
+      ticketActionsKeyboard(ticket.id, offersPlanGrant(ticket.category)),
+    );
   }
 }
 
@@ -299,7 +407,7 @@ export async function handleTicketAction(
           await editMessageReplyMarkup(
             sender.chatId,
             messageId,
-            ticketActionsAfterTakeKeyboard(ticket.id),
+            ticketActionsAfterTakeKeyboard(ticket.id, offersPlanGrant(ticket.category)),
           );
         }
         return;
@@ -317,6 +425,21 @@ export async function handleTicketAction(
           await editMessageReplyMarkup(sender.chatId, messageId, noKeyboard());
         }
         return;
+
+      case "grant": {
+        // Тап подтверждается до выдачи: активация ходит в базу и шлёт
+        // сообщение пользователю, а Telegram гасит спиннер на кнопке только
+        // после ответа и ждать её не станет.
+        await answerCallbackQuery(callbackQueryId, "Выдаём…");
+        const outcome = await grantByButton(sender, ticket.id, action.plan, action.days);
+        logInfo("plan_granted_by_button", {
+          ticket: ticket.ticketNumber,
+          plan: action.plan,
+          by: sender.telegramId,
+          outcome,
+        });
+        return;
+      }
     }
   } catch (error) {
     logWarn("callback_failed", { action: action.kind, ticket: ticket.ticketNumber });

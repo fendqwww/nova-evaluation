@@ -1,6 +1,6 @@
 import "server-only";
 import { escapeHtml, followUpCard, ticketCard } from "../lib/format";
-import { ticketActionsKeyboard } from "../lib/keyboards";
+import { offersPlanGrant, ticketActionsKeyboard } from "../lib/keyboards";
 import { logInfo, logWarn } from "../lib/log";
 import type { SupportTicketView } from "../types";
 import { hasNoAdmins, supportAdminIds } from "./admins";
@@ -53,7 +53,7 @@ export async function notifyNewTicket(ticket: SupportTicketView): Promise<void> 
   }
 
   const card = ticketCard(ticket);
-  const keyboard = ticketActionsKeyboard(ticket.id);
+  const keyboard = ticketActionsKeyboard(ticket.id, offersPlanGrant(ticket.category));
 
   const delivered = await fanOut(async (adminId) => {
     const sent = await sendMessage(adminId, card, keyboard);
@@ -95,7 +95,11 @@ export async function notifyFollowUp(
   const card = followUpCard(ticket, text);
 
   await fanOut(async (adminId) => {
-    const sent = await sendMessage(adminId, card, ticketActionsKeyboard(ticket.id));
+    const sent = await sendMessage(
+      adminId,
+      card,
+      ticketActionsKeyboard(ticket.id, offersPlanGrant(ticket.category)),
+    );
     if (!sent) return false;
 
     for (const fileId of screenshots) {

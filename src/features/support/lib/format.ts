@@ -271,7 +271,121 @@ export const ADMIN_HELP_MESSAGE = [
   "/reply NOVA-000001 текст — ответить пользователю",
   "/close NOVA-000001 — закрыть обращение",
   "",
-  "Кнопки под карточкой тикета делают то же самое в одно касание.",
+  "<b>Тарифы</b>",
+  "",
+  "/plan @user plus — выдать PLUS на 30 дней",
+  "/plan @user max 90 — MAX на 90 дней",
+  "/plan @user plus 0 — бессрочно",
+  "/plan @user free — снять тариф",
+  "/plan @user — посмотреть текущий тариф",
+  "",
+  "Вместо @user можно указать числовой Telegram ID.",
+  "На тикетах об оплате есть кнопки выдачи — они делают то же самое в одно касание.",
+].join("\n");
+
+/* -------------------------------------------------------------- тарифы --- */
+
+/** Что видит админ после выдачи. */
+export function planGranted(
+  target: { name: string; username: string | null; telegramId: string },
+  plan: string,
+  until: string | null,
+  notified: boolean,
+): string {
+  return fitTelegram(
+    [
+      `✅ <b>Тариф ${escapeHtml(plan.toUpperCase())} выдан</b>`,
+      "",
+      `${escapeHtml(target.name)} · ${escapeHtml(formatHandle(target.username, target.telegramId))}`,
+      until
+        ? `Действует до ${formatDate(new Date(until))}`
+        : "Действует бессрочно",
+      "",
+      notified
+        ? "Пользователь уведомлён в этом боте."
+        : "<i>Уведомить не удалось — пользователь не открывал этого бота. Тариф выдан, о нём стоит сказать вручную.</i>",
+    ].join("\n"),
+  );
+}
+
+/** Что видит админ после снятия тарифа. */
+export function planRevoked(target: { name: string; username: string | null; telegramId: string }): string {
+  return fitTelegram(
+    [
+      "↩️ <b>Тариф снят</b>",
+      "",
+      `${escapeHtml(target.name)} · ${escapeHtml(formatHandle(target.username, target.telegramId))}`,
+      "Аккаунт вернулся на NOVA FREE. Данные пользователя не тронуты.",
+    ].join("\n"),
+  );
+}
+
+/** Текущий тариф — ответ на /plan без указания тарифа. */
+export function planStatus(
+  target: { name: string; username: string | null; telegramId: string },
+  plan: string,
+  until: Date | null,
+): string {
+  return fitTelegram(
+    [
+      "💳 <b>Тариф пользователя</b>",
+      "",
+      `${escapeHtml(target.name)} · ${escapeHtml(formatHandle(target.username, target.telegramId))}`,
+      `Сейчас: <b>${escapeHtml(plan.toUpperCase())}</b>`,
+      until ? `Действует до ${formatDate(until)}` : "Без срока окончания",
+    ].join("\n"),
+  );
+}
+
+/**
+ * Что получает пользователь.
+ *
+ * Тариф назван так же, как на экране подписки, и сразу сказано, что делать
+ * дальше: сообщение «вам выдан PLUS» без слов о том, где его увидеть, вынуждает
+ * человека написать второй раз — уже с вопросом «а где он».
+ */
+export function planGrantedForUser(plan: string, until: string | null): string {
+  return fitTelegram(
+    [
+      `🎉 <b>Тариф NOVA ${escapeHtml(plan.toUpperCase())} активирован</b>`,
+      "",
+      until
+        ? `Действует до ${formatDate(new Date(until))}.`
+        : "Действует бессрочно.",
+      "",
+      "Откройте приложение — новые лимиты AI уже действуют. Если оно было открыто, закройте и откройте заново.",
+    ].join("\n"),
+  );
+}
+
+/** Что получает пользователь при снятии тарифа. */
+export function planRevokedForUser(): string {
+  return fitTelegram(
+    [
+      "ℹ️ <b>Тариф изменён</b>",
+      "",
+      "Ваш аккаунт вернулся на NOVA FREE. Все данные на месте, ограничены только лимиты AI.",
+      "",
+      "Если это ошибка — ответьте на это сообщение, разберёмся.",
+    ].join("\n"),
+  );
+}
+
+export function planTargetNotFound(handle: string): string {
+  return fitTelegram(
+    [
+      `❌ Пользователь <code>${escapeHtml(handle)}</code> не найден.`,
+      "",
+      "Он должен хотя бы раз открыть приложение — до этого аккаунта в базе нет.",
+      "Ищется по @username, числовому Telegram ID или внутреннему id.",
+    ].join("\n"),
+  );
+}
+
+export const PLAN_USAGE_MESSAGE = [
+  "Укажите пользователя: <code>/plan @user plus 30</code>",
+  "",
+  "Тариф: plus, max или free. Дней: число, 0 — бессрочно (по умолчанию 30).",
 ].join("\n");
 
 export const NOT_ADMIN_MESSAGE =
