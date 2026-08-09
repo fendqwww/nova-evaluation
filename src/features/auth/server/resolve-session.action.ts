@@ -2,6 +2,7 @@
 
 import { db } from "@/server/db";
 import { resolveIdentity } from "@/server/auth/identity";
+import { recordAppVisit } from "@/features/bot/server/subscriber.repository";
 
 export interface ResolvedProfile {
   name: string;
@@ -66,6 +67,15 @@ export async function resolveSession(
     },
     include: { profile: true, settings: { select: { themeMode: true } } },
   });
+
+  // Отметка о входе — основа всех правил про «давно не заходил». Пишется
+  // здесь, потому что это единственное место, через которое проходит каждый
+  // запуск Mini App, и ошибиться в нём нельзя: пропущенная отметка означает
+  // возвратное сообщение человеку, который был в приложении час назад.
+  //
+  // Await, а не «в фоне»: на serverless незавершённая работа может не
+  // выполниться вовсе, контейнер вправе замереть сразу после ответа.
+  await recordAppVisit(user.id, identity.telegramId);
 
   return {
     user: {

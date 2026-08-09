@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { TelegramProvider } from "@/components/providers/telegram-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ConsentGate } from "@/features/legal/components/consent-gate";
+import { DeepLinkRouter } from "@/features/bot/components/deep-link-router";
 import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 
 // Active state is derived from the route inside BottomNavigation, so this
@@ -56,7 +57,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <QueryProvider>
       <TelegramProvider>
         <AppShell navItems={navItems}>
-          <ConsentGate>{children}</ConsentGate>
+          {/* Приземление по ссылке из бота — внутри гейта согласий: человек,
+              который ещё не подтвердил документы, должен увидеть их, а не
+              раздел, на который вела кнопка. */}
+          <ConsentGate>
+            <DeepLinkRouter />
+            {children}
+          </ConsentGate>
         </AppShell>
       </TelegramProvider>
     </QueryProvider>

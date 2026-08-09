@@ -73,6 +73,12 @@ const envSchema = z.object({
   // Empty is valid and means "no admins configured": tickets are still stored,
   // they simply have nobody to notify. That is a misconfiguration worth
   // logging, not a reason to refuse to boot.
+  // Vercel Cron присылает его в заголовке Authorization при каждом запуске по
+  // расписанию. Необязателен: без него маршрут рассылки остаётся доступен по
+  // ADMIN_SECRET, то есть вручную. Пустой означает «расписание не настроено»,
+  // а не «рассылка открыта всем».
+  CRON_SECRET: optionalSecret(16),
+
   SUPPORT_ADMIN_IDS: z
     .string()
     .optional()
@@ -93,5 +99,6 @@ export const env = envSchema.parse({
   ADMIN_SECRET: process.env.ADMIN_SECRET,
   TELEGRAM_SUPPORT_BOT_TOKEN: process.env.TELEGRAM_SUPPORT_BOT_TOKEN,
   TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET,
+  CRON_SECRET: process.env.CRON_SECRET,
   SUPPORT_ADMIN_IDS: process.env.SUPPORT_ADMIN_IDS,
 });

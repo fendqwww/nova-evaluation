@@ -1,58 +1,30 @@
 import "server-only";
 import { env } from "@/shared/config/env";
+import { callBotApi, type InlineKeyboardMarkup, type SentMessage } from "@/server/telegram/bot-api";
 import { fitTelegram } from "../lib/format";
 import { logError, logWarn } from "../lib/log";
 
 /**
- * The Telegram Bot API, as much of it as this bot uses.
+ * Bot API бота поддержки.
  *
- * A hand-rolled fetch wrapper rather than a bot framework (telegraf, grammy).
- * Those frameworks are built around a long-running process that owns the
- * update loop, and this app has no such process — Next.js App Router gives us
- * a request handler, so the update loop is Telegram's and the framework's main
- * abstraction would be dead weight. What is actually needed is six POSTs.
+ * Транспорт переехал в server/telegram/bot-api.ts, потому что основному боту
+ * нужен ровно тот же код с другим токеном. Здесь осталось то, что относится
+ * именно к поддержке: какие методы она вызывает и как обрезает свои тексты.
  *
- * Every call here is fire-and-check, never fire-and-forget: the return type
- * says whether it worked, and callers that must not proceed on failure check
- * it. What no call does is throw. A throw inside a webhook handler becomes a
- * non-2xx response, and Telegram answers a non-2xx by redelivering the same
- * update — so an exception on "send the confirmation" would replay "create the
- * ticket" forever. Failure is a logged `false`, and the handler decides.
+ * Свойства транспорта не изменились и по-прежнему важны: ни один вызов не
+ * бросает исключение. Исключение внутри вебхука становится ответом не-2xx, а
+ * на не-2xx Telegram присылает то же обновление снова — неудачная отправка
+ * подтверждения заставила бы бесконечно пересоздавать тикет.
  */
 
-export interface InlineKeyboardButton {
-  text: string;
-  callback_data: string;
-}
-
-export interface InlineKeyboardMarkup {
-  inline_keyboard: InlineKeyboardButton[][];
-}
-
-interface TelegramApiResponse<T> {
-  ok: boolean;
-  result?: T;
-  description?: string;
-  error_code?: number;
-}
-
-export interface SentMessage {
-  message_id: number;
-  chat: { id: number };
-}
+export type { InlineKeyboardMarkup, SentMessage };
+export type { InlineKeyboardButton } from "@/server/telegram/bot-api";
 
 /** Whether a support bot is configured at all. Everything else checks this. */
 export function isSupportBotConfigured(): boolean {
   return Boolean(env.TELEGRAM_SUPPORT_BOT_TOKEN);
 }
 
-/**
- * One call to the Bot API.
- *
- * The token goes in the URL because that is the only place Telegram accepts
- * it — which is precisely why no failure path here logs the URL. `method` is
- * logged instead; it identifies the call without carrying the credential.
- */
 async function callTelegram<T>(
   method: string,
   payload: Record<string, unknown>,
@@ -63,34 +35,11 @@ async function callTelegram<T>(
     return null;
   }
 
-  try {
-    const response = await fetch(`https://api.telegram.org/bot${token}/${method}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(payload),
-      // Telegram gives a webhook a limited budget before it retries the
-      // update. An outgoing call that hangs longer than that would have the
-      // handler still running while a duplicate of the same update arrives.
-      signal: AbortSignal.timeout(10_000),
-      cache: "no-store",
-    });
-
-    const data = (await response.json()) as TelegramApiResponse<T>;
-
-    if (!data.ok) {
-      logWarn("telegram_call_failed", {
-        method,
-        code: data.error_code ?? response.status,
-        description: data.description ?? null,
-      });
-      return null;
-    }
-
-    return data.result ?? null;
-  } catch (error) {
-    logError("telegram_call_error", error, { method });
-    return null;
-  }
+  const { result } = await callBotApi<T>(token, method, payload, {
+    warn: logWarn,
+    error: logError,
+  });
+  return result;
 }
 
 export async function sendMessage(
