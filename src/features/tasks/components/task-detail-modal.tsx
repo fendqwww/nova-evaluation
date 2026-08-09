@@ -104,7 +104,7 @@ export function TaskDetailModal({
                 )}
               </div>
 
-              <div className="flex items-center justify-between gap-3 border-t border-white/6 pt-3">
+              <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
                 <span className="text-caption text-muted-foreground">Важность</span>
                 <span
                   className={cn(
@@ -117,7 +117,7 @@ export function TaskDetailModal({
               </div>
 
               {isCompleted && task.completedAt && (
-                <div className="flex items-center justify-between gap-3 border-t border-white/6 pt-3">
+                <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
                   <span className="text-caption text-muted-foreground">Выполнено</span>
                   <span className="text-caption text-foreground">
                     {formatDay(task.completedAt.slice(0, 10), today)}

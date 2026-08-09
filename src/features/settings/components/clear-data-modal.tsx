@@ -154,7 +154,7 @@ export function ClearDataModal({
                     onClick={() => setPending(scope)}
                     className={cn(
                       "flex items-center gap-3 rounded-xl border border-border px-4 py-3 text-left transition-colors duration-200",
-                      isEmpty ? "opacity-45" : "active:bg-white/[0.04]",
+                      isEmpty ? "opacity-45" : "active:bg-fill-subtle",
                     )}
                   >
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">

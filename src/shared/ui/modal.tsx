@@ -14,7 +14,7 @@ export const ModalContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DialogPrimitive.Portal>
-    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=closed]:animate-[modal-overlay-out_150ms_ease-in] data-[state=open]:animate-[modal-overlay-in_200ms_ease-out]" />
+    <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm data-[state=closed]:animate-[modal-overlay-out_150ms_ease-in] data-[state=open]:animate-[modal-overlay-in_200ms_ease-out]" />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
@@ -23,9 +23,9 @@ export const ModalContent = React.forwardRef<
       )}
       {...props}
     >
-      <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-white/15" aria-hidden />
+      <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-fill-strong" aria-hidden />
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-1 text-muted-foreground transition-colors hover:bg-fill-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <X className="h-4 w-4" />
         <span className="sr-only">Закрыть</span>
       </DialogPrimitive.Close>

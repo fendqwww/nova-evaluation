@@ -67,6 +67,16 @@ export const coachAnswerSchema = z.object({
       }),
     )
     .max(4),
+  /**
+   * Why the advice above matters for this person, in one or two sentences.
+   *
+   * Optional, and that is load-bearing rather than laziness: every answer
+   * already stored in CoachMessage predates this field, and a required key
+   * would make the whole history fail to parse the moment this shipped. The UI
+   * renders the block only when it is present, so an old answer looks exactly
+   * as it always did.
+   */
+  rationale: z.string().trim().min(1).max(400).optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -159,6 +169,11 @@ export const COACH_ANSWER_JSON_SCHEMA = {
       type: "string",
       description:
         "Два-четыре предложения: что происходит, почему так, к чему это ведёт. Только на числах из user_data.",
+    },
+    rationale: {
+      type: "string",
+      description:
+        "Почему это важно именно для этого человека: к чему ведёт бездействие или что даст выполненный шаг. Одно-два предложения, на его же числах. Не повторяй body.",
     },
     bullets: {
       type: "array",

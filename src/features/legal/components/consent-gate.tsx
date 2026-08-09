@@ -58,7 +58,7 @@ function ConsentScreen({
           <ScrollText className="h-4 w-4" />
         </IconChip>
         <div className="flex flex-col gap-1">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
+          <h1 className="text-page text-foreground">
             {isUpdate ? "Документы обновились" : "Нужно ваше согласие"}
           </h1>
           <p className="text-caption text-muted-foreground">

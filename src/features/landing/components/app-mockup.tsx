@@ -204,7 +204,7 @@ export function AppMockup() {
                           {pillar.value}
                         </span>
                       </div>
-                      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-white/8">
+                      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-fill-muted">
                         <motion.div
                           className="h-full rounded-full"
                           style={{ backgroundColor: pillar.color }}

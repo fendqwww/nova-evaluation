@@ -53,7 +53,7 @@ export function HabitCard({
       <div className="flex flex-col gap-3 p-3.5">
         <div className="flex items-start gap-2.5">
           {isArchived ? (
-            <span className="mt-px flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/8 text-subtle-foreground">
+            <span className="mt-px flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-border text-subtle-foreground">
               <Archive className="h-3.5 w-3.5" />
             </span>
           ) : (

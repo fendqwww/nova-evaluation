@@ -43,7 +43,7 @@ export function NumberStepper({
         onClick={() => onChange(clamp(value - step))}
         disabled={value <= min}
         aria-label={`${label}: меньше`}
-        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-l-xl border border-border bg-input text-muted-foreground transition-colors duration-200 active:bg-white/6 disabled:pointer-events-none disabled:opacity-30"
+        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-l-xl border border-border bg-input text-muted-foreground transition-colors duration-200 active:bg-fill-muted disabled:pointer-events-none disabled:opacity-30"
       >
         <Minus className="h-3.5 w-3.5" />
       </motion.button>
@@ -77,7 +77,7 @@ export function NumberStepper({
         onClick={() => onChange(clamp(value + step))}
         disabled={value >= max}
         aria-label={`${label}: больше`}
-        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-r-xl border border-border bg-input text-muted-foreground transition-colors duration-200 active:bg-white/6 disabled:pointer-events-none disabled:opacity-30"
+        className="flex h-10 w-9 shrink-0 items-center justify-center rounded-r-xl border border-border bg-input text-muted-foreground transition-colors duration-200 active:bg-fill-muted disabled:pointer-events-none disabled:opacity-30"
       >
         <Plus className="h-3.5 w-3.5" />
       </motion.button>

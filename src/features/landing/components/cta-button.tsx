@@ -32,7 +32,7 @@ export function CtaButton({
         "active:scale-[0.98]",
         variant === "primary"
           ? "nova-gradient-bg text-white shadow-[0_8px_32px_-8px_rgba(139,92,246,0.7)] hover:shadow-[0_12px_44px_-8px_rgba(139,92,246,0.9)]"
-          : "border border-(--nova-hairline-strong) bg-white/[0.03] text-white backdrop-blur-sm hover:border-white/25 hover:bg-white/[0.07]",
+          : "border border-(--nova-hairline-strong) bg-fill-subtle text-white backdrop-blur-sm hover:border-border-strong hover:bg-fill-muted",
         className,
       )}
     >

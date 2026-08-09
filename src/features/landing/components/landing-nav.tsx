@@ -71,7 +71,7 @@ export function LandingNav() {
               href={TELEGRAM_APP_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden rounded-full border border-(--nova-hairline-strong) bg-white/[0.03] px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors duration-200 hover:bg-white/[0.08] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--nova-purple) sm:inline-flex"
+              className="hidden rounded-full border border-(--nova-hairline-strong) bg-fill-subtle px-4 py-2 text-[0.8125rem] font-medium text-white transition-colors duration-200 hover:bg-fill-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--nova-purple) sm:inline-flex"
             >
               Начать бесплатно
             </a>
@@ -81,7 +81,7 @@ export function LandingNav() {
               onClick={() => setMenuOpen((open) => !open)}
               aria-expanded={menuOpen}
               aria-label={menuOpen ? "Закрыть меню" : "Открыть меню"}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-(--nova-hairline) text-white transition-colors duration-200 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--nova-purple) md:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-(--nova-hairline) text-white transition-colors duration-200 hover:bg-fill-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-(--nova-purple) md:hidden"
             >
               {menuOpen ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
             </button>

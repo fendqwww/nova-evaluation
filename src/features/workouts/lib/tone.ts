@@ -29,19 +29,19 @@ export function startButtonClass(tone: WorkoutTone): string {
     case "planned":
       return "border-border-strong text-muted-foreground active:border-accent";
     default:
-      return "border-white/8 text-subtle-foreground";
+      return "border-border text-subtle-foreground";
   }
 }
 
 export function streakBadgeClass(streak: number): string {
-  if (streak === 0) return "bg-white/6 text-subtle-foreground";
+  if (streak === 0) return "bg-fill-muted text-subtle-foreground";
   // A streak is warmth, not urgency — the same small orange chip habits use.
   return "bg-tint-orange-muted text-tint-orange";
 }
 
 /** Ring / bar fill for the week's progress. */
 export function progressFillClass(ratio: number, isArchived: boolean): string {
-  if (isArchived) return "bg-white/15";
+  if (isArchived) return "bg-fill-strong";
   return ratio >= 1 ? "bg-positive" : "bg-accent";
 }
 
@@ -62,9 +62,9 @@ export function dayCellClass(state: WorkoutDayState): string {
     case "planned":
       return "border border-accent-border text-foreground";
     case "unplanned":
-      return "border border-white/6 text-subtle-foreground";
+      return "border border-border text-subtle-foreground";
     case "future":
-      return "border border-white/6 text-subtle-foreground/50";
+      return "border border-border text-subtle-foreground/50";
     case "before":
       return "text-subtle-foreground/30";
   }

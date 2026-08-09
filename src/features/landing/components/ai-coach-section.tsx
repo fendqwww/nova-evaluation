@@ -73,7 +73,7 @@ export function AiCoachSection() {
               <div className="nova-glass nova-edge relative overflow-hidden rounded-3xl p-5 sm:p-6">
                 {/* User message */}
                 <div className="flex justify-end">
-                  <p className="max-w-[80%] rounded-2xl rounded-br-md bg-white/[0.07] px-4 py-2.5 text-[0.875rem] leading-[1.5] text-white/90">
+                  <p className="max-w-[80%] rounded-2xl rounded-br-md bg-fill-muted px-4 py-2.5 text-[0.875rem] leading-[1.5] text-white/90">
                     Почему я всю неделю как выжатый?
                   </p>
                 </div>
@@ -95,7 +95,7 @@ export function AiCoachSection() {
                           −14 за неделю
                         </span>
                       </div>
-                      <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-white/8">
+                      <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-fill-muted">
                         <div
                           className="h-full rounded-full bg-[#f5a524]"
                           style={{ width: "61%" }}

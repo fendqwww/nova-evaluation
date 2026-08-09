@@ -71,7 +71,7 @@ export function SleepHistoryList({
                     onClick={() => onOpen(log)}
                     className="press-sm flex w-full items-center gap-2.5 p-3 text-left"
                   >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.625rem] bg-tint-purple-muted text-tint-purple ring-1 ring-inset ring-white/6">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.625rem] bg-tint-purple-muted text-tint-purple ring-1 ring-inset ring-fill-muted">
                       <Star className={cn("h-4 w-4", log.quality >= 4 && "fill-current")} />
                     </span>
 

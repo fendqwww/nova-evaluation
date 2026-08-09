@@ -183,19 +183,19 @@ export function HabitDetailModal({
                 />
               </div>
 
-              <div className="flex items-stretch gap-2 border-t border-white/6 pt-3">
+              <div className="flex items-stretch gap-2 border-t border-border pt-3">
                 <Stat
                   value={`${adherencePercent}%`}
                   label={`за ${ADHERENCE_DAYS} дней`}
                   className={isArchived ? "text-muted-foreground" : adherenceTextClass(stats.adherence)}
                 />
-                <span className="w-px bg-white/6" aria-hidden />
+                <span className="w-px bg-fill-muted" aria-hidden />
                 <Stat
                   value={String(stats.bestStreak)}
                   label="лучшая серия за год"
                   className="text-foreground"
                 />
-                <span className="w-px bg-white/6" aria-hidden />
+                <span className="w-px bg-fill-muted" aria-hidden />
                 <Stat
                   value={String(stats.totalDone)}
                   label="всего за год"

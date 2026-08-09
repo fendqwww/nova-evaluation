@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
+import { PageHeader } from "@/shared/ui/page-header";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
 import { useAppearance } from "@/features/appearance/hooks/use-appearance";
 import { AppearanceSkeleton } from "@/features/appearance/components/appearance-skeleton";
@@ -144,37 +145,32 @@ export function AppearanceView() {
     <PageContainer className="flex flex-col gap-4">
       <HealthSectionTabs active="appearance" />
 
-      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-            Внешность
-          </h1>
-          <p className="text-caption text-muted-foreground">
-            Ежедневный уход и то, что он меняет
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="secondary"
-            aria-label="Добавить фото"
-            onClick={() => {
-              setPhotoKey((n) => n + 1);
-              setPhotoAddOpen(true);
-            }}
-          >
-            <Camera className="h-4 w-4" />
-          </Button>
-          <Button
-            size="icon"
-            aria-label="Новая процедура"
-            onClick={() => openCreateRoutine(null)}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title="Внешность"
+        subtitle="Ежедневный уход и то, что он меняет"
+        actions={
+          <>
+            <Button
+              size="icon"
+              variant="secondary"
+              aria-label="Добавить фото"
+              onClick={() => {
+                setPhotoKey((n) => n + 1);
+                setPhotoAddOpen(true);
+              }}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+            <Button
+              size="icon"
+              aria-label="Новая процедура"
+              onClick={() => openCreateRoutine(null)}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </>
+        }
+      />
 
       {/* Depends only on local UI state, never on the data below it, so it
           renders immediately rather than popping in once loading resolves. */}

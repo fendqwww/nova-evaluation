@@ -88,7 +88,7 @@ export function CoachChat({
 
       {history.length === 0 && !pendingQuestion && (
         <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border px-4 py-7 text-center">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-white/4 text-subtle-foreground">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-fill-muted text-subtle-foreground">
             <MessagesSquare className="h-4.5 w-4.5" />
           </span>
           <p className="text-body font-medium text-foreground">Диалога ещё не было</p>

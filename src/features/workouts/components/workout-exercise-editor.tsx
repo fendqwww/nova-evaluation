@@ -111,7 +111,7 @@ export function WorkoutExerciseEditor({
                   onClick={() => setExpanded(isOpen ? null : index)}
                   className="flex w-full items-center gap-2.5 p-3 text-left"
                 >
-                  <span className="numeric flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/6 text-[0.6875rem] font-semibold text-subtle-foreground">
+                  <span className="numeric flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-[0.6875rem] font-semibold text-subtle-foreground">
                     {index + 1}
                   </span>
 
@@ -144,7 +144,7 @@ export function WorkoutExerciseEditor({
                 </button>
 
                 {isOpen && (
-                  <div className="flex flex-col gap-3 border-t border-white/6 p-3">
+                  <div className="flex flex-col gap-3 border-t border-border p-3">
                     <Input
                       value={exercise.name}
                       maxLength={EXERCISE_NAME_MAX}
@@ -228,7 +228,7 @@ export function WorkoutExerciseEditor({
                       aria-label="Заметка к упражнению"
                     />
 
-                    <div className="flex items-center gap-1.5 border-t border-white/6 pt-3">
+                    <div className="flex items-center gap-1.5 border-t border-border pt-3">
                       <IconAction
                         label="Выше"
                         disabled={index === 0}
@@ -300,7 +300,7 @@ function IconAction({
       disabled={disabled}
       onClick={onClick}
       aria-label={label}
-      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors duration-200 active:bg-white/6 disabled:pointer-events-none disabled:opacity-30"
+      className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors duration-200 active:bg-fill-muted disabled:pointer-events-none disabled:opacity-30"
     >
       {children}
     </button>

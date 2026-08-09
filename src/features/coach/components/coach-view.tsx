@@ -15,6 +15,7 @@ import { CoachChat } from "@/features/coach/components/coach-chat";
 import { CoachComposer } from "@/features/coach/components/coach-composer";
 import { CoachQuickActions } from "@/features/coach/components/coach-quick-actions";
 import { CoachSkeleton } from "@/features/coach/components/coach-skeleton";
+import { useAskIntent } from "@/features/coach/hooks/use-ask-intent";
 
 /**
  * The Coach screen: today's analysis first, then the conversation.
@@ -26,6 +27,9 @@ import { CoachSkeleton } from "@/features/coach/components/coach-skeleton";
  * following up on what it said.
  */
 export function CoachView() {
+  // Arrived via the Dashboard's ask button (`/coach?ask=1`). Reused from the
+  // record sheet's mechanism — same query, same one-shot read, same URL cleanup.
+  const askIntent = useAskIntent();
   const {
     overview,
     isDisabled,
@@ -92,9 +96,7 @@ export function CoachView() {
     <PageContainer className="flex flex-col gap-4">
       <Reveal className="gap-4">
         <RevealItem className="flex flex-col gap-1">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-            Коуч Nova
-          </h1>
+          <h1 className="text-page text-foreground">Коуч Nova</h1>
           <p className="text-caption text-muted-foreground">
             {overview.greeting} · {formatDay(overview.today, overview.today)}
           </p>
@@ -139,7 +141,11 @@ export function CoachView() {
           disabled={isAnswering}
           onSelect={(question, intent) => ask(question, intent)}
         />
-        <CoachComposer disabled={isAnswering} onSend={(question) => ask(question, null)} />
+        <CoachComposer
+          disabled={isAnswering}
+          autoFocus={askIntent !== null}
+          onSend={(question) => ask(question, null)}
+        />
       </div>
     </PageContainer>
   );

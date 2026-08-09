@@ -21,7 +21,7 @@ const ANALYSIS_SECTIONS = [
  */
 const ZONE_STATE: Record<AppearanceZoneState, { label: string; className: string }> = {
   good: { label: "хорошо", className: "bg-positive-muted text-positive" },
-  neutral: { label: "норма", className: "bg-white/[0.06] text-muted-foreground" },
+  neutral: { label: "норма", className: "bg-fill-muted text-muted-foreground" },
   attention: { label: "внимание", className: "bg-warning-muted text-warning" },
 };
 
@@ -52,15 +52,16 @@ export function AppearanceAnalysisCard({ analysis }: { analysis: AppearanceAnaly
 
         {!analysis.isAnalyzable && (
           <p className="text-caption text-muted-foreground">
-            На фото не получилось достаточно чётко разглядеть лицо или тело — попробуйте
-            более освещённый и чёткий снимок.
+            На фото не получилось разглядеть то, что было выбрано в «Что на фото».
+            Проверьте, что зона выбрана верно, и попробуйте более светлый и чёткий
+            снимок.
           </p>
         )}
 
         {/* Facial structure. First, because every style note below refers back
             to it. */}
         {hasFace && (
-          <div className="flex flex-col gap-2.5 rounded-xl border border-white/5 bg-black/20 p-3">
+          <div className="flex flex-col gap-2.5 rounded-xl border border-border bg-surface-inset p-3">
             <div className="flex items-center gap-2">
               <ScanFace className="h-3.5 w-3.5 shrink-0 text-tint-purple" />
               <p className="text-caption font-medium text-foreground">Черты лица</p>
@@ -73,7 +74,7 @@ export function AppearanceAnalysisCard({ analysis }: { analysis: AppearanceAnaly
             </dl>
 
             {face.features.length > 0 && (
-              <ul className="flex flex-col gap-1 border-t border-white/5 pt-2.5">
+              <ul className="flex flex-col gap-1 border-t border-border pt-2.5">
                 {face.features.map((feature) => (
                   <li key={feature} className="text-caption text-muted-foreground">
                     {feature}

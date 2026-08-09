@@ -41,7 +41,7 @@ export function StepShell({
             type="button"
             onClick={onBack}
             aria-label="Назад"
-            className="-ml-2 flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 active:bg-white/6 active:text-foreground"
+            className="-ml-2 flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors duration-200 active:bg-fill-muted active:text-foreground"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>

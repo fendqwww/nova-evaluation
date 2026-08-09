@@ -50,6 +50,15 @@ export function CoachAnswerBody({
         </ul>
       )}
 
+      {answer.rationale && (
+        <div className="flex flex-col gap-1 rounded-xl border border-border bg-fill-subtle p-3">
+          <p className="text-label uppercase text-subtle-foreground">Почему это важно</p>
+          <p className="wrap-break-word text-caption text-muted-foreground">
+            {answer.rationale}
+          </p>
+        </div>
+      )}
+
       {answer.actions.length > 0 && (
         <div className="flex flex-wrap gap-2 pt-0.5">
           {answer.actions.map((action) => {
@@ -62,7 +71,7 @@ export function CoachAnswerBody({
               return (
                 <span
                   key={action.id}
-                  className="rounded-lg border border-border bg-white/[0.03] px-3 py-1.5 text-[0.8125rem] font-medium text-muted-foreground"
+                  className="rounded-lg border border-border bg-fill-subtle px-3 py-1.5 text-[0.8125rem] font-medium text-muted-foreground"
                 >
                   {action.label}
                 </span>

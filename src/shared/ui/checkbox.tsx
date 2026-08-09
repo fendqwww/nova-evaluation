@@ -43,7 +43,7 @@ export function Checkbox({
         onClick={() => onCheckedChange(!checked)}
         className={cn(
           "press-sm flex w-full items-start gap-3 rounded-xl p-3 text-left transition-colors duration-200",
-          "bg-white/[0.03] active:bg-white/[0.06]",
+          "bg-fill-subtle active:bg-fill-muted",
           disabled && "opacity-50",
         )}
       >
@@ -53,7 +53,7 @@ export function Checkbox({
             "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-colors duration-200",
             checked
               ? "border-accent bg-accent text-accent-foreground"
-              : "border-white/20 bg-transparent",
+              : "border-border-strong bg-transparent",
           )}
         >
           {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}

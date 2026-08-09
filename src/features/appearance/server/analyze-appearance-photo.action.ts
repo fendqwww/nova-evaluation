@@ -13,7 +13,12 @@ import { hasAiConsent } from "@/features/legal/server";
 import { CONSENT_REQUIRED_MESSAGE } from "@/features/legal/constants";
 import { analyzeAppearancePhoto } from "@/ai/appearance";
 import { GeminiError } from "@/ai/gemini";
-import { imageDataUrlSchema, parseImageDataUrl, type AppearanceAnalysis } from "@/ai/types";
+import {
+  appearanceSubjectSchema,
+  imageDataUrlSchema,
+  parseImageDataUrl,
+  type AppearanceAnalysis,
+} from "@/ai/types";
 
 /** Same reasoning as the food-photo ceiling: never stored, forwarded once. */
 const APPEARANCE_PHOTO_MAX_CHARS = 1_500_000;
@@ -27,6 +32,16 @@ const analyzeAppearancePhotoInputSchema = z.object({
    * the client and is written with the photo itself.
    */
   photoId: z.string().min(1).optional(),
+  /**
+   * The area the user picked before shooting — what the photo is *of*.
+   *
+   * The section has always collected this and stored it on the row; it simply
+   * never travelled to the model, so a "Тело" photo was read by face rules and
+   * came back as unreadable. Optional, and defaulted rather than required, so
+   * the contract stays backwards-compatible: an older client that omits it gets
+   * a whole-appearance reading instead of a validation failure.
+   */
+  area: appearanceSubjectSchema.optional(),
 });
 
 export type AnalyzeAppearancePhotoInput = z.input<typeof analyzeAppearancePhotoInputSchema>;
@@ -59,7 +74,8 @@ export type AnalyzeAppearancePhotoResult =
 export async function analyzeAppearancePhotoAction(
   input: AnalyzeAppearancePhotoInput,
 ): Promise<AnalyzeAppearancePhotoResult> {
-  const { rawInitData, imageData, photoId } = analyzeAppearancePhotoInputSchema.parse(input);
+  const { rawInitData, imageData, photoId, area } =
+    analyzeAppearancePhotoInputSchema.parse(input);
   // The user's own calendar day: every usage window is measured in their
   // timezone rather than at UTC midnight.
   const { userId, timezone } = await requireUserContext(rawInitData);
@@ -92,7 +108,7 @@ export async function analyzeAppearancePhotoAction(
   }
 
   try {
-    const analysis = await analyzeAppearancePhoto(parseImageDataUrl(imageData));
+    const analysis = await analyzeAppearancePhoto(parseImageDataUrl(imageData), area);
 
     // Persist before returning, so the budget this call just spent buys a
     // result that survives closing the modal. A photo that isn't the caller's

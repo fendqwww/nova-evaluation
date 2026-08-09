@@ -4,7 +4,7 @@ import { Droplet, Minus, Plus } from "lucide-react";
 import { Card } from "@/shared/ui/card";
 import { IconChip } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
-import { cn } from "@/shared/lib/cn";
+import { Progress } from "@/shared/ui/progress";
 import { formatWater } from "@/features/nutrition/lib/format";
 import { progressBarClass } from "@/features/nutrition/lib/tone";
 import type { MacroProgress } from "@/features/nutrition/lib/stats";
@@ -34,15 +34,11 @@ export function WaterCard({
               {progress.goal > 0 && <span> / {formatWater(progress.goal)}</span>}
             </span>
           </div>
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
-            <div
-              className={cn(
-                "h-full rounded-full transition-[width] duration-300",
-                progressBarClass(progress.ratio),
-              )}
-              style={{ width: `${Math.round(Math.min(1, progress.ratio) * 100)}%` }}
-            />
-          </div>
+          <Progress
+            value={progress.ratio}
+            fillClass={progressBarClass(progress.ratio)}
+            label="Вода за день"
+          />
         </div>
 
         <div className="flex shrink-0 items-center gap-1.5">

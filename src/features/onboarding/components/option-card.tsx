@@ -26,7 +26,7 @@ export function OptionCard({ label, selected, onSelect }: OptionCardProps) {
         "flex w-full items-center justify-between gap-3 rounded-2xl border px-5 py-5 text-left transition-colors duration-200",
         selected
           ? "border-accent bg-accent text-accent-foreground"
-          : "border-border bg-transparent text-foreground active:border-border-strong active:bg-white/3",
+          : "border-border bg-transparent text-foreground active:border-border-strong active:bg-fill-muted",
       )}
     >
       <span className="text-[1.125rem] font-semibold tracking-[-0.018em]">{label}</span>

@@ -75,6 +75,15 @@ model Profile {
   primaryGoal String
   occupation  String
   timezone    String
+  // "sedentary" | "light" | "moderate" | "active" | "athlete" — see
+  // ACTIVITY_LEVELS in src/features/nutrition/lib/targets.ts. String rather
+  // than an enum for the same reason as the fields above.
+  //
+  // Nullable with no default because it is genuinely unknown for every profile
+  // created before this column existed: defaulting them all to "moderate" would
+  // silently compute a calorie target from a fact nobody ever stated. A null
+  // means "still need to ask", which is what the nutrition screen checks.
+  activityLevel String?
   // "ocean" | "purple" | "emerald" | "orange" | "rose" | "graphite" — see
   // THEME_VALUES in src/features/onboarding/schemas.ts. String, not an
   // enum, for the same SQLite-compatibility reason as the fields above.

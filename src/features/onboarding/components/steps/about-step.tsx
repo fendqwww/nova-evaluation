@@ -15,8 +15,6 @@ interface AboutStepProps {
   defaults: { age: number; heightCm: number; weightKg: number; gender?: GenderValue };
   onNext: (patch: Partial<OnboardingProfileInput>) => void;
   onBack?: () => void;
-  /** This is the final scene, so its CTA is what actually saves the profile. */
-  isSubmitting?: boolean;
 }
 
 /**
@@ -30,7 +28,7 @@ interface AboutStepProps {
  * The CTA stays enabled: every ruler starts on a sane default and gender is the
  * only field that can be genuinely unset, so it's the only one that gates.
  */
-export function AboutStep({ defaults, onNext, onBack, isSubmitting }: AboutStepProps) {
+export function AboutStep({ defaults, onNext, onBack }: AboutStepProps) {
   const [age, setAge] = useState(defaults.age);
   const [heightCm, setHeightCm] = useState(defaults.heightCm);
   const [weightKg, setWeightKg] = useState(defaults.weightKg);
@@ -46,10 +44,10 @@ export function AboutStep({ defaults, onNext, onBack, isSubmitting }: AboutStepP
         <Button
           className="w-full"
           size="lg"
-          disabled={!gender || isSubmitting}
+          disabled={!gender}
           onClick={() => gender && onNext({ age, heightCm, weightKg, gender })}
         >
-          {isSubmitting ? "Сохраняем…" : "Продолжить"}
+          Продолжить
         </Button>
       }
     >

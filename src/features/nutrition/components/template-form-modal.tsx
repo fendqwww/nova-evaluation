@@ -159,7 +159,7 @@ export function TemplateFormModal({
                       type="button"
                       onClick={() => removeLine(index)}
                       aria-label="Убрать продукт"
-                      className="shrink-0 rounded-md p-2 text-subtle-foreground transition-colors hover:bg-white/[0.06] hover:text-destructive"
+                      className="shrink-0 rounded-md p-2 text-subtle-foreground transition-colors hover:bg-fill-muted hover:text-destructive"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

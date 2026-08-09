@@ -56,7 +56,7 @@ function WeekBars({
               <div
                 className={
                   isFuture
-                    ? "w-full rounded-t bg-white/[0.04]"
+                    ? "w-full rounded-t bg-fill-subtle"
                     : day.durationMin >= SLEEP_GOAL_MIN
                       ? "w-full rounded-t bg-tint-purple"
                       : "w-full rounded-t bg-accent"

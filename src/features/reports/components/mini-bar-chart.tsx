@@ -46,8 +46,8 @@ export function MiniBarChart({
               <div
                 className={cn(
                   "w-full rounded-t transition-[height] duration-300",
-                  isFuture ? "bg-white/[0.04]" : metGoal ? metGoalClassName : barClassName,
-                  isToday && !isFuture && "ring-1 ring-inset ring-white/40",
+                  isFuture ? "bg-fill-subtle" : metGoal ? metGoalClassName : barClassName,
+                  isToday && !isFuture && "ring-1 ring-inset ring-foreground/40",
                 )}
                 style={{ height: `${point.value > 0 ? Math.max(4, ratio * 100) : 0}%` }}
               />

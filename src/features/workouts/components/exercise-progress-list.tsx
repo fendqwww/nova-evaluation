@@ -60,7 +60,7 @@ export function ExerciseProgressList({
         return (
           <div
             key={exercise.id}
-            className="flex flex-col gap-2 rounded-xl border border-white/6 bg-black/20 p-3"
+            className="flex flex-col gap-2 rounded-xl border border-border bg-surface-inset p-3"
           >
             <div className="flex items-start gap-2">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -90,7 +90,7 @@ export function ExerciseProgressList({
                       ? "bg-positive-muted text-positive"
                       : delta < 0
                         ? "bg-destructive-muted text-destructive"
-                        : "bg-white/6 text-subtle-foreground",
+                        : "bg-fill-muted text-subtle-foreground",
                   )}
                 >
                   {delta > 0 ? (

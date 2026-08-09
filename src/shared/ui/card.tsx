@@ -13,7 +13,7 @@ const cardVariants = cva("relative rounded-xl border", {
     elevation: {
       raised: "surface-raised border-border shadow-card edge-light",
       lifted: "surface-raised-2 border-border-strong shadow-raised edge-light",
-      inset: "border-white/5 bg-black/20",
+      inset: "border-border bg-surface-inset",
       accent: "surface-raised border-accent-border shadow-card edge-light",
       /* Frosted, for a surface that wants to feel like it is floating over the
          page rather than printed on it. Used sparingly — a screen where every
@@ -92,7 +92,7 @@ CardFooter.displayName = "CardFooter";
 const iconChipVariants = cva(
   // The inset ring plus a top-down sheen give the chip a slight dome, so it
   // reads as a physical key rather than a coloured square.
-  "relative flex shrink-0 items-center justify-center overflow-hidden rounded-[0.625rem] ring-1 ring-inset ring-white/[0.06] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/10 before:to-transparent",
+  "relative flex shrink-0 items-center justify-center overflow-hidden rounded-[0.625rem] ring-1 ring-inset ring-fill-muted before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-sheen before:to-transparent",
   {
     variants: {
       tone: {
@@ -102,7 +102,7 @@ const iconChipVariants = cva(
         score: "bg-tint-green-muted text-tint-green",
         ai: "bg-tint-cyan-muted text-tint-cyan",
         accent: "bg-accent-muted text-accent",
-        neutral: "bg-white/[0.06] text-muted-foreground",
+        neutral: "bg-fill-muted text-muted-foreground",
       },
       size: {
         sm: "h-7 w-7",

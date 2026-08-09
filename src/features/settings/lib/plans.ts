@@ -27,6 +27,15 @@ export interface Plan {
   id: PlanId;
   name: string;
   tagline: string;
+  /**
+   * Who this tier is for, in one sentence addressed to a person.
+   *
+   * The cards listed what each tier contains and never said who should buy it,
+   * which left the reader to work out from three allowance numbers whether they
+   * were a PLUS or a MAX. A tier that cannot say who it is for is a price list,
+   * not an offer.
+   */
+  audience: string;
   /** Roubles per month. 0 for FREE. */
   price: number;
   /** The dot next to the name — matches the tint tokens in globals.css. */
@@ -34,6 +43,11 @@ export interface Plan {
   features: PlanFeature[];
   /** Inherited-from line: "Всё из PLUS, плюс:". Null for the base tier. */
   inherits: PlanId | null;
+  /**
+   * The one tier given extra visual weight. True on exactly one entry — a
+   * "recommended" badge on two cards recommends nothing.
+   */
+  isFeatured?: boolean;
 }
 
 /**
@@ -59,7 +73,8 @@ export const PLAN_LIST: Plan[] = [
   {
     id: "free",
     name: "NOVA FREE",
-    tagline: "Вся основа Life OS",
+    tagline: "Вся основа Nova",
+    audience: "Чтобы начать вести здоровье и понять, нужен ли AI глубже.",
     price: 0,
     tone: "positive",
     inherits: null,
@@ -74,6 +89,7 @@ export const PLAN_LIST: Plan[] = [
     id: "plus",
     name: "NOVA PLUS",
     tagline: "AI, который видит",
+    audience: "Если разбираешь еду по фото и каждый день спрашиваешь коуча.",
     price: 299,
     tone: "blue",
     inherits: "free",
@@ -90,9 +106,11 @@ export const PLAN_LIST: Plan[] = [
     id: "max",
     name: "NOVA MAX",
     tagline: "Всё, что Nova умеет и будет уметь",
+    audience: "Если Nova ведёт тебя всерьёз и лимиты не должны мешать.",
     price: 599,
     tone: "purple",
     inherits: "plus",
+    isFeatured: true,
     features: [
       ...aiFeatures("max"),
       { text: "Ранний доступ ко всем новым функциям", included: true },

@@ -86,7 +86,7 @@ export function PricingSection() {
                       <li key={feature} className="flex items-start gap-2.5">
                         <span
                           className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
-                            tier.featured ? "nova-gradient-bg" : "bg-white/10"
+                            tier.featured ? "nova-gradient-bg" : "bg-fill-strong"
                           }`}
                         >
                           <Check

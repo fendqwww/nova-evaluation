@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Settings2, Plus, Salad } from "lucide-react";
+import { Settings2, Plus, Salad, Camera } from "lucide-react";
+import { useAddIntent } from "@/shared/lib/use-add-intent";
+import { useTelegramSession } from "@/features/auth/hooks/use-telegram-session";
+import type { ActivityLevel } from "@/features/nutrition/lib/targets";
 import { HealthSectionTabs } from "@/components/health-section-tabs";
 import { Button } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
+import { PageHeader } from "@/shared/ui/page-header";
 import { useNutrition } from "@/features/nutrition/hooks/use-nutrition";
 import { NutritionSkeleton } from "@/features/nutrition/components/nutrition-skeleton";
 import { NutritionTabs, type NutritionTabId } from "@/features/nutrition/components/nutrition-tabs";
@@ -61,6 +65,13 @@ export function NutritionView() {
     applyQuickTemplate,
   } = useNutrition();
 
+  // The body the calorie formula needs. Read from the session rather than
+  // fetched again: it is the one snapshot every screen already waits on, and a
+  // second query for four numbers that never change mid-session would be a
+  // second answer to the same question.
+  const { data: session } = useTelegramSession();
+  const profile = session?.profile ?? null;
+
   const [tab, setTab] = useState<NutritionTabId>("diary");
   const [day, setDay] = useState<string | null>(null);
 
@@ -87,6 +98,22 @@ export function NutritionView() {
 
   const activeDay = day ?? today;
   const hasData = foods.length > 0 || entries.length > 0;
+
+  /**
+   * Arrived from the record sheet. Each intent opens the form the user already
+   * chose, so the tap they made in the sheet is the last one they need — the
+   * whole reason the sheet navigates with an intent rather than just linking
+   * here.
+   *
+   * Derived rather than pushed into state by an effect, and cancelled by
+   * `intentDismissed` so closing a form does not immediately reopen it.
+   */
+  const addIntent = useAddIntent();
+  const [intentDismissed, setIntentDismissed] = useState(false);
+  const intentLive = addIntent !== null && today !== null && !intentDismissed;
+
+  const isPickerVisible = pickerSlot !== null || (intentLive && addIntent === "food");
+  const isFoodFormVisible = foodFormOpen || (intentLive && addIntent === "photo");
 
   const progress = today
     ? dayProgress(entries, water, goal, activeDay)
@@ -159,36 +186,54 @@ export function NutritionView() {
     <PageContainer className="flex flex-col gap-4">
       <HealthSectionTabs active="nutrition" />
 
-      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-            Питание
-          </h1>
-          {progress && progress.calories.value > 0 && (
-            <p className="text-caption text-muted-foreground">
-              {formatCalories(progress.calories.value)}
-              {progress.calories.goal > 0 && ` из ${formatCalories(progress.calories.goal)}`}
-            </p>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            size="icon"
-            variant="secondary"
-            aria-label="Дневная цель"
-            onClick={() => {
-              setGoalKey((n) => n + 1);
-              setGoalFormOpen(true);
-            }}
-          >
-            <Settings2 className="h-4 w-4" />
-          </Button>
-          <Button size="icon" aria-label="Добавить продукт" onClick={() => openPicker("breakfast")}>
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
-      </header>
+      <PageHeader
+        title="Питание"
+        subtitle={
+          progress && progress.calories.value > 0
+            ? `${formatCalories(progress.calories.value)}${
+                progress.calories.goal > 0
+                  ? ` из ${formatCalories(progress.calories.goal)}`
+                  : ""
+              }`
+            : undefined
+        }
+        actions={
+          <>
+            <Button
+              size="icon"
+              variant="secondary"
+              aria-label="Дневная цель"
+              onClick={() => {
+                setGoalKey((n) => n + 1);
+                setGoalFormOpen(true);
+              }}
+            >
+              <Settings2 className="h-4 w-4" />
+            </Button>
+            {/* Camera before the plus. The photo analysis is the most capable
+                thing this section does and it used to be reachable only from
+                inside the "create a new food" form — four taps deep in a
+                supporting flow, where most people would never find it. */}
+            <Button
+              size="icon"
+              variant="secondary"
+              aria-label="Разобрать еду по фото"
+              onClick={() => {
+                setEditingFood(null);
+                setPendingFoodName("");
+                setLogAfterCreate(true);
+                setFoodFormKey((n) => n + 1);
+                setFoodFormOpen(true);
+              }}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+            <Button size="icon" aria-label="Добавить продукт" onClick={() => openPicker("breakfast")}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </>
+        }
+      />
 
       {/* The tab bar depends only on local UI state, never on the data below
           it, so it renders immediately rather than popping in once loading
@@ -282,8 +327,13 @@ export function NutritionView() {
       <FoodPickerModal
         key={`picker-${pickerKey}`}
         foods={foods}
-        open={pickerSlot !== null}
-        onOpenChange={(next) => !next && setPickerSlot(null)}
+        open={isPickerVisible}
+        onOpenChange={(next) => {
+          if (!next) {
+            setPickerSlot(null);
+            setIntentDismissed(true);
+          }
+        }}
         onSelect={selectFood}
         onCreateNew={openCreateFoodForSlot}
       />
@@ -303,8 +353,11 @@ export function NutritionView() {
         key={`food-form-${foodFormKey}`}
         food={editingFood}
         initialName={pendingFoodName}
-        open={foodFormOpen}
-        onOpenChange={setFoodFormOpen}
+        open={isFoodFormVisible}
+        onOpenChange={(next) => {
+          setFoodFormOpen(next);
+          if (!next) setIntentDismissed(true);
+        }}
         onCreate={handleFoodCreated}
         onUpdate={updateFood}
       />
@@ -322,6 +375,17 @@ export function NutritionView() {
       <GoalFormModal
         key={`goal-form-${goalKey}`}
         goal={goal}
+        body={
+          profile
+            ? {
+                age: profile.age,
+                heightCm: profile.heightCm,
+                weightKg: profile.weightKg,
+                gender: profile.gender,
+                activity: (profile.activityLevel as ActivityLevel | null) ?? null,
+              }
+            : null
+        }
         open={goalFormOpen}
         onOpenChange={setGoalFormOpen}
         onSave={setGoal}

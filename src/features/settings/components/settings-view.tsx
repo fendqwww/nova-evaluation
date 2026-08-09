@@ -112,9 +112,7 @@ export function SettingsView() {
   return (
     <PageContainer className="flex flex-col gap-6">
       <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] flex-col gap-0.5">
-        <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-          Настройки
-        </h1>
+        <h1 className="text-page text-foreground">Настройки</h1>
         <p className="text-caption text-muted-foreground">
           Аккаунт, оформление и данные Nova
         </p>

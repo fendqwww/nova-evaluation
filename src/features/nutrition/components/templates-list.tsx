@@ -72,7 +72,7 @@ export function TemplatesList({
                   type="button"
                   onClick={() => onDelete(template.id)}
                   aria-label={`Удалить шаблон ${template.name}`}
-                  className="rounded-md p-1.5 text-subtle-foreground transition-colors hover:bg-white/[0.06] hover:text-destructive"
+                  className="rounded-md p-1.5 text-subtle-foreground transition-colors hover:bg-fill-muted hover:text-destructive"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

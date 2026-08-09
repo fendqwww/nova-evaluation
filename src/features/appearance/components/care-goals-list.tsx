@@ -150,7 +150,7 @@ export function CareGoalsList({
               )}
 
               {!goal.isCompleted && supporting.length > 0 && stats.expected > 0 && (
-                <div className="h-1 overflow-hidden rounded-full bg-white/6">
+                <div className="h-1 overflow-hidden rounded-full bg-fill-muted">
                   <div
                     className={cn(
                       "h-full rounded-full",
@@ -166,7 +166,7 @@ export function CareGoalsList({
                   type="button"
                   onClick={() => onEdit(goal)}
                   aria-label={`Изменить: ${goal.title}`}
-                  className="rounded-lg p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-white/6"
+                  className="rounded-lg p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-fill-muted"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                 </button>
@@ -174,7 +174,7 @@ export function CareGoalsList({
                   type="button"
                   onClick={() => onDelete(goal.id)}
                   aria-label={`Удалить: ${goal.title}`}
-                  className="rounded-lg p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-white/6 active:text-destructive"
+                  className="rounded-lg p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-fill-muted active:text-destructive"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>

@@ -61,7 +61,7 @@ export function ActivityCard({
                   className={cn(
                     "w-full rounded-[2px] transition-colors duration-200",
                     entry.count === 0
-                      ? "bg-white/[0.07]"
+                      ? "bg-fill-muted"
                       : isWeekend
                         ? "bg-accent/60"
                         : "bg-accent",

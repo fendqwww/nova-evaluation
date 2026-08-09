@@ -14,7 +14,7 @@ export function Avatar({ src, name, size = 44, className }: AvatarProps) {
   return (
     <div
       className={cn(
-        "relative shrink-0 overflow-hidden rounded-full ring-1 ring-white/12",
+        "relative shrink-0 overflow-hidden rounded-full ring-1 ring-fill-strong",
         className,
       )}
       style={{ width: size, height: size }}

@@ -42,6 +42,11 @@ export const ONBOARDING_SCENE_IDS = [
   "goal",
   "focus",
   "about",
+  // Straight after the measurements, because it is the fourth input the calorie
+  // formula needs and belongs with the other three rather than in a different
+  // part of the conversation. It is also the last thing asked, so the recap
+  // that follows can compute a real plan the moment it renders.
+  "activity",
 ] as const;
 
 export type OnboardingSceneId = (typeof ONBOARDING_SCENE_IDS)[number];
@@ -77,6 +82,9 @@ function buildDefaultValues(
     timezone:
       session.profile?.timezone ??
       Intl.DateTimeFormat().resolvedOptions().timeZone,
+    activityLevel: session.profile?.activityLevel as
+      | OnboardingProfileInput["activityLevel"]
+      | undefined,
     themeColor: session.profile?.themeColor as
       | OnboardingProfileInput["themeColor"]
       | undefined,

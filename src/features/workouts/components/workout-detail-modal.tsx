@@ -199,7 +199,7 @@ export function WorkoutDetailModal({
                 />
               </div>
 
-              <div className="flex items-stretch gap-2 border-t border-white/6 pt-3">
+              <div className="flex items-stretch gap-2 border-t border-border pt-3">
                 <Stat
                   value={
                     stats.adherence === null ? "—" : `${Math.round(stats.adherence * 100)}%`
@@ -211,13 +211,13 @@ export function WorkoutDetailModal({
                     isArchived ? "text-muted-foreground" : adherenceTextClass(stats.adherence)
                   }
                 />
-                <span className="w-px bg-white/6" aria-hidden />
+                <span className="w-px bg-fill-muted" aria-hidden />
                 <Stat
                   value={String(stats.sessionsDone)}
                   label="всего за полгода"
                   className="text-foreground"
                 />
-                <span className="w-px bg-white/6" aria-hidden />
+                <span className="w-px bg-fill-muted" aria-hidden />
                 <Stat
                   value={formatVolume(stats.volumeKg)}
                   label="объём за полгода"
@@ -250,9 +250,9 @@ export function WorkoutDetailModal({
                 {exercises.map((exercise, index) => (
                   <li
                     key={exercise.id}
-                    className="flex items-start gap-2.5 rounded-xl border border-white/6 bg-black/20 p-2.5"
+                    className="flex items-start gap-2.5 rounded-xl border border-border bg-surface-inset p-2.5"
                   >
-                    <span className="numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/6 text-[0.6875rem] font-semibold text-subtle-foreground">
+                    <span className="numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-[0.6875rem] font-semibold text-subtle-foreground">
                       {index + 1}
                     </span>
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -301,7 +301,7 @@ export function WorkoutDetailModal({
                       key={session.id}
                       type="button"
                       onClick={() => onOpenSession(session.id)}
-                      className="flex items-center justify-between gap-2 rounded-lg border border-white/6 bg-black/20 px-3 py-2 text-left transition-colors duration-200 active:border-border-strong"
+                      className="flex items-center justify-between gap-2 rounded-lg border border-border bg-surface-inset px-3 py-2 text-left transition-colors duration-200 active:border-border-strong"
                     >
                       <span className="text-caption text-foreground">
                         {formatDay(session.day, today)}

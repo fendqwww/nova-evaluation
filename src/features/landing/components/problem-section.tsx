@@ -52,7 +52,7 @@ export function ProblemSection() {
                 {RAW_DATA.map((item) => (
                   <div
                     key={item.label}
-                    className="rounded-xl border border-white/6 bg-white/[0.015] px-3 py-3"
+                    className="rounded-xl border border-border bg-white/[0.015] px-3 py-3"
                   >
                     <p className="nova-numeric text-[1.0625rem] font-semibold text-white/45">
                       {item.value}

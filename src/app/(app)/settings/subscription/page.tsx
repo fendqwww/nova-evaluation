@@ -1,24 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
+import { AppScreen } from "@/features/auth/components/app-screen";
 import { SubscriptionView } from "@/features/settings/components/subscription-view";
-import { AppLoadingScreen } from "@/shared/ui/app-loading-screen";
-
-const SessionBoundary = dynamic(
-  () =>
-    import("@/features/auth/components/session-boundary").then(
-      (mod) => mod.SessionBoundary,
-    ),
-  { ssr: false, loading: () => <AppLoadingScreen /> },
-);
 
 export default function SubscriptionPage() {
-  return (
-    <SessionBoundary
-      redirectWhen={(session) => !session.onboardingCompleted}
-      redirectTo="/onboarding"
-    >
-      {() => <SubscriptionView />}
-    </SessionBoundary>
-  );
+  return <AppScreen>{() => <SubscriptionView />}</AppScreen>;
 }

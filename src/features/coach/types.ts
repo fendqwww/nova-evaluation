@@ -49,6 +49,13 @@ export interface CoachAnswer {
   body: string;
   bullets: CoachBullet[];
   actions: CoachAction[];
+  /**
+   * Why the advice matters for this person — the consequence, not the
+   * observation. Optional because every answer already in CoachMessage was
+   * written before this field existed, and because the deterministic composer
+   * only produces one when the facts actually support a consequence.
+   */
+  rationale?: string;
 }
 
 /**

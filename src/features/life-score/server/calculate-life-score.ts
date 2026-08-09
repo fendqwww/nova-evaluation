@@ -4,6 +4,7 @@ import type {
   LifeScoreInput,
   LifeScoreNutrition,
   LifeScoreResult,
+  LifeScoreSleep,
   LifeScoreTasks,
   LifeScoreWorkouts,
 } from "@/features/life-score/types";
@@ -43,14 +44,47 @@ import type {
 // Appearance is worth the same as training's smallest sibling rather than more,
 // because a care routine is a cheaper act than a session: five minutes at the
 // sink is real, repeated, and worth counting, but it is not a workout.
-const MAX_PROFILE = 8;
-const MAX_WELLNESS = 14;
-const MAX_GOALS = 13;
-const MAX_HABITS = 20;
-const MAX_TASKS = 20;
+//
+// ── HEALTH-FIRST REWEIGHTING ────────────────────────────────────────────────
+//
+// Sleep now has a block, and the three health blocks are no longer the three
+// smallest things on the board. The old split was written when this was a Life
+// OS: tasks and habits held 40 of the 100 points, nutrition held 5, and sleep —
+// the thing every other block depends on — held none at all, so a user could
+// sleep four hours a night for a fortnight without the index moving a point.
+//
+// Where the 18 points for sleep came from, and why:
+//   tasks      20 → 12  (−8)  A closed to-do is the weakest evidence about a
+//                             body on this board. It stays counted because
+//                             rot in a task list is real, but it can no longer
+//                             outweigh a week of training.
+//   habits     20 → 15  (−5)  Still the strongest behavioural signal outside
+//                             training, and still worth more than any single
+//                             health block on its own.
+//   goals      13 → 10  (−3)  It keeps giving up points for the reason it
+//                             always does: it is counted, not measured.
+//   profile     8 →  6  (−2)  A form filled in once should not be worth a
+//                             third of a week of real sleep.
+//
+// And where nutrition's extra 7 came from: wellness (−4), which is a BMI
+// derived from numbers typed at onboarding, and goals (−3) again. Keeping a
+// diary for a week is stronger evidence about the body than a declaration
+// about it — the same argument that moved points to training originally, now
+// applied to the block that argument skipped.
+//
+// Sleep is worth more than nutrition and less than habits on purpose. It is
+// measured (a logged night is a real event, unlike a diary day that can be
+// filled in seconds), it is upstream of everything else, and it is still one
+// input among several rather than the whole picture.
+const MAX_PROFILE = 6;
+const MAX_WELLNESS = 10;
+const MAX_GOALS = 10;
+const MAX_HABITS = 15;
+const MAX_TASKS = 12;
 const MAX_WORKOUTS = 15;
-const MAX_NUTRITION = 5;
+const MAX_NUTRITION = 12;
 const MAX_APPEARANCE = 5;
+const MAX_SLEEP = 15;
 
 /** Finishing this many tasks in the window is full marks. */
 const TASKS_FOR_FULL_MARKS = 7;
@@ -183,6 +217,35 @@ function scoreAppearance(appearance: LifeScoreAppearance): number {
 }
 
 /**
+ * Sleep scores on two things at once: showing up, and actually sleeping.
+ *
+ * Splitting the block 40/60 is what stops either half being gameable. Logging
+ * alone is worth 40% because a night that was never recorded cannot be judged
+ * and the section is useless unlogged — but if logging were the whole block, a
+ * user could take 40% for typing "23:00 / 03:00" seven times. The remaining 60%
+ * measures the debt those nights ran up against the person's own norm, so the
+ * only way to score it is to have slept.
+ *
+ * Debt is scaled by the norm rather than by a fixed constant: three hours short
+ * of a 7h sleeper and three hours short of a 9h sleeper are the same failure,
+ * and a fixed divisor would punish the long sleeper twice.
+ *
+ * Zero for a user with no logged nights, the same vacuous-ratio guard the other
+ * blocks apply — nothing was measured, so nothing is owed and nothing is earned.
+ */
+function scoreSleep(sleep: LifeScoreSleep): number {
+  if (sleep.expected === 0 || sleep.nightsLogged === 0) return 0;
+
+  const logging = Math.min(1, sleep.nightsLogged / sleep.expected);
+
+  // A full night's worth of debt across the window zeroes the rest half.
+  const debtCeiling = sleep.normMin * sleep.nightsLogged * 0.35;
+  const rest = debtCeiling === 0 ? 1 : Math.max(0, 1 - sleep.debtMin / debtCeiling);
+
+  return Math.round(MAX_SLEEP * (logging * 0.4 + logging * rest * 0.6));
+}
+
+/**
  * Profile completeness + a BMI-derived wellness signal + evidence of follow
  * through.
  *
@@ -242,6 +305,12 @@ export function calculateLifeScore(input: LifeScoreInput): LifeScoreResult {
       label: "Питание за неделю",
       score: scoreNutrition(input.nutrition),
       maxScore: MAX_NUTRITION,
+    },
+    {
+      key: "sleep",
+      label: "Сон за неделю",
+      score: scoreSleep(input.sleep),
+      maxScore: MAX_SLEEP,
     },
     {
       key: "appearance",

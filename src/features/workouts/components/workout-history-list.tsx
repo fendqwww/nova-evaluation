@@ -96,7 +96,7 @@ export function WorkoutHistoryList({
                     >
                       <span
                         className={cn(
-                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.625rem] ring-1 ring-inset ring-white/6",
+                          "flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.625rem] ring-1 ring-inset ring-fill-muted",
                           isOpen
                             ? "bg-accent-muted text-accent"
                             : "bg-tint-green-muted text-tint-green",

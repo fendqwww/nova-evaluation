@@ -5,7 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Plus, Repeat, SearchX } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
+import { PlanSectionTabs } from "@/components/plan-section-tabs";
 import { PageContainer } from "@/shared/ui/page-container";
+import { PageHeader } from "@/shared/ui/page-header";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
 import { useHabits } from "@/features/habits/hooks/use-habits";
@@ -123,36 +125,31 @@ export function HabitsView() {
 
   return (
     <PageContainer className="flex flex-col gap-4">
-      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-            Привычки
-          </h1>
-          {hasHabits && progress.total > 0 && (
-            <p className="text-caption text-muted-foreground">
-              {allKept ? (
-                <span className="font-semibold text-positive">
-                  Всё на сегодня выполнено
-                </span>
-              ) : (
-                <>
-                  <span className="numeric font-semibold text-foreground">
-                    {progress.done} из {progress.total}
-                  </span>{" "}
-                  на сегодня
-                </>
-              )}
-            </p>
-          )}
-          {hasHabits && progress.total === 0 && (
-            <p className="text-caption text-muted-foreground">Сегодня ничего не запланировано</p>
-          )}
-        </div>
+      <PlanSectionTabs active="habits" />
 
-        <Button size="icon" aria-label="Новая привычка" onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-        </Button>
-      </header>
+      <PageHeader
+        title="Привычки"
+        subtitle={
+          hasHabits &&
+          (progress.total === 0 ? (
+            "Сегодня ничего не запланировано"
+          ) : allKept ? (
+            <span className="font-semibold text-positive">Всё на сегодня выполнено</span>
+          ) : (
+            <>
+              <span className="numeric font-semibold text-foreground">
+                {progress.done} из {progress.total}
+              </span>{" "}
+              на сегодня
+            </>
+          ))
+        }
+        actions={
+          <Button size="icon" aria-label="Новая привычка" onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        }
+      />
 
       {isPending && <HabitsSkeleton />}
 

@@ -7,11 +7,13 @@ import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
+import { PageHeader } from "@/shared/ui/page-header";
 import { Reveal, RevealItem } from "@/shared/ui/reveal";
 import { useProfileOverview } from "@/features/profile/hooks/use-profile-overview";
 import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
 import { ProfileHeaderCard } from "@/features/profile/components/profile-header-card";
 import { ProfileStatsCard } from "@/features/profile/components/profile-stats";
+import { BodyCard } from "@/features/profile/components/body-card";
 import { ActivityCard } from "@/features/profile/components/activity-card";
 import { AchievementsCard } from "@/features/profile/components/achievements-card";
 import { AiProfileCard } from "@/features/profile/components/ai-profile-card";
@@ -49,14 +51,7 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
 
   return (
     <PageContainer className="flex flex-col gap-6">
-      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] flex-col gap-0.5">
-        <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-          Профиль
-        </h1>
-        <p className="text-caption text-muted-foreground">
-          Всё, что вы построили в Nova
-        </p>
-      </header>
+      <PageHeader title="Профиль" subtitle="Всё, что вы построили в Nova" />
 
       {isPending && <ProfileSkeleton />}
 
@@ -77,6 +72,13 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
         <Reveal className="gap-6">
           <RevealItem>
             <ProfileHeaderCard account={overview.account} />
+          </RevealItem>
+
+          {/* Directly under the identity header: in a health product the body
+              is who you are on this screen, and it used to appear nowhere on
+              it. */}
+          <RevealItem>
+            <BodyCard ai={overview.ai} startWeightKg={null} />
           </RevealItem>
 
           <RevealItem>

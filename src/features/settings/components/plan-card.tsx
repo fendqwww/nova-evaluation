@@ -69,8 +69,24 @@ export function PlanCard({
   const left = isCurrent ? daysLeft(planUntil) : null;
 
   return (
-    <Card elevation={isCurrent ? "accent" : "raised"}>
-      <div className="flex flex-col gap-4 p-5">
+    <Card
+      elevation={isCurrent ? "accent" : plan.isFeatured ? "lifted" : "raised"}
+      className={cn(
+        // The featured tier gets a tinted hairline and its own soft glow rather
+        // than a bigger card: three cards of different heights read as a broken
+        // layout, while one that is lit differently reads as chosen.
+        plan.isFeatured &&
+          !isCurrent &&
+          "border-tint-purple/40 shadow-[0_0_0_1px_var(--color-tint-purple-muted),0_18px_44px_-24px_var(--tint-purple)]",
+      )}
+    >
+      <div className={cn("flex flex-col gap-4", plan.isFeatured ? "p-5 pt-4" : "p-5")}>
+        {plan.isFeatured && !isCurrent && (
+          <span className="-mt-1 w-fit rounded-md bg-tint-purple-muted px-2 py-1 text-label uppercase text-tint-purple">
+            Полный доступ
+          </span>
+        )}
+
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-2">
@@ -108,6 +124,10 @@ export function PlanCard({
           )}
         >
           {formatPrice(plan.price)}
+        </p>
+
+        <p className="rounded-lg border border-border bg-fill-subtle px-3 py-2 text-caption text-muted-foreground">
+          {plan.audience}
         </p>
 
         <ul className="flex flex-col gap-2">

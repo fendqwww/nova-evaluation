@@ -67,7 +67,7 @@ export function WorkoutMonthCalendar({
           disabled={!canGoBack}
           onClick={() => setAnchor(addMonths(anchor, -1))}
           aria-label="Предыдущий месяц"
-          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-white/6 disabled:pointer-events-none disabled:opacity-30"
+          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-fill-muted disabled:pointer-events-none disabled:opacity-30"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -79,7 +79,7 @@ export function WorkoutMonthCalendar({
           disabled={!canGoForward}
           onClick={() => setAnchor(addMonths(anchor, 1))}
           aria-label="Следующий месяц"
-          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-white/6 disabled:pointer-events-none disabled:opacity-30"
+          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-fill-muted disabled:pointer-events-none disabled:opacity-30"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -164,7 +164,7 @@ export function WorkoutMonthCalendar({
           className="border border-destructive/35 bg-destructive-muted"
           label="пропущено"
         />
-        <Legend className="border border-white/6" label="не по плану" />
+        <Legend className="border border-border" label="не по плану" />
       </div>
     </div>
   );

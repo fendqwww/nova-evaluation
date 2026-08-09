@@ -29,7 +29,7 @@ export function ThemeCard({ label, swatch, selected, onSelect }: ThemeCardProps)
     >
       <span className="relative flex h-11 w-11 items-center justify-center">
         <span
-          className="h-full w-full rounded-full ring-1 ring-inset ring-white/15"
+          className="h-full w-full rounded-full ring-1 ring-inset ring-border-strong"
           style={{ backgroundColor: swatch }}
           aria-hidden
         />
@@ -42,7 +42,7 @@ export function ThemeCard({ label, swatch, selected, onSelect }: ThemeCardProps)
           />
         )}
         {selected && (
-          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/25">
+          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-surface-inset">
             <Check className="h-4 w-4 text-white" strokeWidth={2.75} />
           </span>
         )}

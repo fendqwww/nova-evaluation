@@ -48,7 +48,7 @@ export function SegmentedChoice<T extends string>({
                 "flex-1 rounded-xl py-2.5 text-[0.9375rem] font-semibold tracking-[-0.012em] transition-colors duration-200",
                 selected
                   ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground active:bg-white/4",
+                  : "text-muted-foreground active:bg-fill-muted",
               )}
             >
               {option.label}

@@ -25,12 +25,12 @@ export function tickClass(tone: HabitTone): string {
     case "due":
       return "border-border-strong text-transparent active:border-accent";
     default:
-      return "border-white/8 text-transparent";
+      return "border-border text-transparent";
   }
 }
 
 export function streakBadgeClass(streak: number): string {
-  if (streak === 0) return "bg-white/6 text-subtle-foreground";
+  if (streak === 0) return "bg-fill-muted text-subtle-foreground";
   // A streak is warmth, not urgency — the orange here is the Habit tint doing
   // the one job the palette reserves for it, a small chip.
   return "bg-tint-orange-muted text-tint-orange";
@@ -38,7 +38,7 @@ export function streakBadgeClass(streak: number): string {
 
 /** Ring / bar fill for the week's progress. */
 export function progressFillClass(stats: HabitStats, isArchived: boolean): string {
-  if (isArchived) return "bg-white/15";
+  if (isArchived) return "bg-fill-strong";
   return stats.week.ratio >= 1 ? "bg-positive" : "bg-accent";
 }
 
@@ -55,9 +55,9 @@ export function dayCellClass(state: DayCellState): string {
     case "missed":
       return "border border-destructive/35 bg-destructive-muted text-destructive";
     case "unscheduled":
-      return "border border-white/6 text-subtle-foreground";
+      return "border border-border text-subtle-foreground";
     case "future":
-      return "border border-white/6 text-subtle-foreground/50";
+      return "border border-border text-subtle-foreground/50";
     case "before":
       return "text-subtle-foreground/30";
   }

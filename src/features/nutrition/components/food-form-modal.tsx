@@ -177,7 +177,7 @@ export function FoodFormModal({
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 disabled={analyzePhoto.isPending}
-                className="press-sm flex items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong bg-black/20 px-4 py-3 text-caption font-medium text-muted-foreground active:border-accent disabled:opacity-60"
+                className="press-sm flex items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong bg-surface-inset px-4 py-3 text-caption font-medium text-muted-foreground active:border-accent disabled:opacity-60"
               >
                 <Camera className="h-4 w-4" />
                 {analyzePhoto.isPending

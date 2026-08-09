@@ -77,7 +77,7 @@ export function LifeScoreBreakdownModal({
                       <span className="font-normal text-subtle-foreground"> / {item.maxScore}</span>
                     </span>
                   </div>
-                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/6">
+                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-fill-muted">
                     <div
                       className={`h-full rounded-full ${style?.bar}`}
                       style={{ width: `${percentage}%` }}

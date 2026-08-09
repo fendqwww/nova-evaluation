@@ -102,6 +102,44 @@ export const FOOD_ANALYSIS_JSON_SCHEMA = {
 // ---------------------------------------------------------------------------
 
 /**
+ * What the photo is *of*, as chosen by the user before they shot it.
+ *
+ * Declared here rather than imported from features/appearance so the AI layer
+ * keeps its own vocabulary and does not depend upwards — the same reason the
+ * food and coach schemas restate what they need. The two lists are kept in step
+ * by appearanceSubjectSchema, which the action parses its input through.
+ *
+ * This exists because the section used to collect an area, store it on the row,
+ * and then never tell the model — so a body photo was read by a prompt that
+ * only knew how to describe a face, found none, and reported the picture as
+ * unreadable. The subject is the fix: it decides which rules apply.
+ */
+export const APPEARANCE_SUBJECTS = [
+  "skin",
+  "hair",
+  "teeth",
+  "body",
+  "beard",
+  "nails",
+  "custom",
+] as const;
+
+export type AppearanceSubject = (typeof APPEARANCE_SUBJECTS)[number];
+
+export const appearanceSubjectSchema = z.enum(APPEARANCE_SUBJECTS);
+
+/** What the model is told the photo shows, per subject. */
+export const APPEARANCE_SUBJECT_BRIEF: Record<AppearanceSubject, string> = {
+  skin: "лицо и состояние кожи",
+  hair: "волосы и причёска",
+  teeth: "зубы и улыбка",
+  body: "телосложение и осанка",
+  beard: "борода и её форма",
+  nails: "ногти и руки",
+  custom: "внешность в целом",
+};
+
+/**
  * Facial structure, read descriptively.
  *
  * The point of this block is that a styling recommendation has to be grounded

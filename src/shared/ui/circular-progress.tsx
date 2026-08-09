@@ -67,7 +67,7 @@ export function CircularProgress({
           r={radius}
           strokeWidth={strokeWidth}
           fill="none"
-          className="stroke-white/7"
+          className="stroke-track"
         />
         <motion.circle
           cx={size / 2}

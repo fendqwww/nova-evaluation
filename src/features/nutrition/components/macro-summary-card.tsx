@@ -2,6 +2,7 @@
 
 import { Card } from "@/shared/ui/card";
 import { CircularProgress } from "@/shared/ui/circular-progress";
+import { Progress } from "@/shared/ui/progress";
 import { cn } from "@/shared/lib/cn";
 import { formatCalories, formatGrams } from "@/features/nutrition/lib/format";
 import { progressBarClass, progressToneClass } from "@/features/nutrition/lib/tone";
@@ -28,12 +29,7 @@ function MacroRow({
           {goal > 0 && <span className="text-subtle-foreground"> / {formatGrams(goal)}</span>}
         </span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
-        <div
-          className={cn("h-full rounded-full transition-[width] duration-300", progressBarClass(ratio))}
-          style={{ width: `${Math.round(Math.min(1, ratio) * 100)}%` }}
-        />
-      </div>
+      <Progress value={ratio} fillClass={progressBarClass(ratio)} label={label} />
     </div>
   );
 }

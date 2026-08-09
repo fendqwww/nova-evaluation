@@ -74,7 +74,7 @@ export function LogEntryModal({
               type="button"
               onClick={() => onToggleFavorite(food.id, !food.isFavorite)}
               aria-label={food.isFavorite ? "Убрать из избранного" : "Добавить в избранное"}
-              className="shrink-0 rounded-md p-1.5 text-subtle-foreground transition-colors hover:bg-white/[0.06]"
+              className="shrink-0 rounded-md p-1.5 text-subtle-foreground transition-colors hover:bg-fill-muted"
             >
               <Star className={cn("h-4 w-4", food.isFavorite && "fill-current text-tint-orange")} />
             </button>
@@ -116,7 +116,7 @@ export function LogEntryModal({
             </div>
           </div>
 
-          <div className="flex items-center justify-between rounded-xl border border-border bg-white/[0.03] px-4 py-3">
+          <div className="flex items-center justify-between rounded-xl border border-border bg-fill-subtle px-4 py-3">
             <span className="text-caption text-muted-foreground">
               Б {Math.round(macros.proteinG)} · Ж {Math.round(macros.fatG)} · У{" "}
               {Math.round(macros.carbsG)}

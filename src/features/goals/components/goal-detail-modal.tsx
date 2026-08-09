@@ -168,7 +168,7 @@ export function GoalDetailModal({
                 fillClass={progressFillClass(isCompleted, deadline.tone)}
               />
 
-              <div className="flex items-center gap-1.5 border-t border-white/6 pt-3">
+              <div className="flex items-center gap-1.5 border-t border-border pt-3">
                 {deadline.days === null ? (
                   <CalendarOff className="h-3.5 w-3.5 shrink-0 text-subtle-foreground" />
                 ) : (
@@ -261,7 +261,7 @@ export function GoalDetailModal({
                   type="button"
                   onClick={() => removeStep.mutate({ rawInitData, stepId: step.id })}
                   aria-label={`Удалить шаг: ${step.title}`}
-                  className="shrink-0 rounded-md p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-white/6 active:text-foreground"
+                  className="shrink-0 rounded-md p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-fill-muted active:text-foreground"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>

@@ -64,7 +64,7 @@ export function AiVisionSection() {
               </p>
 
               {/* Result card */}
-              <div className="mt-7 rounded-2xl border border-(--nova-hairline) bg-white/[0.02] p-4">
+              <div className="mt-7 rounded-2xl border border-(--nova-hairline) bg-fill-subtle p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
                     <ScanLine className="h-4 w-4 text-(--nova-purple-bright)" />
@@ -83,7 +83,7 @@ export function AiVisionSection() {
                       <span className="w-[4.5rem] shrink-0 text-[0.75rem] text-(--nova-text-muted)">
                         {macro.label}
                       </span>
-                      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/8">
+                      <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-fill-muted">
                         <span
                           className="block h-full rounded-full"
                           style={{
@@ -121,7 +121,7 @@ export function AiVisionSection() {
               </p>
 
               {/* Result card */}
-              <div className="mt-7 rounded-2xl border border-(--nova-hairline) bg-white/[0.02] p-4">
+              <div className="mt-7 rounded-2xl border border-(--nova-hairline) bg-fill-subtle p-4">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-[0.875rem] font-medium text-white">
                     Динамика за 4 месяца

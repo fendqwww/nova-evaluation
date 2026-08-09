@@ -86,7 +86,7 @@ export function AchievementsCard({ items }: { items: AchievementProgress[] }) {
                   <p className="text-caption text-accent">Получено</p>
                 ) : (
                   <div className="flex flex-col gap-1.5">
-                    <div className="h-1 overflow-hidden rounded-full bg-white/[0.07]">
+                    <div className="h-1 overflow-hidden rounded-full bg-fill-muted">
                       <div
                         className="h-full rounded-full bg-accent"
                         style={{ width: `${Math.round(item.ratio * 100)}%` }}

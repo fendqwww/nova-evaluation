@@ -115,7 +115,7 @@ export function CareStatsCard({
                     </span>
                   </div>
                   {area.expected > 0 && (
-                    <div className="h-1 overflow-hidden rounded-full bg-white/6">
+                    <div className="h-1 overflow-hidden rounded-full bg-fill-muted">
                       <div
                         className={cn(
                           "h-full rounded-full",
@@ -179,7 +179,7 @@ function WeekBars({
               <div
                 className={
                   entry.due === 0
-                    ? "w-full rounded-t bg-white/[0.04]"
+                    ? "w-full rounded-t bg-fill-subtle"
                     : ratio >= 1
                       ? "w-full rounded-t bg-positive"
                       : "w-full rounded-t bg-accent"

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DEFAULT_THEME, THEME_VALUES } from "@/shared/config/themes";
+import { ACTIVITY_LEVELS, NUTRITION_AIMS } from "@/features/nutrition/lib/targets";
 
 export const GENDER_VALUES = ["male", "female", "other"] as const;
 export type GenderValue = (typeof GENDER_VALUES)[number];
@@ -70,6 +71,18 @@ export const onboardingProfileSchema = z.object({
   primaryGoal: z.enum(PRIMARY_GOAL_VALUES),
   occupation: z.enum(OCCUPATION_VALUES),
   timezone: z.string().min(1, "Выбери часовой пояс"),
+  /**
+   * How much the person moves in a normal week. Asked because without it the
+   * calorie target cannot be computed at all — Mifflin gives resting burn, and
+   * the activity factor is what turns that into a daily number.
+   */
+  activityLevel: z.enum(ACTIVITY_LEVELS),
+  /**
+   * Lose / hold / gain. Not stored on the profile — it only picks the deficit
+   * for the initial nutrition goal, and after that the goal itself is the
+   * source of truth and the user edits it directly.
+   */
+  aim: z.enum(NUTRITION_AIMS).default("maintain"),
   // Not a question the flow asks. Every profile is created on Nova Blue and
   // the user re-picks it later in Профиль → Внешний вид, so the value is
   // carried silently with a default instead of gating completion on it.

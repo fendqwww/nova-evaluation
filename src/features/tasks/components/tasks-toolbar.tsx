@@ -51,7 +51,7 @@ export function TasksToolbar({
               type="button"
               onClick={() => onQueryChange("")}
               aria-label="Очистить поиск"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-subtle-foreground transition-colors duration-200 active:bg-white/6 active:text-foreground"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-subtle-foreground transition-colors duration-200 active:bg-fill-muted active:text-foreground"
             >
               <X className="h-3.5 w-3.5" />
             </button>

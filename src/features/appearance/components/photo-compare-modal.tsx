@@ -107,7 +107,7 @@ function ComparePane({
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-caption font-medium text-subtle-foreground">{label}</span>
-      <div className="relative aspect-3/4 overflow-hidden rounded-xl border border-border bg-black/30">
+      <div className="relative aspect-3/4 overflow-hidden rounded-xl border border-border bg-surface-inset">
         <Image
           src={imageData ?? photo.thumbData}
           alt={`${label}: ${formatDay(photo.day, today)}`}

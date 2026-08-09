@@ -17,7 +17,7 @@ export function statusBadgeClass(tone: GoalStatus["tone"]): string {
     case "active":
       return "bg-accent-muted text-accent";
     default:
-      return "bg-white/6 text-muted-foreground";
+      return "bg-fill-muted text-muted-foreground";
   }
 }
 

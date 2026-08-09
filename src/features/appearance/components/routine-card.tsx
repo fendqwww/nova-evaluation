@@ -98,7 +98,7 @@ export function RoutineCard({
               type="button"
               onClick={onOpenMenu}
               aria-label={`Настройки: ${routine.title}`}
-              className="rounded-lg p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-white/6"
+              className="rounded-lg p-1.5 text-subtle-foreground transition-colors duration-200 active:bg-fill-muted"
             >
               <MoreHorizontal className="h-4 w-4" />
             </button>
@@ -142,7 +142,7 @@ export function RoutineCard({
                     onClick={() => onToggleStep(step.id, !stepDone)}
                     role="checkbox"
                     aria-checked={stepDone}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1.5 text-left transition-colors duration-200 active:bg-white/[0.04] disabled:opacity-50"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-1 py-1.5 text-left transition-colors duration-200 active:bg-fill-subtle disabled:opacity-50"
                   >
                     <span
                       className={cn(
@@ -170,7 +170,7 @@ export function RoutineCard({
         )}
 
         <div className="flex items-center gap-2.5">
-          <div className="h-1 flex-1 overflow-hidden rounded-full bg-white/6">
+          <div className="h-1 flex-1 overflow-hidden rounded-full bg-fill-muted">
             <div
               className={cn("h-full rounded-full", progressFillClass(stats.week.ratio, isArchived))}
               style={{ width: `${Math.round(stats.week.ratio * 100)}%` }}

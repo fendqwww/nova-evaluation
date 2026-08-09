@@ -104,7 +104,7 @@ export function WorkoutExerciseRunner({
         <span
           className={cn(
             "numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[0.6875rem] font-semibold transition-colors duration-200",
-            isComplete ? "bg-positive-muted text-positive" : "bg-white/6 text-subtle-foreground",
+            isComplete ? "bg-positive-muted text-positive" : "bg-fill-muted text-subtle-foreground",
           )}
         >
           {index + 1}
@@ -156,7 +156,7 @@ export function WorkoutExerciseRunner({
                     isEditing
                       ? "border-accent-border bg-accent-soft text-foreground"
                       : isDone
-                        ? "border-white/6 bg-white/[0.03] text-muted-foreground"
+                        ? "border-border bg-fill-subtle text-muted-foreground"
                         : "border-border text-foreground active:border-border-strong",
                   )}
                 >

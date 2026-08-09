@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Home, Target, Repeat, ListTodo, HeartPulse, Sparkles, User } from "lucide-react";
+import { Home, HeartPulse, Sparkles, User, CalendarCheck } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { TelegramProvider } from "@/components/providers/telegram-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
@@ -10,21 +10,23 @@ import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 // Active state is derived from the route inside BottomNavigation, so this
 // stays a plain declaration of the app's tabs.
 //
-// Коуч sits between the doing-tabs and Профиль rather than at the end: the
-// first five tabs are the things you *do*, and the Coach is what reads them —
-// putting it after Профиль would file it as a settings screen.
+// FIVE TABS, NOT SEVEN. The old row was Главная · Цели · Привычки · Задачи ·
+// Здоровье · Коуч · Профиль, which left roughly 48px per tab on a 375px phone
+// — "Привычки" already filled its slot edge to edge — and, more importantly,
+// spent three of the seven slots on a productivity tracker while the four
+// health sections shared one. In a health product that is backwards: logging a
+// meal cost four taps and opening a goal cost one.
 //
-// Seven tabs leave roughly 48px each on a 375px phone, which "Привычки" already
-// fills — an eighth tab for Nutrition would wrap onto a second line and break
-// the row's alignment. Тренировки, Питание, Сон and Внешность share one
-// "Здоровье" tab instead: it opens on /workouts, and HealthSectionTabs
-// (rendered at the top of all four screens) is what actually switches between
-// them — alsoActiveFor is what keeps the tab lit while on any of them.
+// Цели, Привычки and Задачи now share "План" exactly the way Тренировки,
+// Питание, Сон and Внешность share "Здоровье" — same mechanism, applied to the
+// sections that are secondary here. Nothing was deleted and no route moved;
+// PlanSectionTabs and HealthSectionTabs switch within each pair, and
+// alsoActiveFor keeps the tab lit across all the screens behind it.
+//
+// The centre slot is not a tab at all — see BottomNavigation's onRecord. It
+// opens the record sheet, which is what actually fixes the four-tap meal.
 const navItems: BottomNavigationItem[] = [
-  { key: "home", label: "Главная", href: "/", icon: <Home className="h-4.5 w-4.5" /> },
-  { key: "goals", label: "Цели", href: "/goals", icon: <Target className="h-4.5 w-4.5" /> },
-  { key: "habits", label: "Привычки", href: "/habits", icon: <Repeat className="h-4.5 w-4.5" /> },
-  { key: "tasks", label: "Задачи", href: "/tasks", icon: <ListTodo className="h-4.5 w-4.5" /> },
+  { key: "home", label: "Сегодня", href: "/", icon: <Home className="h-4.5 w-4.5" /> },
   {
     key: "health",
     label: "Здоровье",
@@ -33,10 +35,16 @@ const navItems: BottomNavigationItem[] = [
     icon: <HeartPulse className="h-4.5 w-4.5" />,
   },
   { key: "coach", label: "Коуч", href: "/coach", icon: <Sparkles className="h-4.5 w-4.5" /> },
-  // Настройки has no tab of its own — the row is full at seven, and settings
-  // are reached from Профиль, which is where every phone already teaches people
-  // to look. alsoActiveFor is what keeps the tab lit while on /settings, the
-  // same trick Здоровье uses for the four screens behind it.
+  {
+    key: "plan",
+    label: "План",
+    href: "/goals",
+    alsoActiveFor: ["/habits", "/tasks"],
+    icon: <CalendarCheck className="h-4.5 w-4.5" />,
+  },
+  // Настройки and Отчёты have no tab of their own — they are reached from
+  // Профиль, which is where every phone already teaches people to look.
+  // alsoActiveFor is what keeps the tab lit while on either.
   {
     key: "profile",
     label: "Профиль",

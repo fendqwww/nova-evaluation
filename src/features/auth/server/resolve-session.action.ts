@@ -14,6 +14,12 @@ export interface ResolvedProfile {
   occupation: string;
   timezone: string;
   themeColor: string;
+  /**
+   * Null for every profile created before the column existed. The nutrition
+   * screen treats null as "never asked" and offers to compute a target rather
+   * than assuming a level nobody stated.
+   */
+  activityLevel: string | null;
 }
 
 export interface ResolvedSession {
@@ -100,6 +106,7 @@ export async function resolveSession(
           occupation: user.profile.occupation,
           timezone: user.profile.timezone,
           themeColor: user.profile.themeColor,
+          activityLevel: user.profile.activityLevel,
         }
       : null,
   };

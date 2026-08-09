@@ -20,7 +20,7 @@ export function CoachReportCard({ report }: { report: CoachDailyReport }) {
     return (
       <Card>
         <CardContent className="flex items-start gap-3 p-4 pt-4">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-white/[0.06] text-muted-foreground ring-1 ring-inset ring-white/[0.06]">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-fill-muted text-muted-foreground ring-1 ring-inset ring-fill-muted">
             <CalendarClock className="h-4 w-4" />
           </span>
           <div className="min-w-0">

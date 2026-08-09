@@ -46,7 +46,7 @@ export function deltaClass(delta: number, higherIsBetter: boolean): string {
 }
 
 export function deltaBadgeClass(delta: number, higherIsBetter: boolean): string {
-  if (delta === 0) return "bg-white/[0.06] text-subtle-foreground";
+  if (delta === 0) return "bg-fill-muted text-subtle-foreground";
   const isGood = higherIsBetter ? delta > 0 : delta < 0;
   return isGood
     ? "bg-positive-muted text-positive"

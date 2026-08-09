@@ -23,10 +23,18 @@ import type { CareArea } from "@/features/appearance/types";
 /**
  * Taking or picking one progress photo.
  *
- * `capture="environment"` on a plain file input rather than a camera API: this
- * runs inside Telegram's webview, where getUserMedia is unreliable and the
- * native picker is what users expect anyway — it offers both the camera and the
- * camera roll, which is exactly the choice a progress photo needs.
+ * A plain file input rather than a camera API: this runs inside Telegram's
+ * webview, where getUserMedia is unreliable, and the native picker is what
+ * users expect anyway — it offers both the camera and the camera roll, which is
+ * exactly the choice a progress photo needs.
+ *
+ * NO `capture` ATTRIBUTE, deliberately. It used to carry `capture="environment"`
+ * under a comment claiming that was what produced the camera-or-gallery choice.
+ * It does the opposite: `capture` tells the browser to skip the picker and open
+ * the camera directly, and "environment" picks the *rear* one — so a user
+ * wanting to compare against a shot from last month could not reach their own
+ * camera roll, and anyone photographing their face got the wrong lens. Omitting
+ * it is what restores the choice.
  *
  * The heavy work happens the moment a file is picked, not on save: decoding and
  * re-encoding a 6 MB phone photo takes a beat, and doing it behind a visible
@@ -91,6 +99,10 @@ export function PhotoAddModal({
         rawInitData,
         imageData: prepared.imageData,
         photoId: created.photoId,
+        // What the user said they were shooting. Without it the model was told
+        // nothing about the subject and fell back to reading every photo as a
+        // portrait — which is why a "Тело" shot came back "не распознано".
+        area,
       });
 
       if (result.ok) return result.analysis;
@@ -127,7 +139,6 @@ export function PhotoAddModal({
             ref={inputRef}
             type="file"
             accept="image/*"
-            capture="environment"
             className="hidden"
             onChange={(event) => {
               const file = event.target.files?.[0];
@@ -140,7 +151,7 @@ export function PhotoAddModal({
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
-            className="flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-border-strong bg-black/20 transition-colors duration-200 active:border-accent"
+            className="flex aspect-4/3 w-full items-center justify-center overflow-hidden rounded-xl border border-dashed border-border-strong bg-surface-inset transition-colors duration-200 active:border-accent"
           >
             {prepared ? (
               <Image
@@ -170,7 +181,14 @@ export function PhotoAddModal({
           )}
 
           <div className="flex flex-col gap-2">
-            <span className="text-caption text-muted-foreground">Что на фото</span>
+            {/* Not a filing label any more — this is what selects the rules the
+                analysis runs under, so it says so. A user who leaves it on
+                «Кожа» while photographing their physique gets a face reading of
+                a body, and the only way they can know that is if the control
+                admits what it does. */}
+            <span className="text-caption text-muted-foreground">
+              Что на фото — по этому Nova выбирает, как разбирать снимок
+            </span>
             <div className="grid grid-cols-4 gap-1.5">
               {areaOptions.map((option) => {
                 const Icon = option.icon;
@@ -205,14 +223,14 @@ export function PhotoAddModal({
             aria-label="Заметка к фото"
           />
 
-          <label className="flex items-start justify-between gap-3 rounded-xl border border-border bg-black/20 p-3">
+          <label className="flex items-start justify-between gap-3 rounded-xl border border-border bg-surface-inset p-3">
             <span className="flex flex-col gap-0.5">
               <span className="text-caption font-medium text-foreground">
                 Разобрать фото через AI
               </span>
               <span className="text-caption text-subtle-foreground">
-                Черты лица, состояние кожи и волос по зонам, рекомендации по уходу и
-                стилю.
+                Разбор по выбранной зоне: черты лица и кожа, волосы, зубы или осанка
+                и телосложение — с рекомендациями по уходу, тренировкам и стилю.
               </span>
             </span>
             <Switch

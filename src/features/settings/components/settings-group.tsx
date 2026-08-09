@@ -117,7 +117,7 @@ export function SettingsRow({
 
   const className = cn(
     "flex w-full items-center gap-3 px-4 py-3.5 transition-colors duration-200",
-    (onClick || href) && !disabled && "press-sm active:bg-white/[0.04]",
+    (onClick || href) && !disabled && "press-sm active:bg-fill-subtle",
     disabled && "opacity-50",
   );
 
@@ -143,7 +143,7 @@ export function SettingsRow({
 /** The muted "Скоро" chip on a row that stores an intention but does nothing. */
 export function SoonBadge({ children = "Скоро" }: { children?: ReactNode }) {
   return (
-    <span className="shrink-0 rounded-md bg-white/[0.06] px-2 py-0.5 text-label text-subtle-foreground">
+    <span className="shrink-0 rounded-md bg-fill-muted px-2 py-0.5 text-label text-subtle-foreground">
       {children}
     </span>
   );

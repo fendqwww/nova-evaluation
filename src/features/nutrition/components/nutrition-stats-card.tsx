@@ -57,7 +57,7 @@ function WeekBars({
               <div
                 className={
                   isFuture
-                    ? "w-full rounded-t bg-white/[0.04]"
+                    ? "w-full rounded-t bg-fill-subtle"
                     : day.calories > goal && goal > 0
                       ? "w-full rounded-t bg-warning"
                       : "w-full rounded-t bg-accent"

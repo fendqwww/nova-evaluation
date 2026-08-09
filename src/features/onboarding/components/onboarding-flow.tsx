@@ -11,6 +11,7 @@ import { OccupationStep } from "@/features/onboarding/components/steps/occupatio
 import { GoalStep } from "@/features/onboarding/components/steps/goal-step";
 import { FocusStep } from "@/features/onboarding/components/steps/focus-step";
 import { AboutStep } from "@/features/onboarding/components/steps/about-step";
+import { ActivityStep } from "@/features/onboarding/components/steps/activity-step";
 import type { ResolvedSession } from "@/features/auth/server/resolve-session.action";
 
 const sceneVariants = {
@@ -101,6 +102,13 @@ export function OnboardingFlow({ session }: { session: ResolvedSession }) {
                   weightKg: values.weightKg ?? 70,
                   gender: values.gender,
                 }}
+                onNext={next}
+                onBack={onBack}
+              />
+            )}
+            {sceneId === "activity" && (
+              <ActivityStep
+                defaults={{ activityLevel: values.activityLevel, aim: values.aim }}
                 onNext={next}
                 onBack={onBack}
                 isSubmitting={isSubmitting}

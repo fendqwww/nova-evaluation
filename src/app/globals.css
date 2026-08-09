@@ -27,6 +27,37 @@
   --border-strong: rgba(255, 255, 255, 0.13);
   --input: rgba(255, 255, 255, 0.05);
 
+  /* Fills — a tint laid *on* a surface rather than a surface of its own.
+     Three steps and no more: subtle is a row that is only just distinguishable
+     from its card, muted is the resting fill of a chip or a hover, strong is a
+     grabber or an unchecked control's edge. These replace the literal
+     `bg-white/[0.06]` utilities the app was written with, which had no light
+     mode by construction — white at 6% over a white page is nothing. */
+  --fill-subtle: rgba(255, 255, 255, 0.035);
+  --fill-muted: rgba(255, 255, 255, 0.06);
+  --fill-strong: rgba(255, 255, 255, 0.12);
+
+  /* Recessed below the page rather than raised above it: the one surface that
+     is darker than its parent in dark mode and greyer in light. */
+  --surface-inset: rgba(0, 0, 0, 0.22);
+
+  /* The unfilled remainder of any progress indicator — the ring's track and
+     every linear bar. One token so a bar and a ring on the same screen are
+     measuring against the same-looking ground. */
+  --track: rgba(255, 255, 255, 0.07);
+
+  /* Behind a modal. Deliberately not a fill step: it darkens the whole app,
+     and in light mode it has to stay a dimming rather than become a wash. */
+  --scrim: rgba(0, 0, 0, 0.6);
+
+  /* The dome highlight across the top half of a *filled* control — an icon
+     chip, a primary button. Always white in both modes, because it is light
+     falling on the control rather than a tint of the surface: only the strength
+     changes, and it has to rise in light mode because the same white reads as
+     nothing over a pale fill. Distinct from --glass-sheen, which lights a
+     frosted panel and is far too strong for a 28px chip. */
+  --sheen: rgba(255, 255, 255, 0.1);
+
   --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.05),
     0 1px 2px 0 rgba(0, 0, 0, 0.45), 0 12px 28px -16px rgba(0, 0, 0, 0.75);
   --shadow-raised: inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
@@ -165,6 +196,25 @@
   --border-strong: rgba(9, 11, 20, 0.16);
   --input: rgba(9, 11, 20, 0.04);
 
+  /* Fills inverted: ink laid on paper rather than light laid on black. The
+     percentages are lower than their dark counterparts because a dark tint on
+     white reads heavier than a light tint on black at the same opacity. */
+  --fill-subtle: rgba(9, 11, 20, 0.03);
+  --fill-muted: rgba(9, 11, 20, 0.055);
+  --fill-strong: rgba(9, 11, 20, 0.11);
+
+  /* An inset surface on a white page is a shallow grey well, not a black one —
+     the same "below the page" reading, arrived at from the other direction. */
+  --surface-inset: rgba(9, 11, 20, 0.035);
+
+  --track: rgba(9, 11, 20, 0.08);
+
+  /* Lighter than the dark scrim: on a light page a 60% black overlay reads as
+     the lights going out rather than as a sheet being dimmed. */
+  --scrim: rgba(12, 13, 17, 0.42);
+
+  --sheen: rgba(255, 255, 255, 0.45);
+
   /* Softer and shorter than the dark shadows: on a white page the same depth
      reads as dirt rather than as elevation. */
   --shadow-card: inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
@@ -215,6 +265,14 @@
   --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--accent);
+
+  --color-fill-subtle: var(--fill-subtle);
+  --color-fill-muted: var(--fill-muted);
+  --color-fill-strong: var(--fill-strong);
+  --color-surface-inset: var(--surface-inset);
+  --color-track: var(--track);
+  --color-scrim: var(--scrim);
+  --color-sheen: var(--sheen);
 
   /* Everything below derives from the single --accent value above. A theme
      switch never touches any other token in this file. */
@@ -287,6 +345,18 @@
   --text-lead--line-height: 1.45;
   --text-lead--letter-spacing: -0.012em;
   --text-lead--font-weight: 500;
+
+  /*
+   * The <h1> at the top of an app screen. It existed as a copy-pasted
+   * `text-[1.375rem] font-bold tracking-[-0.028em]` in fifteen files before it
+   * existed as a role — which is exactly how a scale drifts, one arbitrary
+   * value at a time. Sits between display (the user's own name) and title (a
+   * card headline), because a section heading is neither.
+   */
+  --text-page: 1.375rem;
+  --text-page--line-height: 1.2;
+  --text-page--letter-spacing: -0.028em;
+  --text-page--font-weight: 700;
 
   --text-title: 1.0625rem; /* hero status line, insight title, focus item name */
   --text-title--line-height: 1.28;

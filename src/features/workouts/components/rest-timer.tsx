@@ -104,7 +104,7 @@ export function RestTimer({
           </div>
         </div>
 
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/8">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-fill-muted">
           <motion.div
             className={cn("h-full rounded-full", isDone ? "bg-positive" : "bg-accent")}
             initial={false}
@@ -131,7 +131,7 @@ function TimerButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors duration-200 active:bg-white/6 active:text-foreground"
+      className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground transition-colors duration-200 active:bg-fill-muted active:text-foreground"
     >
       {children}
     </button>

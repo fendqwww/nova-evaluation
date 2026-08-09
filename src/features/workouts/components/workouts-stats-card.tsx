@@ -90,7 +90,7 @@ export function WorkoutsStatsCard({
             />
           )}
 
-          <div className="grid grid-cols-3 gap-2 border-t border-white/6 pt-3.5">
+          <div className="grid grid-cols-3 gap-2 border-t border-border pt-3.5">
             <Metric value={String(stats.monthDone)} label={`за ${ADHERENCE_DAYS} дней`} />
             <Metric value={formatVolume(stats.volumeMonthKg)} label="объём за месяц" />
             <Metric
@@ -99,7 +99,7 @@ export function WorkoutsStatsCard({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2 border-t border-white/6 pt-3.5">
+          <div className="grid grid-cols-3 gap-2 border-t border-border pt-3.5">
             <Metric value={String(stats.totalDone)} label="всего за полгода" />
             <Metric value={formatVolume(stats.volumeWeekKg)} label="объём за неделю" />
             <Metric
@@ -127,7 +127,7 @@ export function WorkoutsStatsCard({
                     <span className="w-24 shrink-0 truncate text-caption text-muted-foreground">
                       {option.short}
                     </span>
-                    <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-white/8">
+                    <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-fill-muted">
                       <div
                         className="h-full rounded-full bg-tint-green"
                         style={{ width: `${Math.round(slice.ratio * 100)}%` }}

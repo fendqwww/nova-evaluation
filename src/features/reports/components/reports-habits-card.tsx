@@ -37,7 +37,7 @@ export function ReportsHabitsCard({
             <MiniBarChart series={series} today={today} barClassName="bg-tint-orange" />
 
             {habits.top.length > 0 && (
-              <div className="flex flex-col gap-2 border-t border-white/6 pt-3">
+              <div className="flex flex-col gap-2 border-t border-border pt-3">
                 {habits.top.slice(0, 3).map((habit: ReportsHabitRow) => (
                   <div key={habit.id} className="flex items-center justify-between gap-2">
                     <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">

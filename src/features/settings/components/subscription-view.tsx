@@ -52,9 +52,7 @@ export function SubscriptionView() {
         </Link>
 
         <div className="flex flex-col gap-1">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-            Подписка
-          </h1>
+          <h1 className="text-page text-foreground">Подписка</h1>
           <p className="text-caption text-muted-foreground">
             Nova работает целиком на бесплатном тарифе. Платные расширяют лимиты AI —
             коуча, анализа еды и внешности.

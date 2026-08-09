@@ -47,7 +47,7 @@ export function ReportsNutritionCard({
           <MiniBarChart series={calorieSeries} today={today} goal={nutrition.caloriesGoal || undefined} barClassName="bg-accent" />
         </div>
 
-        <div className="flex flex-col gap-1 border-t border-white/6 pt-3">
+        <div className="flex flex-col gap-1 border-t border-border pt-3">
           <div className="flex items-center gap-1.5 text-caption text-subtle-foreground">
             <Droplet className="h-3 w-3" />
             Вода — {formatWater(nutrition.waterTodayMl)}

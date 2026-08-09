@@ -183,7 +183,7 @@ function RoutinePresets({
               onClick={() => onPick(preset)}
               className="press-sm glass-card flex items-center gap-3 rounded-xl border px-3.5 py-3 text-left active:border-border-strong"
             >
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-white/[0.06] text-muted-foreground">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[0.625rem] bg-fill-muted text-muted-foreground">
                 <Icon className="h-4 w-4" />
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">

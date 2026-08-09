@@ -15,9 +15,17 @@ import { COACH_QUESTION_MAX } from "@/features/coach/schemas";
 export function CoachComposer({
   onSend,
   disabled,
+  autoFocus = false,
 }: {
   onSend: (question: string) => void;
   disabled: boolean;
+  /**
+   * Set when the screen was opened by the Dashboard's "Спросить AI Coach"
+   * button. Someone who pressed a button that says "ask" has already decided to
+   * type; landing them at the top of a long analysis with the field two screens
+   * down would make them scroll to reach what they just chose.
+   */
+  autoFocus?: boolean;
 }) {
   const [value, setValue] = useState("");
   const trimmed = value.trim();
@@ -33,6 +41,7 @@ export function CoachComposer({
     <div className="flex items-end gap-2">
       <Textarea
         value={value}
+        autoFocus={autoFocus}
         maxLength={COACH_QUESTION_MAX}
         rows={1}
         placeholder="Спроси о своём дне, привычках или целях"

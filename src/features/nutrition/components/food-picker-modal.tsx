@@ -82,7 +82,7 @@ export function FoodPickerModal({
                   key={food.id}
                   type="button"
                   onClick={() => onSelect(food)}
-                  className="flex items-center justify-between gap-2 py-3 text-left transition-colors hover:bg-white/[0.04]"
+                  className="flex items-center justify-between gap-2 py-3 text-left transition-colors hover:bg-fill-subtle"
                 >
                   <div className="flex min-w-0 items-center gap-2">
                     {food.isFavorite && (

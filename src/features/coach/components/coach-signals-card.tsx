@@ -35,8 +35,8 @@ export function CoachSignalsCard({ signals }: { signals: CoachSignals }) {
           />
         </div>
 
-        <div className="flex gap-3 rounded-xl border border-white/5 bg-black/20 p-3.5">
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.625rem] bg-tint-orange-muted text-tint-orange ring-1 ring-inset ring-white/[0.06]">
+        <div className="flex gap-3 rounded-xl border border-border bg-surface-inset p-3.5">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.625rem] bg-tint-orange-muted text-tint-orange ring-1 ring-inset ring-fill-muted">
             <Flame className="h-3.5 w-3.5" />
           </span>
           <div className="min-w-0">

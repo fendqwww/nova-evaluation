@@ -61,7 +61,7 @@ export function CareMonthCalendar({
           disabled={!canGoBack}
           onClick={() => setAnchor(addMonths(anchor, -1))}
           aria-label="Предыдущий месяц"
-          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-white/6 disabled:pointer-events-none disabled:opacity-30"
+          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-fill-muted disabled:pointer-events-none disabled:opacity-30"
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -73,7 +73,7 @@ export function CareMonthCalendar({
           disabled={!canGoForward}
           onClick={() => setAnchor(addMonths(anchor, 1))}
           aria-label="Следующий месяц"
-          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-white/6 disabled:pointer-events-none disabled:opacity-30"
+          className="rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 active:bg-fill-muted disabled:pointer-events-none disabled:opacity-30"
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -130,7 +130,7 @@ export function CareMonthCalendar({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-0.5">
         <Legend className="bg-positive" label="выполнено" />
         <Legend className="border border-destructive/35 bg-destructive-muted" label="пропущено" />
-        <Legend className="border border-white/6" label="без плана" />
+        <Legend className="border border-border" label="без плана" />
       </div>
     </div>
   );
@@ -140,7 +140,7 @@ function cellClass(done: number, missed: boolean, inWindow: boolean): string {
   if (!inWindow) return "text-subtle-foreground/30";
   if (done > 0) return "bg-positive text-background font-semibold";
   if (missed) return "border border-destructive/35 bg-destructive-muted text-destructive";
-  return "border border-white/6 text-subtle-foreground";
+  return "border border-border text-subtle-foreground";
 }
 
 function Legend({ className, label }: { className: string; label: string }) {

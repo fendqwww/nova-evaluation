@@ -32,7 +32,7 @@ export function SectionPlaceholder({
         <p className="max-w-[28ch] text-caption text-muted-foreground">{description}</p>
       </div>
 
-      <span className="rounded-full border border-border bg-white/[0.04] px-3 py-1 text-label uppercase text-subtle-foreground">
+      <span className="rounded-full border border-border bg-fill-subtle px-3 py-1 text-label uppercase text-subtle-foreground">
         В разработке
       </span>
     </div>

@@ -43,7 +43,7 @@ export function groupCountClass(horizon: TaskHorizon): string {
     case "today":
       return "bg-accent-muted text-accent";
     default:
-      return "bg-white/6 text-muted-foreground";
+      return "bg-fill-muted text-muted-foreground";
   }
 }
 
@@ -66,8 +66,8 @@ export function priorityChipClass(priority: TaskPriority): string {
     case "high":
       return "bg-destructive-muted text-destructive";
     case "low":
-      return "bg-white/6 text-subtle-foreground";
+      return "bg-fill-muted text-subtle-foreground";
     default:
-      return "bg-white/6 text-muted-foreground";
+      return "bg-fill-muted text-muted-foreground";
   }
 }

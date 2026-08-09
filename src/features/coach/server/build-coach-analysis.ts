@@ -14,7 +14,7 @@ import {
   SCORING_WINDOW_DAYS,
   calculateLifeScore,
 } from "@/features/life-score/server/calculate-life-score";
-import type { LifeScoreInput } from "@/features/life-score/types";
+import type { LifeScoreInput, LifeScoreSleep } from "@/features/life-score/types";
 import {
   LOG_WINDOW_DAYS,
   getHabitAdherence,
@@ -57,6 +57,7 @@ import {
   loggingStreak as sleepLoggingStreak,
   weekStats as sleepWeekStats,
 } from "@/features/sleep/lib/stats";
+import { sleepNorm } from "@/features/sleep/lib/score";
 import {
   dayProgress,
   entriesOnDay,
@@ -393,10 +394,9 @@ export async function buildCoachAnalysis(
     goalsActive: careGoals.filter((goal) => !goal.isCompleted).length,
   };
 
-  // Sleep is reported to the Coach but deliberately not scored: the Life Score
-  // has no sleep block, and inventing one here would make the ring disagree
-  // with calculateLifeScore. The Coach can still talk about it, which is the
-  // whole point of a fact that is not also a metric.
+  // Sleep is both a fact for the Coach and a scored block in the index. It used
+  // to be only the former, on the argument that the Life Score had no sleep
+  // block to feed — which was true, and was the defect rather than the reason.
   const sleepWeek = sleepWeekStats(sleepLogs, today);
   const lastNight = sleepLogOnDay(sleepLogs, today);
   const nights7d = nightsBetween(sleepLogs, addDays(today, -6), today);
@@ -436,6 +436,27 @@ export async function buildCoachAnalysis(
     ),
   };
 
+  /**
+   * The sleep block's inputs, measured against this person's own norm rather
+   * than a flat eight hours — the same norm the Сон screen shows them, so the
+   * index and the section can never quote different targets.
+   */
+  const sleepNormResult = sleepNorm(sleepLogs, today);
+  const sleepToday: LifeScoreSleep = {
+    nightsLogged: nights7d.length,
+    // Clipped to the account's own age, so a two-day-old account is not judged
+    // against seven nights it could not have logged.
+    expected: Math.max(
+      1,
+      Math.min(7, diffDays(dayInZone(user.createdAt, timezone), today) + 1),
+    ),
+    debtMin: nights7d.reduce(
+      (total, night) => total + Math.max(0, sleepNormResult.targetMin - night.durationMin),
+      0,
+    ),
+    normMin: sleepNormResult.targetMin,
+  };
+
   const todayScoreInput: LifeScoreInput = {
     hasCompletedProfile: true,
     heightCm: profileRow.heightCm,
@@ -446,6 +467,7 @@ export async function buildCoachAnalysis(
     workouts: workoutsToday,
     nutrition: nutritionToday,
     appearance: appearanceToday,
+    sleep: sleepToday,
   };
 
   const metrics: CoachMetrics = {
@@ -495,6 +517,19 @@ export async function buildCoachAnalysis(
           workouts: workoutsYesterday,
           nutrition: nutritionYesterday,
           appearance: appearanceYesterday,
+          // Yesterday's window, one day back — same shape, same norm, so the
+          // day-over-day delta reflects sleep changing rather than the target
+          // moving under it.
+          sleep: {
+            nightsLogged: nightsBetween(sleepLogs, addDays(today, -7), yesterday).length,
+            expected: sleepToday.expected,
+            debtMin: nightsBetween(sleepLogs, addDays(today, -7), yesterday).reduce(
+              (total, night) =>
+                total + Math.max(0, sleepNormResult.targetMin - night.durationMin),
+              0,
+            ),
+            normMin: sleepNormResult.targetMin,
+          },
         }),
         habitsDue: 0,
         habitsDone: 0,

@@ -61,6 +61,10 @@ export function PhotoViewerModal({
         imageData: imageData ?? photo!.thumbData,
         // Attaching it to the row is what makes the result outlive this modal.
         photoId: photo!.id,
+        // The area this photo was filed under, which is also what it is a photo
+        // of — so re-analysing an old physique shot reads it as a physique
+        // rather than as a portrait with no face in it.
+        area: photo!.area,
       }),
     onSuccess: (result) => {
       setLimitMessage(result.ok || result.reason !== "limit" ? null : result.message);
@@ -87,7 +91,7 @@ export function PhotoViewerModal({
         </ModalHeader>
 
         <div className="flex flex-col gap-4">
-          <div className="relative overflow-hidden rounded-xl border border-border bg-black/30">
+          <div className="relative overflow-hidden rounded-xl border border-border bg-surface-inset">
             <Image
               src={imageData ?? photo.thumbData}
               alt={`${areaLabel(photo.area)}, ${formatDay(photo.day, today)}`}

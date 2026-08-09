@@ -16,7 +16,7 @@ const buttonVariants = cva(
           "bg-accent text-accent-foreground shadow-[0_6px_18px_-8px_var(--accent)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/18 before:to-transparent hover:bg-accent-hover hover:shadow-[0_10px_26px_-8px_var(--accent)]",
         secondary:
           "border border-border bg-surface-2 text-foreground shadow-card hover:border-border-strong hover:bg-surface-3",
-        ghost: "text-foreground hover:bg-white/[0.06]",
+        ghost: "text-foreground hover:bg-fill-muted",
         destructive:
           "bg-destructive text-destructive-foreground shadow-[0_6px_18px_-8px_var(--destructive)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/18 before:to-transparent hover:opacity-90",
       },

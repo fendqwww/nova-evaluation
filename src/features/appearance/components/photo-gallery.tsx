@@ -121,7 +121,7 @@ export function PhotoGallery({
                     only way to find out is to open each one in turn. */}
                 {photo.analysis && (
                   <span
-                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/55 backdrop-blur-sm"
+                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-surface-inset backdrop-blur-sm"
                     title="Фото проанализировано"
                   >
                     <Sparkles className="h-3 w-3 text-accent-light" />

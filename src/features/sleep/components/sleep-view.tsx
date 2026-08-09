@@ -2,14 +2,16 @@
 
 import { useState } from "react";
 import { Moon } from "lucide-react";
+import { useAddIntent } from "@/shared/lib/use-add-intent";
 import { HealthSectionTabs } from "@/components/health-section-tabs";
 import { Button } from "@/shared/ui/button";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
+import { PageHeader } from "@/shared/ui/page-header";
 import { useSleep } from "@/features/sleep/hooks/use-sleep";
 import { SleepTabs, type SleepTabId } from "@/features/sleep/components/sleep-tabs";
 import { SleepSkeleton } from "@/features/sleep/components/sleep-skeleton";
-import { SleepTodayCard } from "@/features/sleep/components/sleep-today-card";
+import { SleepScoreCard } from "@/features/sleep/components/sleep-score-card";
 import { SleepHistoryList } from "@/features/sleep/components/sleep-history-list";
 import { SleepStatsCard } from "@/features/sleep/components/sleep-stats-card";
 import { SleepLogModal } from "@/features/sleep/components/sleep-log-modal";
@@ -17,11 +19,14 @@ import { logOnDay } from "@/features/sleep/lib/stats";
 import type { SleepLogItem } from "@/features/sleep/types";
 
 /**
- * NOTE ON WHAT THIS SECTION DOES NOT DO. There is no user-configurable sleep
- * goal and no bedtime reminder. Eight hours is a fixed target — the same
- * pragmatic default this section's stats card measures every day against —
- * and a reminder needs the same Telegram send loop Workouts' note explains
- * this app does not have.
+ * NOTE ON WHAT THIS SECTION DOES NOT DO. There is no bedtime reminder — that
+ * needs the same Telegram send loop Workouts' note explains this app does not
+ * have. And there are no sleep phases: no deep sleep, no REM. This app has no
+ * wearable, so every one of those numbers would be invented (see lib/score.ts).
+ *
+ * The fixed eight-hour goal is gone. The target is now this person's own
+ * trailing average once there are enough nights to mean anything, clamped to a
+ * sane band — so a 7h sleeper stops being told they are failing every morning.
  */
 export function SleepView() {
   const { logs, today, isPending, isError, retry, upsertLog, deleteLog } = useSleep();
@@ -40,20 +45,33 @@ export function SleepView() {
     setFormOpen(true);
   }
 
+  /**
+   * Arrived from the record sheet: open the night straight away rather than
+   * landing on the screen and making the user find the button they just
+   * pressed.
+   *
+   * Derived rather than pushed into state by an effect. It waits on `today`
+   * because the form needs a day to write to, and it is cancelled by
+   * `intentDismissed` so closing the sheet does not immediately reopen it.
+   */
+  const addIntent = useAddIntent();
+  const [intentDismissed, setIntentDismissed] = useState(false);
+  const isFormVisible =
+    isFormOpen || (addIntent !== null && today !== null && !intentDismissed);
+
   return (
     <PageContainer className="flex flex-col gap-4">
       <HealthSectionTabs active="sleep" />
 
-      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">Сон</h1>
-          <p className="text-caption text-muted-foreground">Часы сна и качество отдыха</p>
-        </div>
-
-        <Button size="icon" aria-label="Записать сон" onClick={() => openLog(todayLog)}>
-          <Moon className="h-4 w-4" />
-        </Button>
-      </header>
+      <PageHeader
+        title="Сон"
+        subtitle="Часы сна и качество отдыха"
+        actions={
+          <Button size="icon" aria-label="Записать сон" onClick={() => openLog(todayLog)}>
+            <Moon className="h-4 w-4" />
+          </Button>
+        }
+      />
 
       {isPending && <SleepSkeleton />}
 
@@ -88,7 +106,9 @@ export function SleepView() {
         <>
           <SleepTabs tab={tab} onChange={setTab} />
 
-          {tab === "today" && <SleepTodayCard log={todayLog} onLog={() => openLog(todayLog)} />}
+          {tab === "today" && (
+            <SleepScoreCard logs={logs} today={today} onLog={() => openLog(todayLog)} />
+          )}
 
           {tab === "history" && (
             <SleepHistoryList logs={logs} today={today} onOpen={(log) => openLog(log)} />
@@ -100,11 +120,14 @@ export function SleepView() {
 
       <SleepLogModal
         key={`log-${formKey}`}
-        log={editingLog}
+        log={editingLog ?? (isFormOpen ? null : todayLog)}
         day={today}
         today={today}
-        open={isFormOpen}
-        onOpenChange={setFormOpen}
+        open={isFormVisible}
+        onOpenChange={(next) => {
+          setFormOpen(next);
+          if (!next) setIntentDismissed(true);
+        }}
         onSave={(draft) => upsertLog(draft)}
         onDelete={editingLog ? () => deleteLog(editingLog.id) : undefined}
       />

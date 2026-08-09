@@ -80,7 +80,7 @@ export function RoutineStepEditor({
             type="button"
             onClick={() => remove(index)}
             aria-label={`Убрать шаг ${index + 1}`}
-            className="rounded-lg p-2 text-subtle-foreground transition-colors duration-200 active:bg-white/6 active:text-destructive"
+            className="rounded-lg p-2 text-subtle-foreground transition-colors duration-200 active:bg-fill-muted active:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
           </button>

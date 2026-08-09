@@ -22,10 +22,17 @@ export function DashboardHeader({
   firstName,
   photoUrl,
   timezone,
+  status,
 }: {
   firstName: string;
   photoUrl: string | null;
   timezone: string;
+  /**
+   * One line from the analysis under the name — the app's read on the day
+   * rather than another label. Without it the greeting is decoration; with it
+   * the first thing on screen already says something.
+   */
+  status?: string;
 }) {
   const [greeting, setGreeting] = useState(() => getGreeting(timezone));
 
@@ -37,10 +44,12 @@ export function DashboardHeader({
   return (
     <div className="flex items-center justify-between gap-4">
       <div className="min-w-0">
-        <p className="text-caption font-normal text-muted-foreground">{greeting},</p>
-        {/* The one place besides the ring that carries the brand colour —
-            solid accent, no gradient, no second hue. */}
-        <h1 className="-mt-0.5 truncate text-display text-accent">{firstName}</h1>
+        <p className="text-caption font-normal text-muted-foreground">
+          {greeting}, <span className="text-foreground">{firstName}</span>
+        </p>
+        {status && (
+          <p className="mt-1 text-title text-foreground">{status}</p>
+        )}
       </div>
       <Avatar src={photoUrl} name={firstName} size={44} />
     </div>

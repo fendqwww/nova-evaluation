@@ -106,7 +106,7 @@ function UsageRow({ usage, feature }: { usage: FeatureUsage; feature: UsageFeatu
       </div>
 
       <div className="ml-7 flex flex-col gap-1">
-        <div className="h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
+        <div className="h-1 w-full overflow-hidden rounded-full bg-fill-muted">
           <div
             className={cn(
               "h-full rounded-full transition-[width] duration-300",

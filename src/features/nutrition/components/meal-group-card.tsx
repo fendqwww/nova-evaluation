@@ -42,7 +42,7 @@ function EntryRow({
           type="button"
           onClick={onDelete}
           aria-label={`Удалить ${entry.food.name}`}
-          className="rounded-md p-1.5 text-subtle-foreground opacity-0 transition-opacity hover:bg-white/[0.06] hover:text-destructive group-hover:opacity-100 group-active:opacity-100"
+          className="rounded-md p-1.5 text-subtle-foreground opacity-0 transition-opacity hover:bg-fill-muted hover:text-destructive group-hover:opacity-100 group-active:opacity-100"
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>

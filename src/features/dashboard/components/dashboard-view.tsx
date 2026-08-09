@@ -1,106 +1,79 @@
 "use client";
 
 import { useState } from "react";
-import { Target, Repeat, ListTodo, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { useDashboardData } from "@/features/dashboard/hooks/use-dashboard-data";
 import { DashboardSkeleton } from "@/features/dashboard/components/dashboard-skeleton";
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
-import { LifeScoreCard } from "@/features/dashboard/components/life-score-card";
+import { NovaScoreCard } from "@/features/dashboard/components/nova-score-card";
+import { TodayGrid } from "@/features/dashboard/components/today-grid";
 import { FocusOfDayCard } from "@/features/dashboard/components/focus-of-day-card";
-import { QuickActions } from "@/features/dashboard/components/quick-actions";
 import { CoachPreviewCard } from "@/features/dashboard/components/coach-preview-card";
-import { ActivityOverviewCard } from "@/features/activity/components/activity-overview-card";
 import { QuickCaptureModal } from "@/features/activity/components/quick-capture-modal";
-import { Button } from "@/shared/ui/button";
-import { EmptyState } from "@/shared/ui/empty-state";
+import { AsyncSection } from "@/shared/ui/async-section";
 import { Reveal, RevealItem } from "@/shared/ui/reveal";
-import { pluralizeRu } from "@/shared/lib/pluralize-ru";
 import type { ActivityItemType } from "@/features/activity/types";
 
+/**
+ * The home screen, rebuilt around the body rather than around a to-do list.
+ *
+ * The order is the argument, the same way it is on the Coach screen. The
+ * greeting carries the day's verdict, the score answers "how am I doing", the
+ * four tiles answer "what have I actually done today", and the Coach — which
+ * has read all of it — gets the full-width ask button. The focus of the day
+ * comes last because a single goal or task is the smallest claim on the screen.
+ *
+ * What left: the three "Обзор активности" tiles that counted goals, habits and
+ * tasks, and the 2×2 "Быстрые действия" grid. Both were shortcuts to creating
+ * entities, and both are now served better by the record button in the tab bar,
+ * which is reachable from every screen rather than only from this one.
+ */
 export function DashboardView() {
   const { data, isPending, isError, refresh, refetch } = useDashboardData();
   const [captureType, setCaptureType] = useState<ActivityItemType | null>(null);
 
-  if (isPending) {
-    return <DashboardSkeleton />;
-  }
-
-  if (isError || !data) {
-    return (
-      <EmptyState
-        icon={<Sparkles className="h-5 w-5" />}
-        title="Дашборд не загрузился"
-        description="Проверь соединение — данные никуда не делись."
-        action={
-          <Button variant="secondary" onClick={() => refetch()}>
-            Повторить
-          </Button>
-        }
-      />
-    );
-  }
-
   return (
     <>
-      <Reveal className="gap-3">
-        <RevealItem>
-          <DashboardHeader
-            firstName={data.user.firstName}
-            photoUrl={data.user.photoUrl}
-            timezone={data.timezone}
-          />
-        </RevealItem>
+      <AsyncSection
+        isPending={isPending}
+        isError={isError || !data}
+        skeleton={<DashboardSkeleton />}
+        onRetry={() => refetch()}
+        icon={<Sparkles className="h-5 w-5" />}
+        errorTitle="Дашборд не загрузился"
+      >
+        {data && (
+          <Reveal className="gap-4">
+            <RevealItem>
+              <DashboardHeader
+                firstName={data.user.firstName}
+                photoUrl={data.user.photoUrl}
+                timezone={data.timezone}
+                status={data.coach.headline}
+              />
+            </RevealItem>
 
-        <RevealItem>
-          <LifeScoreCard result={data.lifeScore} />
-        </RevealItem>
+            <RevealItem>
+              <NovaScoreCard result={data.lifeScore} />
+            </RevealItem>
 
-        <RevealItem>
-          <CoachPreviewCard coach={data.coach} />
-        </RevealItem>
+            <RevealItem>
+              <TodayGrid health={data.todayHealth} />
+            </RevealItem>
 
-        <RevealItem>
-          <FocusOfDayCard focus={data.focus} onCreateGoal={() => setCaptureType("goal")} />
-        </RevealItem>
+            <RevealItem>
+              <CoachPreviewCard coach={data.coach} />
+            </RevealItem>
 
-        <RevealItem>
-          <QuickActions
-            onGoal={() => setCaptureType("goal")}
-            onHabit={() => setCaptureType("habit")}
-            onTask={() => setCaptureType("task")}
-          />
-        </RevealItem>
-
-        <RevealItem className="flex flex-col gap-2.5">
-          <p className="text-section text-muted-foreground">Обзор активности</p>
-          <div className="grid grid-cols-3 gap-2.5">
-            <ActivityOverviewCard
-              icon={<Target className="h-3.5 w-3.5" />}
-              title="Цели"
-              count={data.counts.goals}
-              unitLabel={(n) => pluralizeRu(n, ["цель", "цели", "целей"])}
-              tone="goal"
-              onCreate={() => setCaptureType("goal")}
-            />
-            <ActivityOverviewCard
-              icon={<Repeat className="h-3.5 w-3.5" />}
-              title="Привычки"
-              count={data.counts.habits}
-              unitLabel={(n) => pluralizeRu(n, ["привычка", "привычки", "привычек"])}
-              tone="habit"
-              onCreate={() => setCaptureType("habit")}
-            />
-            <ActivityOverviewCard
-              icon={<ListTodo className="h-3.5 w-3.5" />}
-              title="Задачи"
-              count={data.counts.tasks}
-              unitLabel={(n) => pluralizeRu(n, ["задача", "задачи", "задач"])}
-              tone="task"
-              onCreate={() => setCaptureType("task")}
-            />
-          </div>
-        </RevealItem>
-      </Reveal>
+            <RevealItem>
+              <FocusOfDayCard
+                focus={data.focus}
+                onCreateGoal={() => setCaptureType("goal")}
+              />
+            </RevealItem>
+          </Reveal>
+        )}
+      </AsyncSection>
 
       <QuickCaptureModal
         type={captureType ?? "goal"}

@@ -86,6 +86,27 @@ export interface LifeScoreAppearance {
  * engagement in a way it is not for a habit or a task. Habits and tasks now
  * carry evidence instead — see the note in calculate-life-score.ts.
  */
+/**
+ * Sleep over the trailing window — see sleepAdherence.
+ *
+ * Two signals rather than one, because sleep fails in two different ways and a
+ * single average hides both: `nightsLogged` is whether the section is being
+ * used at all, and `debtMin` is how far short of the personal norm those nights
+ * actually fell. A week of five perfect nights and two unlogged ones is a
+ * different thing from seven logged four-hour nights, and one number cannot
+ * tell them apart.
+ */
+export interface LifeScoreSleep {
+  /** Nights logged in the window. Zero means the section is unused. */
+  nightsLogged: number;
+  /** Nights the window asked for — the window length, clipped to signup. */
+  expected: number;
+  /** Total minutes short of the personal norm across those nights. */
+  debtMin: number;
+  /** The norm the debt was measured against, for the falloff to scale with. */
+  normMin: number;
+}
+
 export interface LifeScoreInput {
   hasCompletedProfile: boolean;
   heightCm: number | null;
@@ -96,4 +117,5 @@ export interface LifeScoreInput {
   workouts: LifeScoreWorkouts;
   nutrition: LifeScoreNutrition;
   appearance: LifeScoreAppearance;
+  sleep: LifeScoreSleep;
 }

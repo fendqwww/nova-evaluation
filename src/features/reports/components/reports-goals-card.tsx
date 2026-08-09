@@ -22,7 +22,7 @@ export function ReportsGoalsCard({ goals }: { goals: ReportsSnapshot["goals"] })
         </div>
 
         {goals.items.length > 0 && (
-          <div className="flex flex-col gap-3 border-t border-white/6 pt-3">
+          <div className="flex flex-col gap-3 border-t border-border pt-3">
             {goals.items.map((goal) => (
               <div key={goal.id} className="flex flex-col gap-1.5">
                 <div className="flex items-baseline justify-between gap-2">

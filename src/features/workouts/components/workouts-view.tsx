@@ -9,6 +9,7 @@ import { Card } from "@/shared/ui/card";
 import { CircularProgress } from "@/shared/ui/circular-progress";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
+import { PageHeader } from "@/shared/ui/page-header";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
 import { cn } from "@/shared/lib/cn";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
@@ -199,18 +200,15 @@ export function WorkoutsView() {
     <PageContainer className="flex flex-col gap-4">
       <HealthSectionTabs active="workouts" />
 
-      <header className="flex animate-[rise-in_var(--duration-slow)_var(--ease-enter)_both] items-start justify-between gap-3">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-[1.375rem] font-bold tracking-[-0.028em] text-foreground">
-            Тренировки
-          </h1>
-          <p className="text-caption text-muted-foreground">Программы и прогресс</p>
-        </div>
-
-        <Button size="icon" aria-label="Новая тренировка" onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-        </Button>
-      </header>
+      <PageHeader
+        title="Тренировки"
+        subtitle="Программы и прогресс"
+        actions={
+          <Button size="icon" aria-label="Новая тренировка" onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+          </Button>
+        }
+      />
 
       {isPending && <WorkoutsSkeleton />}
 
