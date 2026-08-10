@@ -4,6 +4,7 @@ import { Check, Dumbbell, Play } from "lucide-react";
 import { Card, IconChip } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Progress } from "@/shared/ui/progress";
+import { haptics } from "@/shared/lib/haptics";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
 import { workoutStats } from "@/features/workouts/lib/stats";
@@ -112,12 +113,25 @@ export function TodayWorkoutCard({
               size="lg"
               className="flex-1"
               disabled={isStarting}
-              onClick={() => onStart(target.workout.id)}
+              onClick={() => {
+                // Средний удар, а не лёгкий: начало тренировки — самое
+                // весомое действие в приложении, и отклик должен отличаться
+                // от отметки стакана воды.
+                haptics.press();
+                onStart(target.workout.id);
+              }}
             >
               <Play className="h-4 w-4" />
               {open ? "Продолжить" : "Начать тренировку"}
             </Button>
-            <Button size="lg" variant="secondary" onClick={() => onOpen(target.workout.id)}>
+            <Button
+              size="lg"
+              variant="secondary"
+              onClick={() => {
+                haptics.tap();
+                onOpen(target.workout.id);
+              }}
+            >
               План
             </Button>
           </div>

@@ -4,28 +4,49 @@ import { useEffect, useId } from "react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
 
+/**
+ * The ring, in four states.
+ *
+ * `accent` is the original and stays the default: the hero ring on the
+ * dashboard, one hue at full strength, lit rather than painted. The other three
+ * exist because the Health Overview shows four rings at once, and four
+ * *category* colours would turn the screen into a rainbow — which the whole
+ * palette in globals.css is written to avoid. So colour here carries **state,
+ * not identity**: a healthy score is the brand hue, a score that wants
+ * attention is warning, a score in trouble is destructive, and a score with
+ * nothing measured is a bare track. Four rings on a good day read as one brand
+ * colour; a red ring means something.
+ */
+export type RingTone = "accent" | "warning" | "destructive" | "muted";
+
+const TONE_VAR: Record<RingTone, { from: string; to: string }> = {
+  accent: { from: "var(--color-accent-light)", to: "var(--accent)" },
+  warning: { from: "var(--warning)", to: "var(--warning)" },
+  destructive: { from: "var(--destructive)", to: "var(--destructive)" },
+  muted: { from: "var(--track)", to: "var(--track)" },
+};
+
 interface CircularProgressProps {
   value: number;
   size?: number;
   strokeWidth?: number;
+  tone?: RingTone;
+  /**
+   * The soft bloom behind the ring. On by default because the dashboard hero
+   * is what it was built for; off for the small rings, where four glows at
+   * 76px would be fog rather than light.
+   */
+  glow?: boolean;
   className?: string;
   children?: React.ReactNode;
 }
 
-/**
- * The single deliberately-colourful element on the dashboard — like an Apple
- * Fitness ring. One hue, not a rainbow: the theme is one accent, and this is
- * where it gets to be seen at full strength.
- *
- * The stroke is a subtle gradient of that one hue (not a second colour) so the
- * ring reads as lit rather than painted, and a soft blurred duplicate sits
- * behind it as a glow — the same "one warm point of light" the empty state's
- * icon well uses, just brighter here because this is the screen's hero.
- */
 export function CircularProgress({
   value,
   size = 160,
   strokeWidth = 12,
+  tone = "accent",
+  glow = true,
   className,
   children,
 }: CircularProgressProps) {
@@ -44,21 +65,25 @@ export function CircularProgress({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- progress is a stable MotionValue
   }, [value]);
 
+  const stops = TONE_VAR[tone];
+
   return (
     <div
       className={cn("relative inline-flex shrink-0 items-center justify-center", className)}
       style={{ width: size, height: size }}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 rounded-full opacity-25 blur-xl"
-        style={{ background: "radial-gradient(circle, var(--accent), transparent 68%)" }}
-      />
+      {glow && tone !== "muted" && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 rounded-full opacity-25 blur-xl"
+          style={{ background: `radial-gradient(circle, ${stops.to}, transparent 68%)` }}
+        />
+      )}
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="var(--color-accent-light)" />
-            <stop offset="100%" stopColor="var(--accent)" />
+            <stop offset="0%" stopColor={stops.from} />
+            <stop offset="100%" stopColor={stops.to} />
           </linearGradient>
         </defs>
         <circle
@@ -85,4 +110,12 @@ export function CircularProgress({
       )}
     </div>
   );
+}
+
+/** The band a health score falls into. One mapping, so no screen invents its own. */
+export function ringToneForScore(score: number | null): RingTone {
+  if (score === null) return "muted";
+  if (score >= 75) return "accent";
+  if (score >= 50) return "warning";
+  return "destructive";
 }

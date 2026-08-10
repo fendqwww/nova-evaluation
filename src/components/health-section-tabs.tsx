@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
+import { haptics } from "@/shared/lib/haptics";
 
 export type HealthSection = "workouts" | "nutrition" | "sleep" | "appearance";
 
@@ -37,6 +38,7 @@ export function HealthSectionTabs({ active }: { active: HealthSection }) {
             href={section.href}
             role="tab"
             aria-selected={isActive}
+            onClick={() => !isActive && haptics.selection()}
             className={cn(
               "press-sm relative flex flex-col items-center gap-1.5 pb-2 pt-0.5 text-caption font-medium",
               isActive ? "text-foreground" : "text-subtle-foreground active:text-muted-foreground",

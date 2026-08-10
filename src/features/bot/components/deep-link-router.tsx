@@ -35,6 +35,12 @@ const ALLOWED_PATHS = new Set([
   "/profile",
   "/settings",
   "/settings/subscription",
+  // Разделы наставника. Добавлены вместе с ними, потому что смысл напоминания
+  // «вернись к своему плану» — привести человека прямо в план, а не на главную,
+  // откуда до плана ещё нужно дойти.
+  "/path",
+  "/library",
+  "/academy",
 ]);
 
 export function DeepLinkRouter() {

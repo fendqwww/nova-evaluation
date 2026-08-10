@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
+import { haptics } from "@/shared/lib/haptics";
 
 export interface BottomNavigationItem {
   key: string;
@@ -73,6 +74,11 @@ export function BottomNavigation({ items, onRecord, className }: BottomNavigatio
                     <Link
                       href={item.href}
                       aria-current={active ? "page" : undefined}
+                      // Только при смене вкладки. Отклик на повторное нажатие
+                      // уже активной вкладки — вибрация без события, а это
+                      // ровно то, от чего словарь жестов в shared/lib/haptics
+                      // и защищает.
+                      onClick={() => !active && haptics.selection()}
                       className={cn(
                         "press-sm relative flex flex-col items-center gap-1 rounded-xl px-1 pb-1.5 pt-2",
                         active
@@ -116,7 +122,10 @@ export function BottomNavigation({ items, onRecord, className }: BottomNavigatio
               <div className="flex w-14 shrink-0 items-center justify-center">
                 <motion.button
                   type="button"
-                  onClick={onRecord}
+                  onClick={() => {
+                    haptics.press();
+                    onRecord();
+                  }}
                   aria-label="Записать"
                   whileTap={{ scale: 0.92 }}
                   transition={{ type: "spring", stiffness: 420, damping: 24 }}

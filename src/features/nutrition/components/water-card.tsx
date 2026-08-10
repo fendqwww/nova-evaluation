@@ -5,6 +5,7 @@ import { Card } from "@/shared/ui/card";
 import { IconChip } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Progress } from "@/shared/ui/progress";
+import { haptics } from "@/shared/lib/haptics";
 import { formatWater } from "@/features/nutrition/lib/format";
 import { progressBarClass } from "@/features/nutrition/lib/tone";
 import type { MacroProgress } from "@/features/nutrition/lib/stats";
@@ -47,11 +48,24 @@ export function WaterCard({
             variant="secondary"
             aria-label={`Убрать ${STEP_ML} мл`}
             disabled={progress.value <= 0}
-            onClick={() => onAdd(-STEP_ML)}
+            onClick={() => {
+              haptics.selection();
+              onAdd(-STEP_ML);
+            }}
           >
             <Minus className="h-4 w-4" />
           </Button>
-          <Button size="icon" aria-label={`Добавить ${STEP_ML} мл`} onClick={() => onAdd(STEP_ML)}>
+          <Button
+            size="icon"
+            aria-label={`Добавить ${STEP_ML} мл`}
+            onClick={() => {
+              // Стакан воды — самое частое действие в приложении. Отклик
+              // «выбор», а не «успех»: успех на каждом стакане обесценил бы
+              // сигнал, которым отмечается закрытая тренировка.
+              haptics.selection();
+              onAdd(STEP_ML);
+            }}
+          >
             <Plus className="h-4 w-4" />
           </Button>
         </div>

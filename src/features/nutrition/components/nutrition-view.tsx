@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Settings2, Plus, Salad, Camera } from "lucide-react";
-import { useAddIntent } from "@/shared/lib/use-add-intent";
+import { Settings2, Plus, Salad } from "lucide-react";
+import { useAddIntent, useAddIntentParam } from "@/shared/lib/use-add-intent";
+import { isMealSlot } from "@/features/nutrition/lib/meal-slot";
 import { useTelegramSession } from "@/features/auth/hooks/use-telegram-session";
 import type { ActivityLevel } from "@/features/nutrition/lib/targets";
 import { HealthSectionTabs } from "@/components/health-section-tabs";
@@ -15,10 +16,12 @@ import { NutritionSkeleton } from "@/features/nutrition/components/nutrition-ske
 import { NutritionTabs, type NutritionTabId } from "@/features/nutrition/components/nutrition-tabs";
 import { DayNavigator } from "@/features/nutrition/components/day-navigator";
 import { MacroSummaryCard } from "@/features/nutrition/components/macro-summary-card";
+import { MacroWhyCard } from "@/features/nutrition/components/macro-why-card";
 import { WaterCard } from "@/features/nutrition/components/water-card";
 import { MealGroupCard } from "@/features/nutrition/components/meal-group-card";
 import { FoodPickerModal } from "@/features/nutrition/components/food-picker-modal";
 import { FoodFormModal } from "@/features/nutrition/components/food-form-modal";
+import { FoodCaptureCard } from "@/features/nutrition/components/food-capture-card";
 import { LogEntryModal } from "@/features/nutrition/components/log-entry-modal";
 import { FoodsList } from "@/features/nutrition/components/foods-list";
 import { TemplatesList } from "@/features/nutrition/components/templates-list";
@@ -30,6 +33,7 @@ import { dayProgress, entriesOnDay, groupByMeal } from "@/features/nutrition/lib
 import { formatCalories } from "@/features/nutrition/lib/format";
 import type { MealSlot, NutritionFoodItem, NutritionMealTemplate } from "@/features/nutrition/types";
 import type { QuickMealTemplate } from "@/features/nutrition/lib/quick-templates";
+import type { FoodAnalysis } from "@/ai/types";
 
 /**
  * NOTE ON WHAT THIS SECTION DOES NOT DO. There is no shared food database and
@@ -86,6 +90,11 @@ export function NutritionView() {
   const [pendingFoodName, setPendingFoodName] = useState("");
   /** Whether the food currently being created should open straight into logging. */
   const [logAfterCreate, setLogAfterCreate] = useState(false);
+  /**
+   * Разбор фото, сделанный до открытия формы — главной кнопкой раздела.
+   * Форма получает его как начальные значения и открывается заполненной.
+   */
+  const [photoAnalysis, setPhotoAnalysis] = useState<FoodAnalysis | null>(null);
   const [goalFormOpen, setGoalFormOpen] = useState(false);
   const [templateFormOpen, setTemplateFormOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<NutritionMealTemplate | null>(null);
@@ -109,11 +118,27 @@ export function NutritionView() {
    * `intentDismissed` so closing a form does not immediately reopen it.
    */
   const addIntent = useAddIntent();
+  // Приём пищи, названный ссылкой из плана дня. Он же — начальный слот для
+  // формы записи, поэтому важен именно на первом рендере, до открытия модалки.
+  const intentSlot = useAddIntentParam("slot");
   const [intentDismissed, setIntentDismissed] = useState(false);
   const intentLive = addIntent !== null && today !== null && !intentDismissed;
 
   const isPickerVisible = pickerSlot !== null || (intentLive && addIntent === "food");
   const isFoodFormVisible = foodFormOpen || (intentLive && addIntent === "photo");
+
+  /**
+   * Куда писать выбранный продукт.
+   *
+   * Пока живёт интент из адреса, побеждает названный им приём пищи — по строке
+   * «Ужин» в плане дня нажали именно ради ужина. Как только человек открыл
+   * выбор сам, побеждает его собственный выбор слота. Значение выводится, а не
+   * заталкивается в состояние эффектом, — то же правило, по которому здесь
+   * устроен весь разбор интентов.
+   */
+  const effectiveSlot: MealSlot =
+    pickerSlot ??
+    (intentLive && intentSlot !== null && isMealSlot(intentSlot) ? intentSlot : targetSlot);
 
   const progress = today
     ? dayProgress(entries, water, goal, activeDay)
@@ -140,7 +165,22 @@ export function NutritionView() {
   function openCreateFood() {
     setEditingFood(null);
     setPendingFoodName("");
+    setPhotoAnalysis(null);
     setLogAfterCreate(false);
+    setFoodFormKey((n) => n + 1);
+    setFoodFormOpen(true);
+  }
+
+  /**
+   * Камера уже отработала — форма открывается с готовыми цифрами, и человеку
+   * остаётся их проверить. `logAfterCreate` включён, потому что снимают еду,
+   * чтобы её записать, а не чтобы пополнить каталог.
+   */
+  function openFormWithAnalysis(analysis: FoodAnalysis) {
+    setEditingFood(null);
+    setPendingFoodName("");
+    setPhotoAnalysis(analysis);
+    setLogAfterCreate(true);
     setFoodFormKey((n) => n + 1);
     setFoodFormOpen(true);
   }
@@ -210,24 +250,10 @@ export function NutritionView() {
             >
               <Settings2 className="h-4 w-4" />
             </Button>
-            {/* Camera before the plus. The photo analysis is the most capable
-                thing this section does and it used to be reachable only from
-                inside the "create a new food" form — four taps deep in a
-                supporting flow, where most people would never find it. */}
-            <Button
-              size="icon"
-              variant="secondary"
-              aria-label="Разобрать еду по фото"
-              onClick={() => {
-                setEditingFood(null);
-                setPendingFoodName("");
-                setLogAfterCreate(true);
-                setFoodFormKey((n) => n + 1);
-                setFoodFormOpen(true);
-              }}
-            >
-              <Camera className="h-4 w-4" />
-            </Button>
+            {/* Камеры здесь больше нет: разбор по фото стал главной кнопкой
+                внутри дневника (FoodCaptureCard), а иконка в шапке была ровно
+                тем местом, где самая сильная функция раздела оставалась
+                незамеченной. */}
             <Button size="icon" aria-label="Добавить продукт" onClick={() => openPicker("breakfast")}>
               <Plus className="h-4 w-4" />
             </Button>
@@ -262,6 +288,21 @@ export function NutritionView() {
               <DayNavigator day={activeDay} today={today} windowStart={windowStart} onChange={setDay} />
 
               <MacroSummaryCard progress={progress} />
+
+              {/* Объяснение под цифрами, а не вместо них. Свёрнуто по
+                  умолчанию: пришедший записать обед не должен пролистывать
+                  абзац о белке до кнопки, а увидевший «140 из 160» впервые —
+                  находит смысл этой цифры там же, где её прочитал. */}
+              <MacroWhyCard progress={progress} />
+
+              {/* Сразу под цифрами дня: сначала человек видит, где он, потом —
+                  чем это изменить. Обратный порядок превратил бы экран в форму
+                  ввода, открывающуюся результатом. */}
+              <FoodCaptureCard
+                onAnalyzed={openFormWithAnalysis}
+                onManual={() => openPicker("breakfast")}
+              />
+
               <WaterCard progress={progress.waterMl} onAdd={(delta) => addWater(activeDay, delta)} />
 
               {!hasData ? (
@@ -269,10 +310,10 @@ export function NutritionView() {
                   className="py-10"
                   icon={<Salad className="h-5 w-5" />}
                   title="День ещё не записан"
-                  description="Добавь первый приём пищи — калории и БЖУ Nova посчитает сама."
+                  description="Сфотографируй тарелку — Nova посчитает калории и БЖУ сама."
                   action={
                     <Button size="lg" onClick={() => openPicker("breakfast")}>
-                      Добавить продукт
+                      Добавить вручную
                     </Button>
                   }
                 />
@@ -341,7 +382,7 @@ export function NutritionView() {
       <LogEntryModal
         key={`log-${logKey}`}
         food={pickedFood}
-        defaultSlot={targetSlot}
+        defaultSlot={effectiveSlot}
         day={activeDay}
         open={pickedFood !== null}
         onOpenChange={(next) => !next && setPickedFood(null)}
@@ -353,6 +394,7 @@ export function NutritionView() {
         key={`food-form-${foodFormKey}`}
         food={editingFood}
         initialName={pendingFoodName}
+        initialAnalysis={photoAnalysis}
         open={isFoodFormVisible}
         onOpenChange={(next) => {
           setFoodFormOpen(next);

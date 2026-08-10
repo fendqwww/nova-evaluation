@@ -2,22 +2,21 @@
 
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Dumbbell, Plus, SearchX } from "lucide-react";
+import { Dumbbell, Plus, SearchX, Sparkles } from "lucide-react";
 import { HealthSectionTabs } from "@/components/health-section-tabs";
 import { Button } from "@/shared/ui/button";
-import { Card } from "@/shared/ui/card";
-import { CircularProgress } from "@/shared/ui/circular-progress";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
-import { cn } from "@/shared/lib/cn";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
 import { useWorkouts } from "@/features/workouts/hooks/use-workouts";
 import { WorkoutCard } from "@/features/workouts/components/workout-card";
+import { TodayWorkoutCard } from "@/features/workouts/components/today-workout-card";
 import { WorkoutFormModal } from "@/features/workouts/components/workout-form-modal";
 import { WorkoutDetailModal } from "@/features/workouts/components/workout-detail-modal";
 import { WorkoutSessionModal } from "@/features/workouts/components/workout-session-modal";
+import { ProgramBuilderModal } from "@/features/workouts/components/program-builder-modal";
 import { WorkoutHistoryList } from "@/features/workouts/components/workout-history-list";
 import { WorkoutsStatsCard } from "@/features/workouts/components/workouts-stats-card";
 import { WorkoutsSkeleton } from "@/features/workouts/components/workouts-skeleton";
@@ -33,7 +32,6 @@ import {
   type WorkoutSortId,
 } from "@/features/workouts/lib/collection";
 import { overallStats, sessionsOf } from "@/features/workouts/lib/stats";
-import { sessionsWord } from "@/features/workouts/lib/format";
 import type { WorkoutItem } from "@/features/workouts/types";
 
 /**
@@ -68,6 +66,8 @@ export function WorkoutsView() {
   const [query, setQuery] = useState("");
 
   const [isFormOpen, setFormOpen] = useState(false);
+  const [isBuilderOpen, setBuilderOpen] = useState(false);
+  const [builderKey, setBuilderKey] = useState(0);
   const [editingWorkout, setEditingWorkout] = useState<WorkoutItem | null>(null);
   // Open rows are tracked by id, not by value: the modals then read the live
   // row every render, so an optimistically logged set shows up inside the sheet
@@ -141,6 +141,11 @@ export function WorkoutsView() {
     setFormOpen(true);
   }
 
+  function openBuilder() {
+    setBuilderKey((n) => n + 1);
+    setBuilderOpen(true);
+  }
+
   function openDetail(workoutId: string) {
     setDetailWorkoutId(workoutId);
     setDetailKey((n) => n + 1);
@@ -183,18 +188,9 @@ export function WorkoutsView() {
     }
   }
 
-  const headline = (() => {
-    if (summary.openToday > 0) return "Тренировка идёт";
-    if (summary.plannedToday > 0) {
-      return `${summary.plannedToday} ${sessionsWord(summary.plannedToday)} на сегодня`;
-    }
-    if (summary.doneToday > 0) {
-      return summary.doneToday === 1
-        ? "Тренировка на сегодня выполнена"
-        : `Выполнено сегодня: ${summary.doneToday}`;
-    }
-    return "Сегодня по плану отдых";
-  })();
+  // Заголовок «Тренировка идёт / N на сегодня / отдых» жил здесь и дублировал
+  // то, что TodayWorkoutCard выводит из тех же workoutStats. Одна формулировка
+  // на один факт — иначе две строки об одном дне рано или поздно разойдутся.
 
   return (
     <PageContainer className="flex flex-col gap-4">
@@ -204,9 +200,21 @@ export function WorkoutsView() {
         title="Тренировки"
         subtitle="Программы и прогресс"
         actions={
-          <Button size="icon" aria-label="Новая тренировка" onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-          </Button>
+          <>
+            {/* Подбор доступен и тем, у кого программы уже есть: смена цели или
+                выход из плато — это новая программа, а не правка старой. */}
+            <Button
+              size="icon"
+              variant="secondary"
+              aria-label="Подобрать программу"
+              onClick={openBuilder}
+            >
+              <Sparkles className="h-4 w-4" />
+            </Button>
+            <Button size="icon" aria-label="Новая тренировка" onClick={openCreate}>
+              <Plus className="h-4 w-4" />
+            </Button>
+          </>
         }
       />
 
@@ -225,16 +233,27 @@ export function WorkoutsView() {
         />
       )}
 
+      {/* Пустое состояние ведёт в подбор, а не в конструктор.
+          Человек, у которого нет ни одной программы, чаще всего не знает не как
+          создать тренировку, а какую именно: экран с пустой формой и полем
+          «название» — это тест, который он проваливает. Ручное создание осталось
+          рядом второй кнопкой для тех, у кого план уже в голове. */}
       {!isPending && !isError && !hasWorkouts && (
         <EmptyState
           className="py-12"
           icon={<Dumbbell className="h-5 w-5" />}
-          title="Программы пока нет"
-          description="Составь её один раз — дальше останется отмечать подходы, а прогресс Nova посчитает сама."
+          title="Не знаешь, какую программу выбрать?"
+          description="Ответь на три вопроса — цель, уровень, оборудование — и Nova соберёт план на неделю по твоим данным."
           action={
-            <Button size="lg" onClick={openCreate}>
-              Создать тренировку
-            </Button>
+            <div className="flex flex-col items-center gap-2">
+              <Button size="lg" onClick={openBuilder}>
+                <Sparkles className="h-4 w-4" />
+                Подобрать программу
+              </Button>
+              <Button variant="ghost" size="md" onClick={openCreate}>
+                Создать вручную
+              </Button>
+            </div>
           }
         />
       )}
@@ -245,47 +264,24 @@ export function WorkoutsView() {
 
           {tab === "plan" && (
             <>
-              <Card elevation="lifted">
-                <div className="flex items-center gap-4 p-4">
-                  {summary.weekTarget > 0 ? (
-                    <CircularProgress value={summary.weekRatio * 100} size={72} strokeWidth={7}>
-                      <div className="flex flex-col items-center justify-center">
-                        <span className="numeric text-[0.9375rem] font-bold leading-tight text-foreground">
-                          {summary.weekDone}
-                        </span>
-                        <span className="text-[0.625rem] text-subtle-foreground">
-                          из {summary.weekTarget}
-                        </span>
-                      </div>
-                    </CircularProgress>
-                  ) : (
-                    <div className="flex h-18 w-18 shrink-0 items-center justify-center rounded-full border border-border text-subtle-foreground">
-                      <Dumbbell className="h-6 w-6" />
-                    </div>
-                  )}
-
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <p className="text-label uppercase text-muted-foreground">Эта неделя</p>
-                    <p
-                      className={cn(
-                        "text-title",
-                        summary.plannedToday === 0 && summary.openToday === 0 && summary.doneToday > 0
-                          ? "text-positive"
-                          : "text-foreground",
-                      )}
-                    >
-                      {headline}
-                    </p>
-                    {summary.weekTarget > 0 && (
-                      <p className="text-caption text-muted-foreground">
-                        {summary.weekDone} из {summary.weekTarget}{" "}
-                        {pluralizeRu(summary.weekTarget, ["тренировка", "тренировки", "тренировок"])}{" "}
-                        на неделе
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </Card>
+              {/* Тренировка дня, а не сводка за неделю.
+                  Экран открывался кольцом «2 из 4 на неделе» — числом, которое
+                  ничего не предлагает сделать. Человек заходит в раздел
+                  тренировок с одним вопросом: «что у меня сегодня и как это
+                  начать». TodayWorkoutCard отвечает на него названием
+                  программы и кнопкой старта, а недельный прогресс остался у
+                  него внизу — ничего не потеряно, изменился приоритет. */}
+              <TodayWorkoutCard
+                workouts={workouts}
+                sessions={sessions}
+                today={today}
+                windowStart={windowStart}
+                weekDone={summary.weekDone}
+                weekTarget={summary.weekTarget}
+                isStarting={isStarting}
+                onStart={(workoutId) => void start(workoutId, today)}
+                onOpen={openDetail}
+              />
 
               <WorkoutsToolbar
                 query={query}
@@ -378,6 +374,13 @@ export function WorkoutsView() {
           )}
         </>
       )}
+
+      <ProgramBuilderModal
+        key={`builder-${builderKey}`}
+        open={isBuilderOpen}
+        onOpenChange={setBuilderOpen}
+        onCreated={refresh}
+      />
 
       <WorkoutFormModal
         key={`form-${formKey}`}

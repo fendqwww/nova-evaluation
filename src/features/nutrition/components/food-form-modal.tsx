@@ -1,37 +1,19 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useRawInitData } from "@tma.js/sdk-react";
 import { Camera, Sparkles } from "lucide-react";
 import { Modal, ModalContent, ModalHeader, ModalTitle } from "@/shared/ui/modal";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { prepareImage } from "@/shared/lib/prepare-image";
+import { haptics } from "@/shared/lib/haptics";
 import { foodDraftSchema } from "@/features/nutrition/schemas";
-import { analyzeFoodPhotoAction } from "@/features/nutrition/server/analyze-food-photo.action";
+import {
+  per100gFrom,
+  useFoodPhotoAnalysis,
+} from "@/features/nutrition/hooks/use-food-photo-analysis";
 import type { FoodAnalysis } from "@/ai/types";
 import type { NutritionFoodItem } from "@/features/nutrition/types";
-
-/** Sized for a Gemini vision call, not for storage — nothing here is ever
- *  written to a row (see analyze-food-photo.action.ts's own ceiling). */
-const PHOTO_MAX_EDGE = 1024;
-const PHOTO_QUALITY = 0.72;
-const PHOTO_MAX_CHARS = 1_400_000;
-
-/** The whole-portion analysis, converted into the per-100g figures a
- *  NutritionFood row actually stores — see the field note on portionGrams
- *  in ai/types.ts. */
-function per100gFrom(analysis: FoodAnalysis) {
-  const factor = 100 / analysis.portionGrams;
-  return {
-    caloriesPer100: Math.round(analysis.calories * factor),
-    proteinPer100: Math.round(analysis.proteinG * factor * 10) / 10,
-    fatPer100: Math.round(analysis.fatG * factor * 10) / 10,
-    carbsPer100: Math.round(analysis.carbsG * factor * 10) / 10,
-  };
-}
 
 /**
  * One modal for both creating and editing a catalogue food — the fields are
@@ -44,10 +26,16 @@ function per100gFrom(analysis: FoodAnalysis) {
  * into the same fields a manual entry would use — never saved on its own.
  * The user still presses "Добавить в каталог" themselves, after correcting
  * whatever the model got wrong.
+ *
+ * `initialAnalysis` — тот же разбор, но пришедший снаружи: главная кнопка
+ * раздела снимает еду до открытия этой формы (см. FoodCaptureCard), и форма
+ * открывается уже заполненной. Сценарий один, точек входа две, и обе идут через
+ * useFoodPhotoAnalysis, чтобы лимиты и тексты ошибок не разошлись.
  */
 export function FoodFormModal({
   food,
   initialName,
+  initialAnalysis = null,
   open,
   onOpenChange,
   onCreate,
@@ -55,6 +43,7 @@ export function FoodFormModal({
 }: {
   food: NutritionFoodItem | null;
   initialName?: string;
+  initialAnalysis?: FoodAnalysis | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreate: (draft: {
@@ -75,49 +64,39 @@ export function FoodFormModal({
     },
   ) => Promise<unknown>;
 }) {
-  const rawInitData = useRawInitData();
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const [name, setName] = useState(food?.name ?? initialName ?? "");
-  const [calories, setCalories] = useState(food ? String(food.caloriesPer100) : "");
-  const [protein, setProtein] = useState(food ? String(food.proteinPer100) : "");
-  const [fat, setFat] = useState(food ? String(food.fatPer100) : "");
-  const [carbs, setCarbs] = useState(food ? String(food.carbsPer100) : "");
+  // Значения, пришедшие с внешним разбором, — начальное состояние полей, а не
+  // эффект после монтирования: модалка пересоздаётся по ключу на каждое
+  // открытие, поэтому seed из props здесь и есть правильный механизм.
+  const seed = initialAnalysis ? per100gFrom(initialAnalysis) : null;
+
+  const [name, setName] = useState(food?.name ?? initialAnalysis?.name ?? initialName ?? "");
+  const [calories, setCalories] = useState(
+    food ? String(food.caloriesPer100) : seed ? String(seed.caloriesPer100) : "",
+  );
+  const [protein, setProtein] = useState(
+    food ? String(food.proteinPer100) : seed ? String(seed.proteinPer100) : "",
+  );
+  const [fat, setFat] = useState(food ? String(food.fatPer100) : seed ? String(seed.fatPer100) : "");
+  const [carbs, setCarbs] = useState(
+    food ? String(food.carbsPer100) : seed ? String(seed.carbsPer100) : "",
+  );
   const [isPending, setPending] = useState(false);
   const [hasError, setError] = useState(false);
 
-  const [analysis, setAnalysis] = useState<FoodAnalysis | null>(null);
-  // The server writes this sentence (features/usage/lib/format.ts): it knows
-  // whether the weekly or the monthly allowance ran out and when it refills,
-  // and neither is something this modal can work out from two numbers.
-  const [limitMessage, setLimitMessage] = useState<string | null>(null);
-
-  const analyzePhoto = useMutation({
-    mutationFn: async (file: File) => {
-      const prepared = await prepareImage(file, {
-        maxEdge: PHOTO_MAX_EDGE,
-        quality: PHOTO_QUALITY,
-        maxChars: PHOTO_MAX_CHARS,
-      });
-      return analyzeFoodPhotoAction({ rawInitData, imageData: prepared.dataUrl });
-    },
-    onSuccess: (result) => {
-      if (result.ok) {
-        setLimitMessage(null);
-        setAnalysis(result.analysis);
-        setName(result.analysis.name);
-        const per100 = per100gFrom(result.analysis);
-        setCalories(String(per100.caloriesPer100));
-        setProtein(String(per100.proteinPer100));
-        setFat(String(per100.fatPer100));
-        setCarbs(String(per100.carbsPer100));
-        return;
-      }
-      if (result.reason === "limit") {
-        setLimitMessage(result.message);
-      }
-    },
+  const photo = useFoodPhotoAnalysis((result) => {
+    setName(result.name);
+    const per100 = per100gFrom(result);
+    setCalories(String(per100.caloriesPer100));
+    setProtein(String(per100.proteinPer100));
+    setFat(String(per100.fatPer100));
+    setCarbs(String(per100.carbsPer100));
   });
+
+  // Разбор, который показывает карточка над полями: либо принесённый снаружи,
+  // либо сделанный здесь же кнопкой «Сканировать другое фото».
+  const analysis = photo.analysis ?? initialAnalysis;
 
   const draft = {
     name,
@@ -134,21 +113,15 @@ export function FoodFormModal({
     try {
       if (food) await onUpdate(food.id, draft);
       else await onCreate(draft);
+      haptics.success();
       onOpenChange(false);
     } catch {
+      haptics.error();
       setError(true);
     } finally {
       setPending(false);
     }
   }
-
-  const analyzeError = analyzePhoto.isError
-    ? analyzePhoto.error instanceof Error
-      ? analyzePhoto.error.message
-      : "Не удалось обработать фото."
-    : analyzePhoto.data && !analyzePhoto.data.ok && analyzePhoto.data.reason === "error"
-      ? analyzePhoto.data.message
-      : null;
 
   return (
     <Modal open={open} onOpenChange={onOpenChange}>
@@ -168,19 +141,22 @@ export function FoodFormModal({
                 className="hidden"
                 onChange={(event) => {
                   const file = event.target.files?.[0];
-                  if (file) analyzePhoto.mutate(file);
+                  if (file) photo.analyze(file);
                   event.target.value = "";
                 }}
               />
 
               <button
                 type="button"
-                onClick={() => inputRef.current?.click()}
-                disabled={analyzePhoto.isPending}
+                onClick={() => {
+                  haptics.tap();
+                  inputRef.current?.click();
+                }}
+                disabled={photo.isPending}
                 className="press-sm flex items-center justify-center gap-2 rounded-xl border border-dashed border-border-strong bg-surface-inset px-4 py-3 text-caption font-medium text-muted-foreground active:border-accent disabled:opacity-60"
               >
                 <Camera className="h-4 w-4" />
-                {analyzePhoto.isPending
+                {photo.isPending
                   ? "Анализируем фото…"
                   : analysis
                     ? "Сканировать другое фото"
@@ -213,15 +189,17 @@ export function FoodFormModal({
                 </Card>
               )}
 
-              {limitMessage && (
+              {photo.limitMessage && (
                 <Card elevation="inset">
                   <p className="p-3.5 text-caption text-muted-foreground">
-                    {limitMessage} Тарифы — «Настройки» → «Подписка».
+                    {photo.limitMessage} Тарифы — «Настройки» → «Подписка».
                   </p>
                 </Card>
               )}
 
-              {analyzeError && <p className="text-caption text-destructive">{analyzeError}</p>}
+              {photo.errorMessage && (
+                <p className="text-caption text-destructive">{photo.errorMessage}</p>
+              )}
             </>
           )}
 

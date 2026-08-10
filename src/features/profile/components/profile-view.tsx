@@ -1,44 +1,68 @@
 "use client";
 
-import { useMemo } from "react";
-import Link from "next/link";
-import { BarChart3, Settings, Sparkles } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  BarChart3,
+  BookOpen,
+  GraduationCap,
+  ListTodo,
+  Repeat,
+  Route,
+  Settings,
+  Sparkles,
+  Target,
+  Wand2,
+} from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { Card } from "@/shared/ui/card";
 import { EmptyState } from "@/shared/ui/empty-state";
 import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Reveal, RevealItem } from "@/shared/ui/reveal";
+import { useAddIntent } from "@/shared/lib/use-add-intent";
 import { useProfileOverview } from "@/features/profile/hooks/use-profile-overview";
 import { ProfileSkeleton } from "@/features/profile/components/profile-skeleton";
 import { ProfileHeaderCard } from "@/features/profile/components/profile-header-card";
 import { ProfileStatsCard } from "@/features/profile/components/profile-stats";
 import { BodyCard } from "@/features/profile/components/body-card";
+import { ProfileGoalCard } from "@/features/profile/components/goal-card";
+import { WeightLogModal } from "@/features/profile/components/weight-log-modal";
 import { ActivityCard } from "@/features/profile/components/activity-card";
 import { AchievementsCard } from "@/features/profile/components/achievements-card";
 import { AiProfileCard } from "@/features/profile/components/ai-profile-card";
 import { ProfileSubscriptionCard } from "@/features/profile/components/subscription-card";
+import { SectionLinks } from "@/features/profile/components/section-links";
 import { ThemePicker } from "@/features/profile/components/theme-picker";
 import { evaluateAchievements } from "@/features/profile/lib/achievements";
 import { ACTIVITY_CHART_DAYS } from "@/features/profile/lib/constants";
 import { DEFAULT_THEME, type ThemeValue } from "@/shared/config/themes";
 
 /**
- * Профиль — who you are, what you have done, and what Nova knows.
+ * Профиль — кто ты, куда идёшь и что Nova о тебе знает.
  *
- * The order is the argument, the same way it is on the Coach screen. Identity
- * first, then the two numbers that describe today, then the cumulative record,
- * then the rhythm, then the trophies — so the screen reads from "me" outwards
- * to "what I have built". The AI card and the subscription sit below that
- * because they are about the app's relationship with the user rather than about
- * the user, and Настройки is last because it is a way out of this screen.
+ * ПОРЯДОК — ЭТО АРГУМЕНТ, и в нём изменилось одно: между «кто я» и «что я
+ * сделал» встало «куда я иду». Раньше экран читался как отчёт о прошлом —
+ * личность, тело, счёт, история, достижения — и человек, открывший его в
+ * середине трёхмесячного пути, не находил на нём своей цели вовсе.
  *
- * The accent picker stays here rather than moving to Настройки: it is the one
- * genuinely personal piece of configuration, Настройки links to it, and moving
- * it would break that link for no gain.
+ * Теперь: личность → тело → цель и её прогресс → чем это подтверждено (счёт,
+ * ритм, достижения) → чем это поддерживается (путь, библиотека, академия,
+ * планирование) → отношения с приложением (AI, подписка, тема, настройки).
+ *
+ * Настройки остаются последними, потому что это выход с экрана, а тема — здесь,
+ * потому что это единственная действительно личная настройка.
  */
 export function ProfileView({ themeColor }: { themeColor: string }) {
-  const { overview, isPending, isError, retry } = useProfileOverview();
+  const { overview, isPending, isError, retry, refresh } = useProfileOverview();
+  const [weightOpen, setWeightOpen] = useState(false);
+  const [weightKey, setWeightKey] = useState(0);
+  /**
+   * Пришли из листа записи по «Вес» (`/profile?add=weight`) — форма открывается
+   * сразу, чтобы нажатие в листе было последним. Интент выводится, а не
+   * заталкивается в состояние, и гасится после закрытия: то же правило, что в
+   * разделах «Питание» и «Путь».
+   */
+  const addIntent = useAddIntent();
+  const [intentDismissed, setIntentDismissed] = useState(false);
 
   // Achievements are derived from the snapshot rather than fetched — no table,
   // no unlock rows, see the note at the top of lib/achievements.ts. Memoised
@@ -78,7 +102,20 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
               is who you are on this screen, and it used to appear nowhere on
               it. */}
           <RevealItem>
-            <BodyCard ai={overview.ai} startWeightKg={null} />
+            <BodyCard
+              ai={overview.ai}
+              startWeightKg={overview.startWeightKg}
+              onLogWeight={() => {
+                setWeightKey((n) => n + 1);
+                setWeightOpen(true);
+              }}
+            />
+          </RevealItem>
+
+          {/* Цель — сразу под телом: вместе они и есть ответ «вот мои цифры, вот
+              куда они двигаются». */}
+          <RevealItem>
+            <ProfileGoalCard path={overview.path} />
           </RevealItem>
 
           <RevealItem>
@@ -101,6 +138,52 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
             <AchievementsCard items={achievements} />
           </RevealItem>
 
+          {/* Развитие. Три раздела, которые превращают трекер в наставника:
+              маршрут, объяснение «почему» и обучение. Стоят выше планирования,
+              потому что человек, не знающий, что делать, приходит сюда, а не в
+              список задач. */}
+          <RevealItem>
+            <SectionLinks
+              title="Развитие"
+              items={[
+                {
+                  key: "path",
+                  href: "/path",
+                  label: "Мой путь",
+                  hint: overview.path
+                    ? `${overview.path.title} · ${overview.path.percent}%`
+                    : "Выбрать цель и получить маршрут",
+                  tone: "accent",
+                  icon: <Route className="h-4 w-4" />,
+                },
+                {
+                  key: "academy",
+                  href: "/academy",
+                  label: "Академия",
+                  hint: "Короткие уроки: питание, тренировки, сон, привычки",
+                  tone: "ai",
+                  icon: <GraduationCap className="h-4 w-4" />,
+                },
+                {
+                  key: "library",
+                  href: "/library",
+                  label: "Библиотека",
+                  hint: "Книги под твою проблему, с объяснением зачем",
+                  tone: "goal",
+                  icon: <BookOpen className="h-4 w-4" />,
+                },
+                {
+                  key: "coach",
+                  href: "/coach",
+                  label: "Коуч Nova",
+                  hint: "Разбор дня и диалог по твоим данным",
+                  tone: "score",
+                  icon: <Sparkles className="h-4 w-4" />,
+                },
+              ]}
+            />
+          </RevealItem>
+
           <RevealItem>
             <AiProfileCard ai={overview.ai} />
           </RevealItem>
@@ -113,34 +196,86 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
             <ThemePicker current={(themeColor as ThemeValue) ?? DEFAULT_THEME} />
           </RevealItem>
 
+          {/* Вход в разделы, у которых нет своей вкладки. Стоит выше
+              «Настроек», потому что цели и привычки открывают, чтобы работать,
+              а настройки — чтобы что-то однократно поправить. */}
           <RevealItem>
-            <Card interactive>
-              <Link href="/reports" className="flex items-center gap-3 p-4">
-                <BarChart3 className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
-                <span className="flex flex-1 flex-col gap-0.5">
-                  <span className="text-body font-medium text-foreground">Отчёты</span>
-                  <span className="text-caption text-muted-foreground">
-                    Прогресс по всем сферам, графики, AI-сводка
-                  </span>
-                </span>
-              </Link>
-            </Card>
+            <SectionLinks
+              title="План"
+              items={[
+                {
+                  key: "goals",
+                  href: "/goals",
+                  label: "Цели",
+                  hint: "Большие результаты и шаги к ним",
+                  tone: "goal",
+                  icon: <Target className="h-4 w-4" />,
+                },
+                {
+                  key: "habits",
+                  href: "/habits",
+                  label: "Привычки",
+                  hint: "Регулярность и серии",
+                  tone: "habit",
+                  icon: <Repeat className="h-4 w-4" />,
+                },
+                {
+                  key: "tasks",
+                  href: "/tasks",
+                  label: "Задачи",
+                  hint: "Разовые дела со сроком",
+                  tone: "task",
+                  icon: <ListTodo className="h-4 w-4" />,
+                },
+              ]}
+            />
           </RevealItem>
 
           <RevealItem>
-            <Card interactive>
-              <Link href="/settings" className="flex items-center gap-3 p-4">
-                <Settings className="h-4.5 w-4.5 shrink-0 text-muted-foreground" />
-                <span className="flex flex-1 flex-col gap-0.5">
-                  <span className="text-body font-medium text-foreground">Настройки</span>
-                  <span className="text-caption text-muted-foreground">
-                    Тема, регион, уведомления, данные
-                  </span>
-                </span>
-              </Link>
-            </Card>
+            <SectionLinks
+              title="Ещё"
+              items={[
+                {
+                  key: "appearance",
+                  href: "/appearance",
+                  label: "Внешность",
+                  hint: "Уход, фото прогресса, цели",
+                  tone: "ai",
+                  icon: <Wand2 className="h-4 w-4" />,
+                },
+                {
+                  key: "reports",
+                  href: "/reports",
+                  label: "Отчёты",
+                  hint: "Прогресс по всем сферам, графики, AI-сводка",
+                  tone: "neutral",
+                  icon: <BarChart3 className="h-4 w-4" />,
+                },
+                {
+                  key: "settings",
+                  href: "/settings",
+                  label: "Настройки",
+                  hint: "Тема, регион, уведомления, данные",
+                  tone: "neutral",
+                  icon: <Settings className="h-4 w-4" />,
+                },
+              ]}
+            />
           </RevealItem>
         </Reveal>
+      )}
+
+      {overview && (
+        <WeightLogModal
+          key={`weight-${weightKey}`}
+          open={weightOpen || (addIntent === "weight" && !intentDismissed)}
+          onOpenChange={(next) => {
+            setWeightOpen(next);
+            if (!next) setIntentDismissed(true);
+          }}
+          currentWeightKg={overview.ai.weightKg}
+          onSaved={refresh}
+        />
       )}
     </PageContainer>
   );

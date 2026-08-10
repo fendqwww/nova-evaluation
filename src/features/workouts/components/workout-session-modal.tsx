@@ -10,6 +10,7 @@ import { Card } from "@/shared/ui/card";
 import { Textarea } from "@/shared/ui/textarea";
 import { GoalProgressBar } from "@/features/goals/components/goal-progress-bar";
 import { formatDay, type CalendarDay } from "@/shared/lib/calendar-day";
+import { haptics } from "@/shared/lib/haptics";
 import { RestTimer } from "@/features/workouts/components/rest-timer";
 import { WorkoutExerciseRunner } from "@/features/workouts/components/workout-exercise-runner";
 import { activeExercises, sessionStats, setsOf } from "@/features/workouts/lib/stats";
@@ -214,6 +215,11 @@ export function WorkoutSessionModal({
               size="lg"
               variant={isCompleted ? "secondary" : "primary"}
               onClick={() => {
+                // «Успех» ровно один раз за сессию — на её закрытии. Возврат в
+                // работу успехом не является, поэтому отклик там нейтральный.
+                if (isCompleted) haptics.tap();
+                else haptics.success();
+
                 onComplete(!isCompleted);
                 if (!isCompleted) onOpenChange(false);
               }}

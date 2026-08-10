@@ -1,31 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, MessageCircle, Sparkles } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Card, IconChip } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
+import { haptics } from "@/shared/lib/haptics";
 import { bulletDotClass } from "@/features/coach/lib/tone";
 import type { DashboardData } from "@/features/dashboard/server/get-dashboard-data.action";
 
 /**
- * The Coach, previewed on the Dashboard.
+ * Коуч на главном экране — разбор, а не анонс чата.
  *
- * It shows the *actual* first lines of today's analysis plus its most severe
- * finding, not a teaser written separately — so the card can never promise
- * something the Coach screen then fails to say.
+ * ЧТО ИЗМЕНИЛОСЬ И ПОЧЕМУ. Карточка показывала заголовок, два предложения и
+ * кнопку «Спросить AI Coach». То есть сообщала, что у Nova есть мнение, и
+ * предлагала пойти его выяснить — лишний шаг между выводом и действием. При
+ * этом CoachAnswer уже содержал `rationale` и `actions`: причина и конкретное
+ * действие были посчитаны и просто не доезжали до экрана.
  *
- * The ask button is full-width and inside the card rather than being a quarter
- * of a 2×2 grid of "quick actions" elsewhere on the screen. The Coach is the
- * one thing here that reads every other number on the page; sizing it like a
- * shortcut to a settings panel was the clearest signal that this app did not
- * know what its own centre was.
+ * Теперь карточка держит форму рассуждения целиком:
+ *
+ *   что     — headline, вывод одной строкой
+ *   почему  — highlight (самый громкий факт дня) и rationale (последствие)
+ *   что делать — actions[0], настоящая кнопка в тот раздел, где это чинится
+ *
+ * «Спросить» осталось, но стало вторичным: диалог нужен для уточнения вывода,
+ * а не вместо него.
  */
 export function CoachPreviewCard({ coach }: { coach: DashboardData["coach"] }) {
   return (
     <Card elevation="accent">
       <div className="flex flex-col gap-3.5 p-4">
-        <Link href="/coach" className="flex items-start gap-3">
+        <div className="flex items-start gap-3">
           <IconChip tone="ai" size="md">
             <Sparkles className="h-4 w-4" />
           </IconChip>
@@ -43,31 +49,65 @@ export function CoachPreviewCard({ coach }: { coach: DashboardData["coach"] }) {
             <p className="mt-1.5 text-title text-foreground">{coach.headline}</p>
             <p className="mt-1 line-clamp-3 text-caption text-muted-foreground">{coach.body}</p>
           </div>
-        </Link>
+        </div>
 
-        {coach.highlight && (
-          <div className="flex items-start gap-2 border-t border-border pt-3">
-            <span
-              aria-hidden
-              className={cn(
-                "mt-[0.375rem] h-[0.3125rem] w-[0.3125rem] shrink-0 rounded-full",
-                bulletDotClass(coach.highlight.tone),
-              )}
-            />
-            <span className="text-caption text-foreground">{coach.highlight.text}</span>
+        {/* Причина. Отдельным блоком с собственной подложкой, потому что это
+            другой род высказывания: выше — вывод, здесь — доказательство.
+            Блок исчезает целиком, когда доказывать нечем, вместо того чтобы
+            печатать пустой заголовок «Почему». */}
+        {(coach.highlight || coach.rationale) && (
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-fill-subtle p-3">
+            <p className="text-label uppercase text-subtle-foreground">Почему</p>
+
+            {coach.highlight && (
+              <div className="flex items-start gap-2">
+                <span
+                  aria-hidden
+                  className={cn(
+                    "mt-[0.375rem] h-[0.3125rem] w-[0.3125rem] shrink-0 rounded-full",
+                    bulletDotClass(coach.highlight.tone),
+                  )}
+                />
+                <span className="text-caption text-foreground">{coach.highlight.text}</span>
+              </div>
+            )}
+
+            {coach.rationale && (
+              <p className="text-caption text-muted-foreground">{coach.rationale}</p>
+            )}
           </div>
         )}
 
-        {/* The real Button rather than a Link dressed up as one: the primary
-            variant already owns the fill, the coloured drop shadow and the top
-            sheen, and hand-copying them here is how a second button language
-            starts. */}
-        <Button asChild size="lg" className="group w-full font-semibold">
-          <Link href="/coach?ask=1">
-            Спросить AI Coach
-            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-active:translate-x-0.5" />
-          </Link>
-        </Button>
+        {/* Что делать. Основная кнопка ведёт в раздел, где проблема решается, —
+            это и есть разница между советом и продуктом. Когда действия нет
+            (Nova не нашла, что чинить), «Спросить» поднимается на его место,
+            чтобы карточка никогда не заканчивалась ничем. */}
+        <div className="flex flex-col gap-2">
+          {coach.action ? (
+            <>
+              <Button asChild size="lg" className="group w-full font-semibold">
+                <Link href={coach.action.href} onClick={() => haptics.tap()}>
+                  {coach.action.label}
+                  <ArrowRight className="h-4 w-4 transition-transform duration-200 group-active:translate-x-0.5" />
+                </Link>
+              </Button>
+
+              <Button asChild variant="ghost" size="md" className="w-full text-muted-foreground">
+                <Link href="/coach?ask=1" onClick={() => haptics.tap()}>
+                  <MessageCircle className="h-4 w-4" />
+                  Спросить коуча
+                </Link>
+              </Button>
+            </>
+          ) : (
+            <Button asChild size="lg" className="group w-full font-semibold">
+              <Link href="/coach?ask=1" onClick={() => haptics.tap()}>
+                Спросить AI Coach
+                <ArrowRight className="h-4 w-4 transition-transform duration-200 group-active:translate-x-0.5" />
+              </Link>
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );

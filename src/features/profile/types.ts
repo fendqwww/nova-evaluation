@@ -108,6 +108,25 @@ export interface AiProfileFacts {
   isCoachEnabled: boolean;
 }
 
+/**
+ * Цель человека и её прогресс — блок «Моя цель» на этом экране.
+ *
+ * Сжатая копия того, что показывает экран пути, и считается она там же
+ * (pathProgress), а не второй формулой: профиль и путь обязаны показывать один
+ * процент. Null — пути нет, и блок превращается в приглашение его создать.
+ */
+export interface ProfilePathSummary {
+  id: string;
+  title: string;
+  percent: number;
+  /** «Этап 2 из 3 · Снижение веса». */
+  stageCaption: string;
+  /** «82 → 75 кг», либо null у неизмеримых целей. */
+  measureCaption: string | null;
+  nextStepTitle: string | null;
+  horizonDays: number;
+}
+
 /** One fetch of the Профиль screen. */
 export interface ProfileOverview {
   today: CalendarDay;
@@ -120,4 +139,11 @@ export interface ProfileOverview {
   /** Newest last, one entry per day, gaps filled with zeros. */
   activity: ActivityDay[];
   ai: AiProfileFacts;
+  /** Активный путь, сжатый до карточки. Null — цель ещё не выбрана. */
+  path: ProfilePathSummary | null;
+  /**
+   * Самый ранний записанный вес, кг. Null, когда замер всего один — «изменение»
+   * при единственной точке было бы нулём, выданным за факт.
+   */
+  startWeightKg: number | null;
 }

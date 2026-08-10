@@ -10,6 +10,9 @@ import {
   getActivityDays,
   getProfileTotals,
 } from "@/features/profile/server/profile.repository";
+import { getStartWeight } from "@/features/profile/server/weight.repository";
+import { getActivePath } from "@/features/path/server/path.repository";
+import { measureCaption, pathProgress, stageCaption } from "@/features/path/lib/progress";
 import { ACTIVITY_WINDOW_DAYS } from "@/features/profile/lib/constants";
 import type { ProfileOverview } from "@/features/profile/types";
 
@@ -54,12 +57,33 @@ export async function getProfileOverview(
   // empty days for an account that is a week old.
   const since = dayInZone(user.createdAt, timezone);
 
-  const [analysis, settings, totals, activity] = await Promise.all([
-    buildCoachAnalysis(userId, timezone),
-    getSettings(userId),
-    getProfileTotals(userId, timezone, today, since),
-    getActivityDays(userId, timezone, today, ACTIVITY_WINDOW_DAYS),
-  ]);
+  const [analysis, settings, totals, activity, activePath, startWeightKg] =
+    await Promise.all([
+      buildCoachAnalysis(userId, timezone),
+      getSettings(userId),
+      getProfileTotals(userId, timezone, today, since),
+      getActivityDays(userId, timezone, today, ACTIVITY_WINDOW_DAYS),
+      getActivePath(userId),
+      getStartWeight(userId),
+    ]);
+
+  // Прогресс считает та же функция, что и экран пути с главной, — иначе три
+  // экрана показывали бы три процента одной цели.
+  const path = (() => {
+    if (activePath === null) return null;
+
+    const progress = pathProgress(activePath, analysis.profile.weightKg);
+
+    return {
+      id: activePath.id,
+      title: activePath.title,
+      percent: progress.percent,
+      stageCaption: stageCaption(progress),
+      measureCaption: measureCaption(progress),
+      nextStepTitle: progress.nextStep?.title ?? null,
+      horizonDays: activePath.horizonDays,
+    };
+  })();
 
   return {
     today,
@@ -101,5 +125,7 @@ export async function getProfileOverview(
         .map((goal) => goal.title),
       isCoachEnabled: settings.ai.coachEnabled,
     },
+    path,
+    startWeightKg,
   };
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { Scale, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Plus, Scale, TrendingDown, TrendingUp, Minus } from "lucide-react";
+import { Button } from "@/shared/ui/button";
 import { Card, IconChip } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
+import { haptics } from "@/shared/lib/haptics";
 import type { AiProfileFacts } from "@/features/profile/types";
 
 function bmiTone(bmi: number): string {
@@ -27,10 +29,13 @@ function bmiTone(bmi: number): string {
 export function BodyCard({
   ai,
   startWeightKg,
+  onLogWeight,
 }: {
   ai: AiProfileFacts;
   /** The earliest weight on record, or null when there is only one reading. */
   startWeightKg: number | null;
+  /** Открывает форму записи веса. */
+  onLogWeight: () => void;
 }) {
   const delta =
     startWeightKg === null ? null : Math.round((ai.weightKg - startWeightKg) * 10) / 10;
@@ -44,6 +49,21 @@ export function BodyCard({
             <Scale className="h-3.5 w-3.5" />
           </IconChip>
           <p className="text-label uppercase text-muted-foreground">Тело</p>
+
+          {/* Запись веса живёт здесь, а не в настройках: это единственное число
+              на экране, которое человек меняет сам и регулярно. */}
+          <Button
+            size="sm"
+            variant="secondary"
+            className="ml-auto"
+            onClick={() => {
+              haptics.tap();
+              onLogWeight();
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Вес
+          </Button>
         </div>
 
         <div className="grid grid-cols-3 gap-3">

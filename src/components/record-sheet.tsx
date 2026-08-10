@@ -8,12 +8,14 @@ import {
   ListTodo,
   Moon,
   Repeat,
+  Scale,
   Target,
   UtensilsCrossed,
 } from "lucide-react";
 import { Modal, ModalContent, ModalHeader, ModalTitle, ModalDescription } from "@/shared/ui/modal";
 import { IconChip } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
+import { haptics } from "@/shared/lib/haptics";
 
 type Tone = "goal" | "habit" | "task" | "score" | "ai" | "accent";
 
@@ -73,6 +75,17 @@ const HEALTH: RecordOption[] = [
     tone: "task",
     href: "/workouts?add=1",
   },
+  {
+    // Последним в ряду здоровья: взвешиваются раз в неделю, а не трижды в день.
+    // Но именно из этой записи считается прогресс цели, поэтому у неё должен
+    // быть вход рядом с остальными, а не только внутри профиля.
+    key: "weight",
+    label: "Вес",
+    hint: "Из него считается прогресс цели",
+    icon: Scale,
+    tone: "score",
+    href: "/profile?add=weight",
+  },
 ];
 
 /** The planning acts. Same sheet, quieter row — they are rarer, not lesser. */
@@ -104,6 +117,7 @@ export function RecordSheet({
   const router = useRouter();
 
   function go(href: string) {
+    haptics.tap();
     onOpenChange(false);
     router.push(href);
   }

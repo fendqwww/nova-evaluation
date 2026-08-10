@@ -3,6 +3,7 @@
 import { Check } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/cn";
+import { haptics } from "@/shared/lib/haptics";
 
 /**
  * Отметка согласия.
@@ -40,7 +41,10 @@ export function Checkbox({
         role="checkbox"
         aria-checked={checked}
         disabled={disabled}
-        onClick={() => onCheckedChange(!checked)}
+        onClick={() => {
+          haptics.selection();
+          onCheckedChange(!checked);
+        }}
         className={cn(
           "press-sm flex w-full items-start gap-3 rounded-xl p-3 text-left transition-colors duration-200",
           "bg-fill-subtle active:bg-fill-muted",
