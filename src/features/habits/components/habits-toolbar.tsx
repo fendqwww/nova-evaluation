@@ -98,7 +98,7 @@ export function HabitsToolbar({
               {option.label}
               <span
                 className={cn(
-                  "numeric text-[0.6875rem] font-semibold",
+                  "numeric text-micro font-semibold",
                   isSelected
                     ? "text-accent-foreground/70"
                     : count > 0

@@ -109,6 +109,7 @@ export function useNutrition() {
     water: snapshot?.water ?? [],
     templates: snapshot?.templates ?? [],
     goal: snapshot?.goal ?? { calories: 0, proteinG: 0, fatG: 0, carbsG: 0, waterMl: 2000 },
+    goalStartedAt: snapshot?.goalStartedAt ?? null,
     today: snapshot?.today ?? "",
     windowStart: snapshot?.windowStart ?? "",
     isPending: query.isPending,

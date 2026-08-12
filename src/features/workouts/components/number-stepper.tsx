@@ -65,7 +65,7 @@ export function NumberStepper({
           )}
         />
         {suffix && (
-          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[0.6875rem] text-subtle-foreground">
+          <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-micro text-subtle-foreground">
             {suffix}
           </span>
         )}

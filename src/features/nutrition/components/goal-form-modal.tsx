@@ -127,7 +127,7 @@ export function GoalFormModal({
                     aria-pressed={aim === value}
                     onClick={() => setAim(value)}
                     className={cn(
-                      "press-sm flex-1 rounded-lg border px-2 py-1.5 text-[0.8125rem] font-medium transition-colors duration-200",
+                      "press-sm flex-1 rounded-lg border px-2 py-1.5 text-caption font-medium transition-colors duration-200",
                       aim === value
                         ? "border-accent bg-accent text-accent-foreground"
                         : "border-border text-muted-foreground",

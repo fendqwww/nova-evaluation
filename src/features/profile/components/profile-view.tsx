@@ -138,52 +138,6 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
             <AchievementsCard items={achievements} />
           </RevealItem>
 
-          {/* Развитие. Три раздела, которые превращают трекер в наставника:
-              маршрут, объяснение «почему» и обучение. Стоят выше планирования,
-              потому что человек, не знающий, что делать, приходит сюда, а не в
-              список задач. */}
-          <RevealItem>
-            <SectionLinks
-              title="Развитие"
-              items={[
-                {
-                  key: "path",
-                  href: "/path",
-                  label: "Мой путь",
-                  hint: overview.path
-                    ? `${overview.path.title} · ${overview.path.percent}%`
-                    : "Выбрать цель и получить маршрут",
-                  tone: "accent",
-                  icon: <Route className="h-4 w-4" />,
-                },
-                {
-                  key: "academy",
-                  href: "/academy",
-                  label: "Академия",
-                  hint: "Короткие уроки: питание, тренировки, сон, привычки",
-                  tone: "ai",
-                  icon: <GraduationCap className="h-4 w-4" />,
-                },
-                {
-                  key: "library",
-                  href: "/library",
-                  label: "Библиотека",
-                  hint: "Книги под твою проблему, с объяснением зачем",
-                  tone: "goal",
-                  icon: <BookOpen className="h-4 w-4" />,
-                },
-                {
-                  key: "coach",
-                  href: "/coach",
-                  label: "Коуч Nova",
-                  hint: "Разбор дня и диалог по твоим данным",
-                  tone: "score",
-                  icon: <Sparkles className="h-4 w-4" />,
-                },
-              ]}
-            />
-          </RevealItem>
-
           <RevealItem>
             <AiProfileCard ai={overview.ai} />
           </RevealItem>
@@ -196,68 +150,113 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
             <ThemePicker current={(themeColor as ThemeValue) ?? DEFAULT_THEME} />
           </RevealItem>
 
-          {/* Вход в разделы, у которых нет своей вкладки. Стоит выше
-              «Настроек», потому что цели и привычки открывают, чтобы работать,
-              а настройки — чтобы что-то однократно поправить. */}
-          <RevealItem>
-            <SectionLinks
-              title="План"
-              items={[
-                {
-                  key: "goals",
-                  href: "/goals",
-                  label: "Цели",
-                  hint: "Большие результаты и шаги к ним",
-                  tone: "goal",
-                  icon: <Target className="h-4 w-4" />,
-                },
-                {
-                  key: "habits",
-                  href: "/habits",
-                  label: "Привычки",
-                  hint: "Регулярность и серии",
-                  tone: "habit",
-                  icon: <Repeat className="h-4 w-4" />,
-                },
-                {
-                  key: "tasks",
-                  href: "/tasks",
-                  label: "Задачи",
-                  hint: "Разовые дела со сроком",
-                  tone: "task",
-                  icon: <ListTodo className="h-4 w-4" />,
-                },
-              ]}
-            />
-          </RevealItem>
+          {/* Все разделы без своей вкладки — одним блоком с подзаголовками.
+              Было три отдельные карточки подряд («Развитие», «План», «Ещё»),
+              то есть три одинаковых прямоугольника со ссылками, делившие низ
+              профиля на равные куски. Разбор слияния — в SectionLinks.
 
+              Порядок групп сохранён и остаётся аргументом: развитие выше
+              планирования, потому что человек, не знающий, что делать,
+              приходит за маршрутом, а не за списком задач; «Настройки»
+              последние, потому что это выход с экрана.
+
+              «Коуч Nova» из «Развития» ушёл раньше: у него постоянная вкладка
+              внизу, видимая с любого экрана, и строка здесь дублировала бы её,
+              ничего не добавляя. */}
           <RevealItem>
             <SectionLinks
-              title="Ещё"
-              items={[
+              groups={[
                 {
-                  key: "appearance",
-                  href: "/appearance",
-                  label: "Внешность",
-                  hint: "Уход, фото прогресса, цели",
-                  tone: "ai",
-                  icon: <Wand2 className="h-4 w-4" />,
+                  key: "growth",
+                  title: "Развитие",
+                  items: [
+                    {
+                      key: "path",
+                      href: "/path",
+                      label: "Мой путь",
+                      hint: overview.path
+                        ? `${overview.path.title} · ${overview.path.percent}%`
+                        : "Выбрать цель и получить маршрут",
+                      tone: "accent",
+                      icon: <Route className="h-4 w-4" />,
+                    },
+                    {
+                      key: "academy",
+                      href: "/academy",
+                      label: "Академия",
+                      hint: "Короткие уроки: питание, тренировки, сон, привычки",
+                      tone: "ai",
+                      icon: <GraduationCap className="h-4 w-4" />,
+                    },
+                    {
+                      key: "library",
+                      href: "/library",
+                      label: "Библиотека",
+                      hint: "Книги под твою проблему, с объяснением зачем",
+                      tone: "goal",
+                      icon: <BookOpen className="h-4 w-4" />,
+                    },
+                  ],
                 },
                 {
-                  key: "reports",
-                  href: "/reports",
-                  label: "Отчёты",
-                  hint: "Прогресс по всем сферам, графики, AI-сводка",
-                  tone: "neutral",
-                  icon: <BarChart3 className="h-4 w-4" />,
+                  key: "plan",
+                  title: "План",
+                  items: [
+                    {
+                      key: "goals",
+                      href: "/goals",
+                      label: "Цели",
+                      hint: "Большие результаты и шаги к ним",
+                      tone: "goal",
+                      icon: <Target className="h-4 w-4" />,
+                    },
+                    {
+                      key: "habits",
+                      href: "/habits",
+                      label: "Привычки",
+                      hint: "Регулярность и серии",
+                      tone: "habit",
+                      icon: <Repeat className="h-4 w-4" />,
+                    },
+                    {
+                      key: "tasks",
+                      href: "/tasks",
+                      label: "Задачи",
+                      hint: "Разовые дела со сроком",
+                      tone: "task",
+                      icon: <ListTodo className="h-4 w-4" />,
+                    },
+                  ],
                 },
                 {
-                  key: "settings",
-                  href: "/settings",
-                  label: "Настройки",
-                  hint: "Тема, регион, уведомления, данные",
-                  tone: "neutral",
-                  icon: <Settings className="h-4 w-4" />,
+                  key: "more",
+                  title: "Ещё",
+                  items: [
+                    {
+                      key: "appearance",
+                      href: "/appearance",
+                      label: "Внешность",
+                      hint: "Уход, фото прогресса, цели",
+                      tone: "ai",
+                      icon: <Wand2 className="h-4 w-4" />,
+                    },
+                    {
+                      key: "reports",
+                      href: "/reports",
+                      label: "Отчёты",
+                      hint: "Прогресс по всем сферам, графики, AI-сводка",
+                      tone: "neutral",
+                      icon: <BarChart3 className="h-4 w-4" />,
+                    },
+                    {
+                      key: "settings",
+                      href: "/settings",
+                      label: "Настройки",
+                      hint: "Тема, регион, уведомления, данные",
+                      tone: "neutral",
+                      icon: <Settings className="h-4 w-4" />,
+                    },
+                  ],
                 },
               ]}
             />

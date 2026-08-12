@@ -41,15 +41,19 @@ export function ThemeCard({ label, swatch, selected, onSelect }: ThemeCardProps)
             transition={{ type: "spring", stiffness: 420, damping: 32 }}
           />
         )}
+        {/* Затемнение, а не «утопленная поверхность»: галочка белая, и в
+            светлой теме --surface-inset прозрачен настолько, что белое по
+            graphite переставало читаться. --scrim существует ровно для того,
+            чтобы поверх него был виден передний план — в обоих режимах. */}
         {selected && (
-          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-surface-inset">
+          <span className="absolute inset-0 flex items-center justify-center rounded-full bg-scrim">
             <Check className="h-4 w-4 text-white" strokeWidth={2.75} />
           </span>
         )}
       </span>
       <span
         className={cn(
-          "text-[0.75rem] font-medium tracking-[-0.006em] transition-colors duration-200",
+          "text-micro font-medium tracking-[-0.006em] transition-colors duration-200",
           selected ? "text-foreground" : "text-muted-foreground",
         )}
       >

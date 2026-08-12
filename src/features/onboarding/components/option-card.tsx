@@ -29,7 +29,7 @@ export function OptionCard({ label, selected, onSelect }: OptionCardProps) {
           : "border-border bg-transparent text-foreground active:border-border-strong active:bg-fill-muted",
       )}
     >
-      <span className="text-[1.125rem] font-semibold tracking-[-0.018em]">{label}</span>
+      <span className="text-title font-semibold tracking-[-0.018em]">{label}</span>
       {selected && <Check className="h-5 w-5 shrink-0" strokeWidth={2.5} />}
     </motion.button>
   );

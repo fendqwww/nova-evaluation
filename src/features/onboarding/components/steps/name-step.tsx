@@ -44,7 +44,7 @@ export function NameStep({ defaultValue, onNext, onBack }: OnboardingStepProps<s
           placeholder="Имя"
           aria-label="Твоё имя"
           enterKeyHint="next"
-          className="w-full bg-transparent text-[1.75rem] font-bold tracking-[-0.03em] text-foreground caret-accent outline-none placeholder:font-semibold placeholder:text-subtle-foreground"
+          className="w-full bg-transparent text-metric-lg font-bold tracking-[-0.03em] text-foreground caret-accent outline-none placeholder:font-semibold placeholder:text-subtle-foreground"
         />
         <span className="h-px w-full bg-border-strong transition-colors duration-200 group-focus-within:bg-accent" />
       </div>

@@ -213,7 +213,7 @@ export function AppearanceView() {
                 <EmptyState
                   className="py-10"
                   icon={<Sparkles className="h-5 w-5" />}
-                  title="Ухода пока нет"
+                  title="Начни с одной процедуры"
                   description="Добавь первую процедуру — она встанет в список на каждый день."
                   action={
                     <Button size="lg" onClick={() => setTab("routines")}>

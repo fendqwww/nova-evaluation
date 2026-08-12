@@ -49,7 +49,7 @@ export function CareHistoryList({
       <EmptyState
         className="py-8"
         icon={<History className="h-5 w-5" />}
-        title="История пока пуста"
+        title="Здесь появится твоя история"
         description="Здесь останутся фото, достигнутые цели и серии выполнения."
       />
     );

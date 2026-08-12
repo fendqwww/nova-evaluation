@@ -99,7 +99,7 @@ export function PathStageList({
                 </div>
 
                 {isLocked && (
-                  <p className="text-[0.6875rem] leading-snug text-subtle-foreground">
+                  <p className="text-micro leading-snug text-subtle-foreground">
                     Откроется, когда закончится этап {currentStageIndex + 1}. Порядок здесь важен:
                     следующий этап опирается на привычки предыдущего.
                   </p>
@@ -176,7 +176,7 @@ function StepRow({
             {step.title}
           </span>
           {step.hint && !step.isDone && (
-            <span className="text-[0.6875rem] leading-snug text-subtle-foreground">
+            <span className="text-micro leading-snug text-subtle-foreground">
               {step.hint}
             </span>
           )}

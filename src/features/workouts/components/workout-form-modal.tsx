@@ -126,7 +126,7 @@ export function WorkoutFormModal({
                     onClick={() => setCategory(option.id)}
                     aria-pressed={selected}
                     className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-lg border px-1.5 py-2.5 text-[0.6875rem] font-medium transition-colors duration-200",
+                      "flex flex-col items-center gap-1.5 rounded-lg border px-1.5 py-2.5 text-micro font-medium transition-colors duration-200",
                       selected
                         ? "border-accent-border bg-accent-muted text-accent"
                         : "border-border text-subtle-foreground active:border-border-strong",
@@ -148,7 +148,7 @@ export function WorkoutFormModal({
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between">
               <span className="text-caption text-muted-foreground">Упражнения</span>
-              <span className="numeric text-[0.6875rem] text-subtle-foreground">
+              <span className="numeric text-micro text-subtle-foreground">
                 {exercises.length}
               </span>
             </div>

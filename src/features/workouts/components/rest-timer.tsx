@@ -80,7 +80,7 @@ export function RestTimer({
         <div className="flex items-center gap-3">
           <span
             className={cn(
-              "numeric text-[1.75rem] font-bold leading-none tracking-[-0.04em]",
+              "numeric text-metric-lg font-bold leading-none tracking-[-0.04em]",
               isDone ? "text-positive" : "text-foreground",
             )}
           >

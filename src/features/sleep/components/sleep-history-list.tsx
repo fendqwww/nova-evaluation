@@ -27,7 +27,7 @@ export function SleepHistoryList({
       <EmptyState
         className="py-10"
         icon={<History className="h-5 w-5" />}
-        title="Ночей пока нет"
+        title="Запиши первую ночь"
         description="Каждая записанная ночь останется здесь — время, часы и качество сна."
       />
     );
@@ -58,7 +58,7 @@ export function SleepHistoryList({
                 {MONTH_NOMINATIVE[monthIndex - 1]}
                 {String(year) !== today.slice(0, 4) && ` ${year}`}
               </span>
-              <span className="numeric text-[0.6875rem] text-subtle-foreground">
+              <span className="numeric text-micro text-subtle-foreground">
                 в среднем {formatDuration(averageMin)}
               </span>
             </div>
@@ -79,7 +79,7 @@ export function SleepHistoryList({
                       <span className="truncate text-caption font-semibold text-foreground">
                         {formatDay(log.day, today)}
                       </span>
-                      <span className="numeric text-[0.6875rem] text-subtle-foreground">
+                      <span className="numeric text-micro text-subtle-foreground">
                         {log.bedTime} – {log.wakeTime}
                       </span>
                     </span>

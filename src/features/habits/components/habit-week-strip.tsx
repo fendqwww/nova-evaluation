@@ -50,7 +50,7 @@ export function HabitWeekStrip({
           <>
             <span
               className={cn(
-                "text-[0.625rem] font-medium leading-none",
+                "text-nano font-medium leading-none",
                 isToday ? "text-foreground" : "text-subtle-foreground",
               )}
             >
@@ -58,7 +58,7 @@ export function HabitWeekStrip({
             </span>
             <span
               className={cn(
-                "flex h-7 w-7 items-center justify-center rounded-lg text-[0.6875rem] transition-colors duration-200",
+                "flex h-7 w-7 items-center justify-center rounded-lg text-micro transition-colors duration-200",
                 dayCellClass(state),
                 isToday && !isKept && "ring-1 ring-inset ring-accent-border",
               )}

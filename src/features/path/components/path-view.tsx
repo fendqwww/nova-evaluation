@@ -12,9 +12,11 @@ import { Reveal, RevealItem } from "@/shared/ui/reveal";
 import { haptics } from "@/shared/lib/haptics";
 import { useAddIntent } from "@/shared/lib/use-add-intent";
 import { usePath } from "@/features/path/hooks/use-path";
+import { useAcademy } from "@/features/academy/hooks/use-academy";
 import { pathProgress } from "@/features/path/lib/progress";
 import { PathProgressCard } from "@/features/path/components/path-progress-card";
 import { PathStageList } from "@/features/path/components/path-stage-list";
+import { PathLearningCard } from "@/features/path/components/path-learning-card";
 import { PathWizardModal } from "@/features/path/components/path-wizard-modal";
 import { PathSkeleton } from "@/features/path/components/path-skeleton";
 
@@ -57,6 +59,14 @@ export function PathView() {
    */
   const addIntent = useAddIntent();
   const [intentDismissed, setIntentDismissed] = useState(false);
+
+  /**
+   * Прогресс академии — только ради галочек в карточке «Что изучить». Экран
+   * пути рисуется и без него: пока запрос идёт, `completedIds` пуст, и уроки
+   * показываются непрочитанными, а не отсутствуют. Поэтому здесь нет ни
+   * ожидания, ни скелета — карточка не имеет права задерживать сам путь.
+   */
+  const { completedIds } = useAcademy();
 
   const path = snapshot?.path ?? null;
 
@@ -116,6 +126,14 @@ export function PathView() {
               />
             </RevealItem>
 
+            {/* Между планом и управлением путём. План отвечает «что делать»,
+                эта карточка — «почему это работает», и читается она после
+                шагов, а не вместо них: человек, пришедший отметить сегодняшний
+                шаг, не должен пролистывать до него список книг. */}
+            <RevealItem>
+              <PathLearningCard goalKind={path.goalKind} completedLessonIds={completedIds} />
+            </RevealItem>
+
             <RevealItem className="flex flex-col gap-2 pt-1">
               <p className="text-section text-muted-foreground">Управление путём</p>
 
@@ -153,7 +171,7 @@ export function PathView() {
               </Card>
 
               {(snapshot?.archivedCount ?? 0) > 0 && (
-                <p className="px-1 text-[0.6875rem] text-subtle-foreground">
+                <p className="px-1 text-micro text-subtle-foreground">
                   Пройденных и отложенных путей: {snapshot?.archivedCount}. Прежние планы остаются
                   в истории — они не удаляются.
                 </p>

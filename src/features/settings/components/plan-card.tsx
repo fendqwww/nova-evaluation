@@ -104,7 +104,7 @@ export function PlanCard({
               {until && (
                 <span
                   className={cn(
-                    "text-[0.6875rem]",
+                    "text-micro",
                     // Under a week left is the point at which the date stops
                     // being reassurance and starts being a thing to act on.
                     left !== null && left <= 7 ? "text-tint-orange" : "text-subtle-foreground",
@@ -119,7 +119,7 @@ export function PlanCard({
 
         <p
           className={cn(
-            "numeric text-[1.625rem] font-bold leading-none tracking-[-0.03em]",
+            "numeric text-metric-lg font-bold leading-none tracking-[-0.03em]",
             plan.price === 0 ? "text-foreground" : TONE_TEXT[plan.tone],
           )}
         >
@@ -158,7 +158,7 @@ export function PlanCard({
                 // primary Button variant uses, so this stays inside the system
                 // instead of becoming a second button language.
                 TONE_BUTTON[plan.tone],
-                "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/20 before:to-transparent",
+                "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-sheen before:to-transparent",
               )}
             >
               <a href={href} target="_blank" rel="noopener noreferrer">
@@ -167,7 +167,7 @@ export function PlanCard({
               </a>
             </Button>
 
-            <p className="text-center text-[0.6875rem] leading-relaxed text-subtle-foreground">
+            <p className="text-center text-micro leading-relaxed text-subtle-foreground">
               Откроется бот @{SUPPORT_USERNAME} — активируем вручную после оплаты
             </p>
           </div>

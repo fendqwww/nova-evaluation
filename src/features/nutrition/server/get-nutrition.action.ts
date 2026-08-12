@@ -5,6 +5,7 @@ import { addDays, todayIn } from "@/shared/lib/calendar-day";
 import {
   ENTRY_WINDOW_DAYS,
   getGoal,
+  getGoalStartedAt,
   listEntries,
   listFoods,
   listTemplates,
@@ -27,13 +28,14 @@ export async function getNutrition(
   const today = todayIn(timezone);
   const windowStart = addDays(today, -(ENTRY_WINDOW_DAYS - 1));
 
-  const [foods, entries, water, templates, goal] = await Promise.all([
+  const [foods, entries, water, templates, goal, goalStartedAt] = await Promise.all([
     listFoods(userId),
     listEntries(userId, windowStart),
     listWater(userId, windowStart),
     listTemplates(userId),
     getGoal(userId),
+    getGoalStartedAt(userId),
   ]);
 
-  return { today, windowStart, foods, entries, water, templates, goal };
+  return { today, windowStart, foods, entries, water, templates, goal, goalStartedAt };
 }

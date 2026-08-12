@@ -43,7 +43,7 @@ export function PhotoGallery({
       <div className="flex flex-col gap-4 py-2">
         <EmptyState
           icon={<Camera className="h-5 w-5" />}
-          title="Точки отсчёта пока нет"
+          title="Сделай первый снимок"
           description="Снимок раз в неделю при одном и том же свете — через месяц разницу будет видно."
           action={
             <Button size="lg" onClick={onAdd}>
@@ -114,7 +114,7 @@ export function PhotoGallery({
                   sizes="33vw"
                   className="object-cover"
                 />
-                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-3 text-left text-[0.625rem] font-medium text-white">
+                <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-1.5 pb-1 pt-3 text-left text-nano font-medium text-white">
                   {photo.day.slice(-2).replace(/^0/, "")}.{photo.day.slice(5, 7)}
                 </span>
                 {/* Which photos already carry an AI reading. Without it, the

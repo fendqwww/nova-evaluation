@@ -34,7 +34,7 @@ export function CoachBriefCard({
       <CardContent className="flex flex-col gap-4 p-4 pt-4">
         <div className="flex items-center gap-4">
           <CircularProgress value={score} size={72} strokeWidth={7}>
-            <span className="numeric text-[1.75rem] font-bold leading-none tracking-[-0.045em] text-foreground">
+            <span className="numeric text-metric-lg font-bold leading-none tracking-[-0.045em] text-foreground">
               {score}
             </span>
           </CircularProgress>
@@ -60,7 +60,7 @@ export function CoachBriefCard({
               {delta !== null && (
                 <span
                   className={cn(
-                    "numeric rounded-md px-1.5 py-0.5 text-[0.6875rem] font-semibold",
+                    "numeric rounded-md px-1.5 py-0.5 text-micro font-semibold",
                     deltaBadgeClass(delta, true),
                   )}
                 >
@@ -72,7 +72,7 @@ export function CoachBriefCard({
         </div>
 
         <div className="border-t border-border pt-3.5">
-          <CoachAnswerBody answer={brief} />
+          <CoachAnswerBody answer={brief} variant="brief" />
         </div>
       </CardContent>
     </Card>

@@ -30,7 +30,7 @@ export function CoachQuickActions({
             type="button"
             disabled={disabled}
             onClick={() => onSelect(action.label, action.intent)}
-            className="shrink-0 rounded-full border border-border bg-surface-2 px-3.5 py-2 text-[0.8125rem] font-medium tracking-[-0.01em] text-foreground transition-colors duration-200 active:border-border-strong active:bg-surface-3 disabled:pointer-events-none disabled:opacity-40"
+            className="shrink-0 rounded-full border border-border bg-surface-2 px-3.5 py-2 text-caption font-medium tracking-[-0.01em] text-foreground transition-colors duration-200 active:border-border-strong active:bg-surface-3 disabled:pointer-events-none disabled:opacity-40"
           >
             {action.label}
           </button>

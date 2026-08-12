@@ -86,7 +86,7 @@ export function WorkoutExerciseEditor({
         <div className="flex flex-col items-center gap-1 rounded-xl border border-dashed border-border px-4 py-5 text-center">
           <Dumbbell className="h-4 w-4 text-subtle-foreground" />
           <p className="text-caption text-muted-foreground">Упражнений пока нет</p>
-          <p className="text-[0.6875rem] text-subtle-foreground">
+          <p className="text-micro text-subtle-foreground">
             Можно сохранить и без них — тогда тренировка отмечается целиком.
           </p>
         </div>
@@ -111,7 +111,7 @@ export function WorkoutExerciseEditor({
                   onClick={() => setExpanded(isOpen ? null : index)}
                   className="flex w-full items-center gap-2.5 p-3 text-left"
                 >
-                  <span className="numeric flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-[0.6875rem] font-semibold text-subtle-foreground">
+                  <span className="numeric flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-micro font-semibold text-subtle-foreground">
                     {index + 1}
                   </span>
 
@@ -124,7 +124,7 @@ export function WorkoutExerciseEditor({
                     >
                       {exercise.name.trim() || "Новое упражнение"}
                     </span>
-                    <span className="numeric text-[0.6875rem] text-subtle-foreground">
+                    <span className="numeric text-micro text-subtle-foreground">
                       {exercise.targetSets} × {exercise.targetReps}
                       {/* formatWeight, not the raw number: a JS float renders
                           "62.5" with a decimal point, which is not how a weight
@@ -198,7 +198,7 @@ export function WorkoutExerciseEditor({
                           <button
                             type="button"
                             onClick={() => patch(index, { targetWeightKg: null })}
-                            className="shrink-0 text-[0.6875rem] font-medium text-subtle-foreground transition-colors duration-200 active:text-foreground"
+                            className="shrink-0 text-micro font-medium text-subtle-foreground transition-colors duration-200 active:text-foreground"
                           >
                             Свой вес
                           </button>
@@ -277,7 +277,7 @@ export function WorkoutExerciseEditor({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
-      <span className="text-[0.6875rem] text-subtle-foreground">{label}</span>
+      <span className="text-micro text-subtle-foreground">{label}</span>
       {children}
     </div>
   );

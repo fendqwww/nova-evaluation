@@ -75,7 +75,7 @@ export function TaskDetailModal({
             </IconChip>
             <h2
               className={cn(
-                "min-w-0 flex-1 text-[1.125rem] font-semibold leading-snug tracking-[-0.02em]",
+                "min-w-0 flex-1 text-title font-semibold leading-snug tracking-[-0.02em]",
                 isCompleted ? "text-muted-foreground line-through" : "text-foreground",
               )}
             >
@@ -108,7 +108,7 @@ export function TaskDetailModal({
                 <span className="text-caption text-muted-foreground">Важность</span>
                 <span
                   className={cn(
-                    "rounded-md px-2 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.04em]",
+                    "rounded-md px-2 py-1 text-micro font-semibold uppercase tracking-[0.04em]",
                     priorityChipClass(task.priority),
                   )}
                 >

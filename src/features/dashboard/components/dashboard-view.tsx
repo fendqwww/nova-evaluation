@@ -7,9 +7,9 @@ import { DashboardSkeleton } from "@/features/dashboard/components/dashboard-ske
 import { DashboardHeader } from "@/features/dashboard/components/dashboard-header";
 import { NovaScoreCard } from "@/features/dashboard/components/nova-score-card";
 import { TodayPlanCard } from "@/features/dashboard/components/today-plan-card";
-import { PathCard } from "@/features/dashboard/components/path-card";
-import { FocusOfDayCard } from "@/features/dashboard/components/focus-of-day-card";
+import { DirectionCard } from "@/features/dashboard/components/direction-card";
 import { CoachPreviewCard } from "@/features/dashboard/components/coach-preview-card";
+import { QuickActions } from "@/features/dashboard/components/quick-actions";
 import { QuickCaptureModal } from "@/features/activity/components/quick-capture-modal";
 import { AsyncSection } from "@/shared/ui/async-section";
 import { Reveal, RevealItem } from "@/shared/ui/reveal";
@@ -22,9 +22,28 @@ import type { ActivityItemType } from "@/features/activity/types";
  *
  *   1. Как я сегодня?      → шапка с выводом Nova
  *   2. Насколько всё в норме? → NOVA Score и четыре состояния организма под ним
- *   3. Что дальше?         → план дня по часам
- *   4. Почему и что делать?→ разбор коуча с кнопкой в нужный раздел
- *   5. Куда я иду?         → путь: этап, процент и следующий шаг
+ *   3. Почему и что делать?→ разбор коуча с кнопкой в нужный раздел
+ *   4. Что дальше?         → план дня по часам
+ *   5. Как это записать?   → быстрые действия
+ *   6. Куда я иду?         → путь и фокус дня одним блоком
+ *
+ * РАЗБОР КОУЧА ПОДНЯЛСЯ НАД ПЛАНОМ ДНЯ. Раньше сначала шло расписание, потом
+ * вывод о нём. Это порядок панели управления: сперва данные, потом их
+ * интерпретация, если долистаешь. Личный тренер говорит наоборот — сначала
+ * «сегодня энергия ниже нормы, сделай тренировку легче», и только потом
+ * показывает часы. План никуда не делся и стоит сразу под выводом, но первым
+ * человек читает мысль, а не таблицу.
+ *
+ * БЫСТРЫЕ ДЕЙСТВИЯ СТОЯТ ПОСЛЕ РАЗБОРА, А НЕ ПЕРЕД НИМ. Соблазн поднять их выше
+ * понятен — записывают чаще, чем читают. Но экран, который открывается кнопками
+ * «добавить», сообщает, что приложение ждёт от человека работы; экран, который
+ * открывается выводом о его состоянии, сообщает, что работа уже сделана за него.
+ * К тому же строки плана дня выше сами по себе кликабельны и ведут в те же
+ * формы, так что записать что-либо можно раньше, чем блок быстрых действий
+ * вообще появится.
+ *
+ * ПУТЬ И ФОКУС — ОДИН БЛОК. Были две карточки подряд; разбор того, почему они
+ * слились, лежит в DirectionCard.
  *
  * ЧТО ИЗМЕНИЛОСЬ В ЭТОЙ ВЕРСИИ И ПОЧЕМУ.
  *
@@ -75,19 +94,20 @@ export function DashboardView() {
             </RevealItem>
 
             <RevealItem>
-              <TodayPlanCard items={data.plan} />
-            </RevealItem>
-
-            <RevealItem>
               <CoachPreviewCard coach={data.coach} />
             </RevealItem>
 
             <RevealItem>
-              <PathCard path={data.path} />
+              <TodayPlanCard items={data.plan} />
             </RevealItem>
 
             <RevealItem>
-              <FocusOfDayCard
+              <QuickActions />
+            </RevealItem>
+
+            <RevealItem>
+              <DirectionCard
+                path={data.path}
                 focus={data.focus}
                 onCreateGoal={() => setCaptureType("goal")}
               />

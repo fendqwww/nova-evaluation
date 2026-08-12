@@ -201,7 +201,7 @@ export function PhotoAddModal({
                     onClick={() => setArea(option.id)}
                     aria-pressed={selected}
                     className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2.5 text-[0.6875rem] font-medium transition-colors duration-200",
+                      "flex flex-col items-center gap-1.5 rounded-lg border px-1 py-2.5 text-micro font-medium transition-colors duration-200",
                       selected
                         ? "border-accent-border bg-accent-muted text-accent"
                         : "border-border text-subtle-foreground active:border-border-strong",

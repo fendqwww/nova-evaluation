@@ -42,7 +42,7 @@ export function ConsentStep({ onNext }: { onNext: () => void }) {
           >
             {isSubmitting ? "Сохраняем…" : "Принять и продолжить"}
           </Button>
-          <p className="text-center text-[0.6875rem] text-subtle-foreground">
+          <p className="text-center text-micro text-subtle-foreground">
             Отметки со звёздочкой обязательны — без них Nova не сможет работать.
           </p>
         </div>

@@ -52,12 +52,16 @@ const HEALTH: RecordOption[] = [
     href: "/nutrition?add=photo",
   },
   {
+    // Ведёт на экран, а не в модалку: стакан отмечается прямо в дневнике
+    // карточкой воды, и отдельной формы у него нет. Раньше здесь стоял
+    // `?add=water`, который никто не читал, — нажатие просто открывало
+    // «Питание», но обещало форму.
     key: "water",
     label: "Вода",
-    hint: "Стакан — 250 мл",
+    hint: "Отметить стакан в дневнике",
     icon: Droplet,
     tone: "accent",
-    href: "/nutrition?add=water",
+    href: "/nutrition",
   },
   {
     key: "sleep",
@@ -68,12 +72,17 @@ const HEALTH: RecordOption[] = [
     href: "/sleep?add=1",
   },
   {
+    // Тоже экран, а не модалка, и это осознанно. Начать сессию по ссылке
+    // значило бы создать строку в базе на переходе — переоткрытие вкладки или
+    // «назад» плодили бы пустые тренировки. Экран «Тренировки» открывается
+    // карточкой сегодняшней тренировки с кнопкой старта, то есть тем же
+    // действием, но по нажатию человека.
     key: "workout",
     label: "Тренировка",
-    hint: "Начать сессию по плану",
+    hint: "Сегодняшняя — с кнопкой старта",
     icon: Dumbbell,
     tone: "task",
-    href: "/workouts?add=1",
+    href: "/workouts",
   },
   {
     // Последним в ряду здоровья: взвешиваются раз в неделю, а не трижды в день.
@@ -96,25 +105,34 @@ const PLAN: RecordOption[] = [
 ];
 
 /**
- * What the centre button opens.
+ * Полный список того, что можно записать.
  *
  * Every destination carries an `?add=` query the target screen reads on mount
  * and opens the right modal for. That indirection is deliberate: the sheet
  * would otherwise need to own the state of five different forms belonging to
  * five different features, and the screens already know how to open their own.
  *
- * The cost this removes: logging a meal used to be Здоровье → Питание → «+» →
- * picker → log, and the first two of those taps existed only because Nutrition
- * lived behind a tab shared with three other sections.
+ * ЧТО ИЗМЕНИЛОСЬ. Лист открывался центральной кнопкой «+» в панели вкладок;
+ * теперь его открывает «Ещё» в блоке быстрых действий на главном экране, а
+ * четыре самых частых записи (фото еды, приём пищи, тренировка, сон) стали там
+ * же отдельными плитками. Поэтому у листа появился `omitKeys`: показывать в
+ * «Ещё» то, что человек только что видел плиткой рядом, — это удвоение, ровно
+ * то, от чего быстрые действия и должны были избавить.
  */
 export function RecordSheet({
   open,
   onOpenChange,
+  omitKeys,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Ключи, уже показанные вызывающим экраном отдельными кнопками. */
+  omitKeys?: readonly string[];
 }) {
   const router = useRouter();
+  const omitted = new Set(omitKeys ?? []);
+  const health = HEALTH.filter((option) => !omitted.has(option.key));
+  const plan = PLAN.filter((option) => !omitted.has(option.key));
 
   function go(href: string) {
     haptics.tap();
@@ -132,7 +150,7 @@ export function RecordSheet({
 
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
-            {HEALTH.map((option) => {
+            {health.map((option) => {
               const Icon = option.icon;
 
               return (
@@ -154,10 +172,17 @@ export function RecordSheet({
             })}
           </div>
 
-          <div className="flex flex-col gap-2 border-t border-border pt-4">
+          {/* Разделитель только когда сверху действительно что-то есть —
+              иначе `omitKeys` мог бы оставить лист, начинающийся с линии. */}
+          <div
+            className={cn(
+              "flex flex-col gap-2",
+              health.length > 0 && "border-t border-border pt-4",
+            )}
+          >
             <p className="text-section text-muted-foreground">В план</p>
             <div className="grid grid-cols-3 gap-2">
-              {PLAN.map((option) => {
+              {plan.map((option) => {
                 const Icon = option.icon;
 
                 return (

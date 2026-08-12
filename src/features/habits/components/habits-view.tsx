@@ -9,6 +9,7 @@ import { PlanSectionTabs } from "@/components/plan-section-tabs";
 import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
+import { useAddIntent } from "@/shared/lib/use-add-intent";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
 import { useHabits } from "@/features/habits/hooks/use-habits";
 import { HabitCard } from "@/features/habits/components/habit-card";
@@ -54,6 +55,14 @@ export function HabitsView() {
 
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<HabitItem | null>(null);
+  /**
+   * Пришли из листа записи по «Привычка» (`/habits?add=1`) — форма создания
+   * открывается сразу. Ссылка существовала и раньше, но её никто не читал:
+   * кнопка в листе записи просто открывала список. См. тот же разбор в
+   * GoalsView.
+   */
+  const addIntent = useAddIntent();
+  const [intentDismissed, setIntentDismissed] = useState(false);
   // The open habit is tracked by id, not by value: the detail modal then reads
   // the live row every render, so an optimistic tick shows up inside the modal
   // instead of only in the list behind it.
@@ -256,8 +265,11 @@ export function HabitsView() {
       <HabitFormModal
         key={`form-${formKey}`}
         habit={editingHabit}
-        open={isFormOpen}
-        onOpenChange={setFormOpen}
+        open={isFormOpen || (addIntent !== null && !intentDismissed)}
+        onOpenChange={(next) => {
+          setFormOpen(next);
+          if (!next) setIntentDismissed(true);
+        }}
         onSaved={refresh}
       />
 

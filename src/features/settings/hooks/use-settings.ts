@@ -11,6 +11,7 @@ import { restartOnboardingAction } from "@/features/settings/server/restart-onbo
 import { sessionQueryKey } from "@/features/auth/hooks/use-telegram-session";
 import { dashboardQueryKey } from "@/features/dashboard/hooks/use-dashboard-data";
 import { applyThemeMode, systemMode } from "@/shared/lib/apply-theme";
+import { cacheThemeMode } from "@/shared/lib/theme-storage";
 import type {
   AiDraft,
   NotificationsDraft,
@@ -25,6 +26,10 @@ export function settingsQueryKey(rawInitData: string | undefined) {
 /** Paint a mode immediately, resolving "system" the way SessionBoundary will. */
 function preview(mode: ThemeMode): void {
   applyThemeMode(mode === "system" ? systemMode() : mode);
+  // Кэш обновляется вместе с DOM, а не только когда SessionBoundary получит
+  // новую сессию: между нажатием и ответом сервера помещается закрытие
+  // приложения, и без этой строки следующий старт нарисовал бы прежний режим.
+  cacheThemeMode(mode);
 }
 
 /**

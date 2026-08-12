@@ -67,8 +67,8 @@ function WeekBars({
             <span
               className={
                 isToday
-                  ? "text-[0.6875rem] font-semibold text-foreground"
-                  : "text-[0.6875rem] text-subtle-foreground"
+                  ? "text-micro font-semibold text-foreground"
+                  : "text-micro text-subtle-foreground"
               }
             >
               {WEEKDAY_SHORT[weekdayIndex(day.day)]}
@@ -86,7 +86,7 @@ export function SleepStatsCard({ logs, today }: { logs: SleepLogItem[]; today: C
       <EmptyState
         className="py-10"
         icon={<BarChart3 className="h-5 w-5" />}
-        title="Сон ещё не измерен"
+        title="Счёт начнётся с первой ночи"
         description="Запиши первую ночь — Nova начнёт считать часы, качество и недельный ритм."
       />
     );
@@ -103,14 +103,14 @@ export function SleepStatsCard({ logs, today }: { logs: SleepLogItem[]; today: C
         <div className="flex flex-col gap-3.5 p-4">
           <div className="flex items-end justify-between gap-3">
             <div className="flex items-baseline gap-2">
-              <span className="numeric text-[2rem] font-bold leading-none tracking-[-0.045em] text-foreground">
+              <span className="numeric text-metric-xl font-bold leading-none tracking-[-0.045em] text-foreground">
                 {hoursDecimal(week.averageDurationMin)}
               </span>
               <span className="text-caption text-muted-foreground">ч в среднем на этой неделе</span>
             </div>
 
             {streak > 0 && (
-              <span className="flex shrink-0 items-center gap-1 rounded-md bg-tint-orange-muted px-1.5 py-0.5 text-[0.6875rem] font-semibold text-tint-orange">
+              <span className="flex shrink-0 items-center gap-1 rounded-md bg-tint-orange-muted px-1.5 py-0.5 text-micro font-semibold text-tint-orange">
                 <Flame className="h-3 w-3" />
                 <span className="numeric">
                   {streak} {nightsWord(streak)}

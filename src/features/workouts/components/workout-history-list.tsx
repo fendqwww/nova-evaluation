@@ -39,7 +39,7 @@ export function WorkoutHistoryList({
       <EmptyState
         className="py-10"
         icon={<History className="h-5 w-5" />}
-        title="Тренировок пока нет"
+        title="Здесь появится твоя история"
         description="Каждая завершённая тренировка останется здесь — с подходами, весом и объёмом."
       />
     );
@@ -73,7 +73,7 @@ export function WorkoutHistoryList({
                 {MONTH_NOMINATIVE[monthIndex - 1]}
                 {String(year) !== today.slice(0, 4) && ` ${year}`}
               </span>
-              <span className="numeric text-[0.6875rem] text-subtle-foreground">
+              <span className="numeric text-micro text-subtle-foreground">
                 {completed.length} {sessionsWord(completed.length)}
                 {volume > 0 && ` · ${formatVolume(volume)}`}
               </span>
@@ -109,7 +109,7 @@ export function WorkoutHistoryList({
                         <span className="truncate text-caption font-semibold text-foreground">
                           {workout?.title ?? "Тренировка"}
                         </span>
-                        <span className="numeric text-[0.6875rem] text-subtle-foreground">
+                        <span className="numeric text-micro text-subtle-foreground">
                           {formatDay(session.day, today)}
                           {isOpen
                             ? " · не завершена"

@@ -50,7 +50,7 @@ export function WorkoutsStatsCard({
       <EmptyState
         className="py-10"
         icon={<BarChart3 className="h-5 w-5" />}
-        title="Прогресс ещё не измерен"
+        title="Прогресс начнётся с первой тренировки"
         description="Заверши первую тренировку — Nova начнёт считать объём, регулярность и календарь."
       />
     );
@@ -62,7 +62,7 @@ export function WorkoutsStatsCard({
         <div className="flex flex-col gap-3.5 p-4">
           <div className="flex items-end justify-between gap-3">
             <div className="flex items-baseline gap-2">
-              <span className="numeric text-[2rem] font-bold leading-none tracking-[-0.045em] text-foreground">
+              <span className="numeric text-metric-xl font-bold leading-none tracking-[-0.045em] text-foreground">
                 {stats.weekDone}
               </span>
               <span className="text-caption text-muted-foreground">
@@ -73,7 +73,7 @@ export function WorkoutsStatsCard({
             </div>
 
             {stats.weekStreak > 0 && (
-              <span className="flex shrink-0 items-center gap-1 rounded-md bg-tint-orange-muted px-1.5 py-0.5 text-[0.6875rem] font-semibold text-tint-orange">
+              <span className="flex shrink-0 items-center gap-1 rounded-md bg-tint-orange-muted px-1.5 py-0.5 text-micro font-semibold text-tint-orange">
                 <Flame className="h-3 w-3" />
                 <span className="numeric">
                   {stats.weekStreak} {pluralizeRu(stats.weekStreak, ["неделя", "недели", "недель"])}
@@ -133,7 +133,7 @@ export function WorkoutsStatsCard({
                         style={{ width: `${Math.round(slice.ratio * 100)}%` }}
                       />
                     </div>
-                    <span className="numeric w-6 shrink-0 text-right text-[0.6875rem] font-semibold text-foreground">
+                    <span className="numeric w-6 shrink-0 text-right text-micro font-semibold text-foreground">
                       {slice.count}
                     </span>
                   </div>
@@ -173,13 +173,13 @@ function Metric({ value, label, className }: { value: string; label: string; cla
     <div className="flex flex-col gap-0.5">
       <span
         className={cn(
-          "numeric text-[1.125rem] font-bold leading-none tracking-[-0.03em] text-foreground",
+          "numeric text-metric-sm font-bold leading-none tracking-[-0.03em] text-foreground",
           className,
         )}
       >
         {value}
       </span>
-      <span className="text-[0.6875rem] leading-tight text-subtle-foreground">{label}</span>
+      <span className="text-micro leading-tight text-subtle-foreground">{label}</span>
     </div>
   );
 }

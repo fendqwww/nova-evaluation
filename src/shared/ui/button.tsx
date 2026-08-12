@@ -13,17 +13,17 @@ const buttonVariants = cva(
         // The top sheen is the same trick the icon chips use, so a filled
         // button and a filled chip are lit from the same direction.
         primary:
-          "bg-accent text-accent-foreground shadow-[0_6px_18px_-8px_var(--accent)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/18 before:to-transparent hover:bg-accent-hover hover:shadow-[0_10px_26px_-8px_var(--accent)]",
+          "bg-accent text-accent-foreground shadow-[0_6px_18px_-8px_var(--accent)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-sheen before:to-transparent hover:bg-accent-hover hover:shadow-[0_10px_26px_-8px_var(--accent)]",
         secondary:
           "border border-border bg-surface-2 text-foreground shadow-card hover:border-border-strong hover:bg-surface-3",
         ghost: "text-foreground hover:bg-fill-muted",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-[0_6px_18px_-8px_var(--destructive)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-white/18 before:to-transparent hover:opacity-90",
+          "bg-destructive text-destructive-foreground shadow-[0_6px_18px_-8px_var(--destructive)] before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:h-1/2 before:bg-gradient-to-b before:from-sheen before:to-transparent hover:opacity-90",
       },
       size: {
         sm: "h-8 rounded-lg px-3",
         md: "h-10 px-4",
-        lg: "h-[3.25rem] px-6 text-[0.9375rem]",
+        lg: "h-[3.25rem] px-6 text-body",
         icon: "h-10 w-10",
       },
     },

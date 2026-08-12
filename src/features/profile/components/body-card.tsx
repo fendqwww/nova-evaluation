@@ -68,28 +68,28 @@ export function BodyCard({
 
         <div className="grid grid-cols-3 gap-3">
           <div className="flex flex-col gap-0.5">
-            <span className="numeric text-[1.5rem] font-bold leading-none tracking-[-0.035em] text-foreground">
+            <span className="numeric text-metric-md font-bold leading-none tracking-[-0.035em] text-foreground">
               {ai.weightKg}
             </span>
-            <span className="text-[0.6875rem] text-subtle-foreground">Вес, кг</span>
+            <span className="text-micro text-subtle-foreground">Вес, кг</span>
           </div>
 
           <div className="flex flex-col gap-0.5">
             <span
               className={cn(
-                "numeric text-[1.5rem] font-bold leading-none tracking-[-0.035em]",
+                "numeric text-metric-md font-bold leading-none tracking-[-0.035em]",
                 bmiTone(ai.bmi),
               )}
             >
               {ai.bmi.toFixed(1).replace(".", ",")}
             </span>
-            <span className="text-[0.6875rem] text-subtle-foreground">ИМТ · {ai.bmiLabel}</span>
+            <span className="text-micro text-subtle-foreground">ИМТ · {ai.bmiLabel}</span>
           </div>
 
           <div className="flex flex-col gap-0.5">
             <span
               className={cn(
-                "numeric flex items-center gap-1 text-[1.5rem] font-bold leading-none tracking-[-0.035em]",
+                "numeric flex items-center gap-1 text-metric-md font-bold leading-none tracking-[-0.035em]",
                 delta === null || delta === 0
                   ? "text-muted-foreground"
                   : delta < 0
@@ -100,7 +100,7 @@ export function BodyCard({
               <DeltaIcon className="h-4 w-4 shrink-0" />
               {delta === null ? "—" : `${delta > 0 ? "+" : ""}${String(delta).replace(".", ",")}`}
             </span>
-            <span className="text-[0.6875rem] text-subtle-foreground">
+            <span className="text-micro text-subtle-foreground">
               {delta === null ? "Нет истории" : "Изменение, кг"}
             </span>
           </div>

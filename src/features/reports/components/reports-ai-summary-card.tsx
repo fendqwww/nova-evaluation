@@ -62,7 +62,7 @@ export function ReportsAiSummaryCard({
             <Sparkles className="h-4 w-4 shrink-0" />
             <span className="text-label uppercase">AI Summary</span>
           </div>
-          <span className="numeric text-[0.6875rem] text-subtle-foreground">
+          <span className="numeric text-micro text-subtle-foreground">
             {isFromGemini
               ? "от Gemini"
               : aiUsage.limit === null

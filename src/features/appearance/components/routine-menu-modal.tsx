@@ -157,7 +157,7 @@ function Metric({
 }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-xl border border-border bg-surface-inset px-3 py-2.5">
-      <span className="text-[0.6875rem] text-subtle-foreground">{label}</span>
+      <span className="text-micro text-subtle-foreground">{label}</span>
       <span className={cn("numeric text-body font-semibold text-foreground", className)}>
         {value}
       </span>

@@ -47,10 +47,10 @@ export function CareSummaryCard({
       <div className="flex items-center gap-4 p-4">
         <CircularProgress value={percent} size={84} strokeWidth={7}>
           <div className="flex flex-col items-center">
-            <span className="numeric text-[1.125rem] font-bold leading-none text-foreground">
+            <span className="numeric text-metric-sm font-bold leading-none text-foreground">
               {doneToday.length}
             </span>
-            <span className="numeric text-[0.6875rem] leading-tight text-subtle-foreground">
+            <span className="numeric text-micro leading-tight text-subtle-foreground">
               из {due}
             </span>
           </div>

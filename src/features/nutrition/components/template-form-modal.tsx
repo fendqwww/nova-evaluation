@@ -108,7 +108,7 @@ export function TemplateFormModal({
                   onClick={() => setMealSlot(slot)}
                   aria-pressed={mealSlot === slot}
                   className={cn(
-                    "rounded-lg border px-1.5 py-2 text-[0.6875rem] font-medium transition-colors duration-200",
+                    "rounded-lg border px-1.5 py-2 text-micro font-medium transition-colors duration-200",
                     mealSlot === slot
                       ? "border-accent-border bg-accent-muted text-accent"
                       : "border-border text-subtle-foreground active:border-border-strong",
@@ -123,7 +123,7 @@ export function TemplateFormModal({
           <div className="flex flex-col gap-2">
             <div className="flex items-baseline justify-between">
               <span className="text-caption text-muted-foreground">Продукты</span>
-              <span className="numeric text-[0.6875rem] text-subtle-foreground">{items.length}</span>
+              <span className="numeric text-micro text-subtle-foreground">{items.length}</span>
             </div>
 
             {activeFoods.length === 0 ? (

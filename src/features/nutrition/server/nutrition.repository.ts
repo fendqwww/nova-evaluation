@@ -524,6 +524,21 @@ export async function getGoal(userId: string): Promise<NutritionGoalItem> {
   };
 }
 
+/**
+ * Когда у человека появилась первая норма — начало отсчёта сценария питания.
+ *
+ * Именно createdAt, а не updatedAt: правка нормы (или даже одной цели по воде)
+ * не должна отбрасывать человека на первую неделю протокола, который он честно
+ * проходит третью.
+ */
+export async function getGoalStartedAt(userId: string): Promise<string | null> {
+  const goal = await db.nutritionGoal.findUnique({
+    where: { userId },
+    select: { createdAt: true },
+  });
+  return goal?.createdAt.toISOString() ?? null;
+}
+
 export async function setGoal(
   userId: string,
   data: NutritionGoalItem,

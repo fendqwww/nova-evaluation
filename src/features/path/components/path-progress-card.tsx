@@ -65,10 +65,10 @@ export function PathProgressCard({
           </div>
 
           <div className="flex shrink-0 flex-col items-end">
-            <span className="numeric text-[1.75rem] font-bold leading-none tracking-[-0.04em] text-foreground">
+            <span className="numeric text-metric-lg font-bold leading-none tracking-[-0.04em] text-foreground">
               {progress.percent}%
             </span>
-            <span className="text-[0.6875rem] text-subtle-foreground">
+            <span className="text-micro text-subtle-foreground">
               {progress.stepsDone} из {progress.stepsTotal} шагов
             </span>
           </div>

@@ -109,7 +109,7 @@ export function HabitSchedulePicker({
                 type="button"
                 onClick={() => onChange({ kind: "weekdays", weekdayMask: preset.mask })}
                 className={cn(
-                  "rounded-md border px-2 py-1 text-[0.6875rem] font-medium transition-colors duration-200",
+                  "rounded-md border px-2 py-1 text-micro font-medium transition-colors duration-200",
                   preset.mask === schedule.weekdayMask
                     ? "border-accent-border text-accent"
                     : "border-border text-subtle-foreground active:border-border-strong",

@@ -117,7 +117,7 @@ export function WorkoutSessionModal({
             <div className="flex flex-col gap-2.5 p-3.5">
               <div className="flex items-end justify-between gap-3">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="numeric text-[1.75rem] font-bold leading-none tracking-[-0.04em] text-foreground">
+                  <span className="numeric text-metric-lg font-bold leading-none tracking-[-0.04em] text-foreground">
                     {stats.setsDone}
                   </span>
                   <span className="text-caption text-muted-foreground">
@@ -131,7 +131,7 @@ export function WorkoutSessionModal({
                   <span className="numeric text-caption font-semibold text-foreground">
                     {formatVolume(stats.volumeKg)}
                   </span>
-                  <span className="numeric text-[0.6875rem] text-subtle-foreground">
+                  <span className="numeric text-micro text-subtle-foreground">
                     {stats.totalReps} {repsWord(stats.totalReps)}
                   </span>
                 </div>
@@ -151,7 +151,7 @@ export function WorkoutSessionModal({
               <p className="text-caption text-muted-foreground">
                 В этой тренировке нет упражнений
               </p>
-              <p className="text-[0.6875rem] text-subtle-foreground">
+              <p className="text-micro text-subtle-foreground">
                 Её можно просто отметить выполненной — или добавить упражнения в
                 настройках тренировки.
               </p>

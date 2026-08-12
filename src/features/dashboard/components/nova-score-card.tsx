@@ -86,7 +86,7 @@ export function NovaScoreCard({
 
           <CircularProgress value={result.score} size={168} strokeWidth={12}>
             <div className="flex flex-col items-center">
-              <span className="numeric text-[3.5rem] font-bold leading-none tracking-[-0.05em] text-foreground">
+              <span className="numeric text-metric-3xl font-bold leading-none tracking-[-0.05em] text-foreground">
                 {displayValue}
               </span>
               <span className="mt-1 text-caption text-subtle-foreground">из 100</span>

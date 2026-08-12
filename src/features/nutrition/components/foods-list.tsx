@@ -75,7 +75,7 @@ export function FoodsList({
         <EmptyState
           className="py-10"
           icon={<Apple className="h-5 w-5" />}
-          title="Своих продуктов пока нет"
+          title="Собери свой каталог"
           description="Добавь продукт вручную или создай прямо из дневника — дальше он всегда под рукой."
           action={
             <Button size="lg" onClick={onCreate}>

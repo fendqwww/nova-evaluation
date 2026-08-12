@@ -68,8 +68,8 @@ function WeekBars({
             <span
               className={
                 isToday
-                  ? "text-[0.6875rem] font-semibold text-foreground"
-                  : "text-[0.6875rem] text-subtle-foreground"
+                  ? "text-micro font-semibold text-foreground"
+                  : "text-micro text-subtle-foreground"
               }
             >
               {WEEKDAY_SHORT[weekdayIndex(day.day)]}
@@ -100,7 +100,7 @@ export function NutritionStatsCard({
       <EmptyState
         className="py-10"
         icon={<BarChart3 className="h-5 w-5" />}
-        title="Неделя пока пустая"
+        title="Здесь появится твоя неделя"
         description="Запиши первый приём пищи — здесь появятся калории, макросы и вода за семь дней."
       />
     );

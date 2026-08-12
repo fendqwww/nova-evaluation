@@ -45,10 +45,10 @@ function Stat({
 }) {
   return (
     <div className="flex flex-1 flex-col items-center gap-0.5">
-      <span className={cn("numeric text-[1.375rem] font-bold leading-none tracking-[-0.03em]", className)}>
+      <span className={cn("numeric text-page font-bold leading-none tracking-[-0.03em]", className)}>
         {value}
       </span>
-      <span className="text-[0.6875rem] text-subtle-foreground">{label}</span>
+      <span className="text-micro text-subtle-foreground">{label}</span>
     </div>
   );
 }
@@ -125,7 +125,7 @@ export function HabitDetailModal({
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <h2
                 className={cn(
-                  "text-[1.125rem] font-semibold leading-snug tracking-[-0.02em]",
+                  "text-title font-semibold leading-snug tracking-[-0.02em]",
                   isArchived ? "text-muted-foreground" : "text-foreground",
                 )}
               >
@@ -144,7 +144,7 @@ export function HabitDetailModal({
                 <div className="flex items-baseline gap-2">
                   <span
                     className={cn(
-                      "numeric text-[2.5rem] font-bold leading-none tracking-[-0.045em]",
+                      "numeric text-metric-2xl font-bold leading-none tracking-[-0.045em]",
                       stats.currentStreak > 0 && !isArchived
                         ? "text-foreground"
                         : "text-subtle-foreground",

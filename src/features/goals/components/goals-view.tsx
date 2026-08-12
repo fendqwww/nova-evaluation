@@ -9,6 +9,7 @@ import { PlanSectionTabs } from "@/components/plan-section-tabs";
 import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
+import { useAddIntent } from "@/shared/lib/use-add-intent";
 import { useGoals } from "@/features/goals/hooks/use-goals";
 import { GoalCard } from "@/features/goals/components/goal-card";
 import { GoalFormModal } from "@/features/goals/components/goal-form-modal";
@@ -47,6 +48,18 @@ export function GoalsView() {
 
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<GoalItem | null>(null);
+  /**
+   * Пришли из листа записи по «Цель» (`/goals?add=1`) — форма создания
+   * открывается сразу, чтобы нажатие в листе было последним.
+   *
+   * Ссылка существовала и раньше, но её никто не читал: экран просто
+   * открывался списком, и кнопка «Цель» в листе записи не делала ничего.
+   * Интент выводится, а не заталкивается в состояние эффектом, и гасится
+   * `intentDismissed`, чтобы закрытая форма не открывалась снова, — то же
+   * правило, что в разделах «Питание», «Сон» и «Путь».
+   */
+  const addIntent = useAddIntent();
+  const [intentDismissed, setIntentDismissed] = useState(false);
   // The open goal is tracked by id, not by value: the detail modal then reads
   // the live row every render, so an optimistic step tick shows up inside the
   // modal instead of only in the list behind it.
@@ -250,8 +263,11 @@ export function GoalsView() {
       <GoalFormModal
         key={`form-${formKey}`}
         goal={editingGoal}
-        open={isFormOpen}
-        onOpenChange={setFormOpen}
+        open={isFormOpen || (addIntent !== null && !intentDismissed)}
+        onOpenChange={(next) => {
+          setFormOpen(next);
+          if (!next) setIntentDismissed(true);
+        }}
         onSaved={refresh}
       />
 

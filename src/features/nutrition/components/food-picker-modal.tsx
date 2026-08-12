@@ -62,7 +62,7 @@ export function FoodPickerModal({
             <EmptyState
               className="py-8"
               icon={<Search className="h-5 w-5" />}
-              title={trimmed ? "Ничего не найдено" : "В каталоге пока пусто"}
+              title={trimmed ? "Ничего не найдено" : "Добавь первый продукт"}
               description={
                 trimmed
                   ? "Создай новый продукт с таким названием."

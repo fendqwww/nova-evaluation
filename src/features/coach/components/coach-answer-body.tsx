@@ -13,24 +13,60 @@ import type { CoachAnswer } from "@/features/coach/types";
  * the same component — which is also what guarantees a Gemini-written answer
  * and a rules-written one are visually indistinguishable. They are equally
  * real; only the prose differs.
+ *
+ * ДВА РАЗМЕРА ОДНОГО И ТОГО ЖЕ ОТВЕТА. Разбор дня и реплика в чате — это разные
+ * по весу высказывания, хотя структура у них одна. Разбор человек читает первым
+ * и один раз за день: его вывод — самая важная строка во всём приложении, и на
+ * 17px он выглядел как заголовок карточки, то есть как подпись к чему-то, а не
+ * как мысль. В `brief` он набирается 22px и становится тем, ради чего экран
+ * открывают.
+ *
+ * Там же ограничивается длина: три пункта объяснения вместо всех, что прислала
+ * модель. Тренер, который говорит пять причин подряд, не тренер, а отчёт —
+ * а `rationale` и действие под ними доносят остальное лучше четвёртого пункта.
+ * В чате ограничения нет: там человек сам задал вопрос и ждёт полного ответа.
  */
+const BRIEF_MAX_BULLETS = 3;
+
 export function CoachAnswerBody({
   answer,
   className,
+  variant = "reply",
 }: {
   answer: CoachAnswer;
   className?: string;
+  /** `brief` — разбор дня, `reply` — реплика в диалоге. */
+  variant?: "brief" | "reply";
 }) {
+  const isBrief = variant === "brief";
+  const bullets = isBrief ? answer.bullets.slice(0, BRIEF_MAX_BULLETS) : answer.bullets;
+
   return (
     <div className={cn("flex flex-col gap-3", className)}>
       <div className="flex flex-col gap-1.5">
-        <p className="wrap-break-word text-title text-foreground">{answer.headline}</p>
-        <p className="wrap-break-word text-caption text-muted-foreground">{answer.body}</p>
+        <p
+          className={cn(
+            "wrap-break-word text-foreground",
+            isBrief ? "text-page" : "text-title",
+          )}
+        >
+          {answer.headline}
+        </p>
+        <p
+          className={cn(
+            "wrap-break-word text-caption text-muted-foreground",
+            // Короткое объяснение — именно короткое. Модель иногда присылает
+            // абзац, и в разборе дня он вытесняет собой действие под ним.
+            isBrief && "line-clamp-3",
+          )}
+        >
+          {answer.body}
+        </p>
       </div>
 
-      {answer.bullets.length > 0 && (
+      {bullets.length > 0 && (
         <ul className="flex flex-col gap-2">
-          {answer.bullets.map((item) => (
+          {bullets.map((item) => (
             <li key={item.id} className="flex items-start gap-2.5">
               {/* A 5px dot rather than an icon per tone: six different glyphs
                   in one card reads as decoration, a column of dots reads as a
@@ -71,7 +107,7 @@ export function CoachAnswerBody({
               return (
                 <span
                   key={action.id}
-                  className="rounded-lg border border-border bg-fill-subtle px-3 py-1.5 text-[0.8125rem] font-medium text-muted-foreground"
+                  className="rounded-lg border border-border bg-fill-subtle px-3 py-1.5 text-caption font-medium text-muted-foreground"
                 >
                   {action.label}
                 </span>
@@ -82,7 +118,7 @@ export function CoachAnswerBody({
               <Link
                 key={action.id}
                 href={href}
-                className="group inline-flex items-center gap-1.5 rounded-lg border border-accent-border bg-accent-soft px-3 py-1.5 text-[0.8125rem] font-medium text-accent transition-colors duration-200 active:bg-accent-muted"
+                className="group inline-flex items-center gap-1.5 rounded-lg border border-accent-border bg-accent-soft px-3 py-1.5 text-caption font-medium text-accent transition-colors duration-200 active:bg-accent-muted"
               >
                 {action.label}
                 <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-200 group-active:translate-x-0.5" />

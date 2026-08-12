@@ -72,7 +72,7 @@ function UsageRow({ usage, feature }: { usage: FeatureUsage; feature: UsageFeatu
         <Icon className="h-4 w-4 shrink-0 text-subtle-foreground" />
         <div className="flex min-w-0 flex-1 flex-col">
           <p className="text-caption font-medium text-foreground">{label.title}</p>
-          <p className="text-[0.6875rem] text-subtle-foreground">{label.hint}</p>
+          <p className="text-micro text-subtle-foreground">{label.hint}</p>
         </div>
         <InfinityIcon className="h-4 w-4 shrink-0 text-accent" />
       </div>
@@ -97,7 +97,7 @@ function UsageRow({ usage, feature }: { usage: FeatureUsage; feature: UsageFeatu
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <p className="text-caption font-medium text-foreground">{label.title}</p>
-          <p className="text-[0.6875rem] text-subtle-foreground">{label.hint}</p>
+          <p className="text-micro text-subtle-foreground">{label.hint}</p>
         </div>
         <span className="numeric shrink-0 text-caption text-foreground">
           {used}
@@ -115,7 +115,7 @@ function UsageRow({ usage, feature }: { usage: FeatureUsage; feature: UsageFeatu
             style={{ width: `${Math.round(ratio * 100)}%` }}
           />
         </div>
-        <p className="text-[0.6875rem] text-subtle-foreground">
+        <p className="text-micro text-subtle-foreground">
           {WINDOW_NOTE[usage.window]}
           {exhausted && <RenewalNote renewsOn={usage.renewsOn} />}
         </p>

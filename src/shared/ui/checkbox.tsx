@@ -65,11 +65,11 @@ export function Checkbox({
 
         <span className="flex min-w-0 flex-col gap-1">
           <span className="text-caption text-foreground">{label}</span>
-          {hint && <span className="text-[0.6875rem] text-subtle-foreground">{hint}</span>}
+          {hint && <span className="text-micro text-subtle-foreground">{hint}</span>}
         </span>
       </button>
 
-      {footnote && <div className="pl-11 text-[0.6875rem]">{footnote}</div>}
+      {footnote && <div className="pl-11 text-micro">{footnote}</div>}
     </div>
   );
 }

@@ -81,7 +81,7 @@ export function HabitCard({
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span
                 className={cn(
-                  "text-[1.0625rem] font-semibold leading-snug tracking-[-0.018em]",
+                  "text-title font-semibold leading-snug tracking-[-0.018em]",
                   isArchived ? "text-muted-foreground" : "text-foreground",
                 )}
               >
@@ -107,7 +107,7 @@ export function HabitCard({
           <div className="flex items-baseline gap-2">
             <span
               className={cn(
-                "numeric text-[2rem] font-bold leading-none tracking-[-0.045em]",
+                "numeric text-metric-xl font-bold leading-none tracking-[-0.045em]",
                 stats.currentStreak > 0 && !isArchived ? "text-foreground" : "text-subtle-foreground",
               )}
             >
@@ -135,7 +135,7 @@ export function HabitCard({
               {stats.week.done} из {stats.week.target}{" "}
               {pluralizeRu(stats.week.target, ["раз", "раза", "раз"])}
             </span>
-            <span className={cn("numeric text-[0.75rem]", adherenceTextClass(stats.adherence))}>
+            <span className={cn("numeric text-micro", adherenceTextClass(stats.adherence))}>
               {adherencePercent}% за месяц
             </span>
           </div>

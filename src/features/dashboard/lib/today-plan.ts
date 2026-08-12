@@ -31,6 +31,50 @@ import type { MealSlot } from "@/features/nutrition/types";
 export type TodayPlanKind = "meal" | "workout" | "water" | "sleep";
 
 /**
+ * Часть суток, к которой принадлежит строка.
+ *
+ * ЗАЧЕМ ОНА ПОЯВИЛАСЬ. Лента из шести-семи строк со временем слева читается как
+ * список дел, а не как день: глазу не за что зацепиться, и «13:00 Обед» ничем не
+ * отличается от «19:30 Вода». Заголовок части суток разбивает ленту на четыре
+ * коротких отрезка и возвращает ей то, ради чего она задумывалась, — ощущение
+ * расписания, у которого есть утро и есть вечер.
+ *
+ * Границы конвенциональные и намеренно грубые: это подписи над группами, а не
+ * утверждение о том, когда у конкретного человека начинается вечер.
+ */
+export type TodayPlanPeriod = "morning" | "day" | "evening" | "night";
+
+export const PERIOD_LABELS: Record<TodayPlanPeriod, string> = {
+  morning: "Утро",
+  day: "День",
+  evening: "Вечер",
+  night: "Ночь",
+};
+
+/** Порядок частей суток. Совпадает с порядком ключей сортировки строк. */
+export const PERIOD_ORDER: TodayPlanPeriod[] = ["morning", "day", "evening", "night"];
+
+/**
+ * К какой части суток относится ключ сортировки.
+ *
+ * Считается по ключу, а не по полю `time`, и это принципиально: у строки может
+ * не быть времени вовсе (тренировка без истории, вода), но место в дне у неё
+ * есть всегда — иначе она не встала бы в ленту. Ключ и есть это место.
+ *
+ * Ключ подготовки ко сну уходит за пределы суток, когда отбой после полуночи
+ * (см. buildTodayPlan), поэтому сначала берётся остаток от 1440: половина
+ * второго ночи — это ночь, а не раннее утро следующего дня.
+ */
+function periodOf(sortKey: number): TodayPlanPeriod {
+  const minutes = ((sortKey % 1440) + 1440) % 1440;
+
+  if (minutes >= 22 * 60 || minutes < 5 * 60) return "night";
+  if (minutes < 12 * 60) return "morning";
+  if (minutes < 17 * 60) return "day";
+  return "evening";
+}
+
+/**
  * Состояние строки.
  *
  * `missed` существует отдельно от `upcoming` не ради красного цвета, а потому
@@ -48,6 +92,7 @@ export interface TodayPlanItem {
   subtitle: string;
   state: TodayPlanState;
   href: string;
+  period: TodayPlanPeriod;
 }
 
 /**
@@ -173,7 +218,9 @@ function stateOf(
 export function buildTodayPlan(input: TodayPlanInput): TodayPlanItem[] {
   const { nowMinutes, meals, workout, water, sleep, proteinGapG } = input;
 
-  const rows: { sortKey: number; item: TodayPlanItem }[] = [];
+  // Без `period`: он выводится из sortKey одним проходом в самом конце, поэтому
+  // веткам ниже его знать не надо и подделать его они не могут.
+  const rows: { sortKey: number; item: Omit<TodayPlanItem, "period"> }[] = [];
 
   // --- Приёмы пищи -------------------------------------------------------
   const loggedBySlot = new Map(meals.map((meal) => [meal.slot, meal]));
@@ -255,7 +302,9 @@ export function buildTodayPlan(input: TodayPlanInput): TodayPlanItem[] {
         title: "Вода",
         subtitle: `Осталось ${(remaining / 1000).toFixed(1).replace(".", ",")} л до нормы`,
         state: "upcoming",
-        href: "/nutrition?add=water",
+        // Без интента: формы у воды нет, стакан отмечается карточкой в дневнике
+        // (та же причина, что у плитки воды в QuickActions и у листа записи).
+        href: "/nutrition",
       },
     });
   }
@@ -303,5 +352,10 @@ export function buildTodayPlan(input: TodayPlanInput): TodayPlanItem[] {
     });
   }
 
-  return rows.sort((a, b) => a.sortKey - b.sortKey).map((row) => row.item);
+  // Часть суток проставляется здесь, а не в каждой ветке выше: она целиком
+  // выводится из ключа сортировки, и вычислять её на месте означало бы дать
+  // семи веткам семь возможностей разойтись с порядком строк.
+  return rows
+    .sort((a, b) => a.sortKey - b.sortKey)
+    .map((row) => ({ ...row.item, period: periodOf(row.sortKey) }));
 }

@@ -6,8 +6,14 @@
  * preview during onboarding and the restore-from-profile on session load
  * stay the same operation.
  */
+import { cacheThemeColor, cacheThemeMode } from "@/shared/lib/theme-storage";
+
 export function applyThemeColor(theme: string): void {
   document.documentElement.dataset.theme = theme;
+  // Кэшируется здесь, а не у вызывающих: применение темы и запоминание темы —
+  // одно событие, и разнести их значило бы завести состояние, в котором на
+  // экране одно, а на следующем старте другое.
+  cacheThemeColor(theme);
 }
 
 /**
@@ -50,6 +56,10 @@ export function systemMode(): "light" | "dark" {
  * the same code.
  */
 export function watchThemeMode(mode: "light" | "dark" | "system"): () => void {
+  // Запоминается политика, а не результат её разрешения — «как на устройстве»
+  // должно остаться «как на устройстве» и после перезапуска.
+  cacheThemeMode(mode);
+
   if (mode !== "system") {
     applyThemeMode(mode);
     return () => {};

@@ -42,7 +42,7 @@ export function TemplatesList({
         <EmptyState
           className="py-10"
           icon={<Layers className="h-5 w-5" />}
-          title="Шаблонов пока нет"
+          title="Собери первый шаблон"
           description="Собери повторяющийся приём пищи один раз — дальше он записывается в одно касание."
           action={
             <Button size="lg" onClick={onCreate}>

@@ -15,17 +15,17 @@ import { useNutrition } from "@/features/nutrition/hooks/use-nutrition";
 import { NutritionSkeleton } from "@/features/nutrition/components/nutrition-skeleton";
 import { NutritionTabs, type NutritionTabId } from "@/features/nutrition/components/nutrition-tabs";
 import { DayNavigator } from "@/features/nutrition/components/day-navigator";
-import { MacroSummaryCard } from "@/features/nutrition/components/macro-summary-card";
+import { NutritionTodayCard } from "@/features/nutrition/components/nutrition-today-card";
 import { MacroWhyCard } from "@/features/nutrition/components/macro-why-card";
 import { WaterCard } from "@/features/nutrition/components/water-card";
 import { MealGroupCard } from "@/features/nutrition/components/meal-group-card";
 import { FoodPickerModal } from "@/features/nutrition/components/food-picker-modal";
 import { FoodFormModal } from "@/features/nutrition/components/food-form-modal";
-import { FoodCaptureCard } from "@/features/nutrition/components/food-capture-card";
 import { LogEntryModal } from "@/features/nutrition/components/log-entry-modal";
 import { FoodsList } from "@/features/nutrition/components/foods-list";
 import { TemplatesList } from "@/features/nutrition/components/templates-list";
 import { QuickTemplatesGrid } from "@/features/nutrition/components/quick-templates-grid";
+import { NutritionPlanTab } from "@/features/nutrition/components/nutrition-plan-tab";
 import { TemplateFormModal } from "@/features/nutrition/components/template-form-modal";
 import { GoalFormModal } from "@/features/nutrition/components/goal-form-modal";
 import { NutritionStatsCard } from "@/features/nutrition/components/nutrition-stats-card";
@@ -50,6 +50,7 @@ export function NutritionView() {
     water,
     templates,
     goal,
+    goalStartedAt,
     today,
     windowStart,
     isPending,
@@ -107,6 +108,28 @@ export function NutritionView() {
 
   const activeDay = day ?? today;
   const hasData = foods.length > 0 || entries.length > 0;
+
+  /**
+   * Тело, из которого считается норма.
+   *
+   * Собрано один раз и делится между формой цели и вкладкой «План»: обе отвечают
+   * на вопросы про одну и ту же норму, и два разных снимка профиля означали бы,
+   * что форма может считать по одним данным, а сценарий — по другим.
+   */
+  const body = profile
+    ? {
+        age: profile.age,
+        heightCm: profile.heightCm,
+        weightKg: profile.weightKg,
+        gender: profile.gender,
+        activity: (profile.activityLevel as ActivityLevel | null) ?? null,
+      }
+    : null;
+
+  function openGoalForm() {
+    setGoalKey((n) => n + 1);
+    setGoalFormOpen(true);
+  }
 
   /**
    * Arrived from the record sheet. Each intent opens the form the user already
@@ -243,10 +266,7 @@ export function NutritionView() {
               size="icon"
               variant="secondary"
               aria-label="Дневная цель"
-              onClick={() => {
-                setGoalKey((n) => n + 1);
-                setGoalFormOpen(true);
-              }}
+              onClick={openGoalForm}
             >
               <Settings2 className="h-4 w-4" />
             </Button>
@@ -287,21 +307,21 @@ export function NutritionView() {
             <>
               <DayNavigator day={activeDay} today={today} windowStart={windowStart} onChange={setDay} />
 
-              <MacroSummaryCard progress={progress} />
+              {/* Один герой вместо трёх карточек: калории, БЖУ и обе кнопки
+                  записи. Сначала человек видит, где он, потом — чем это
+                  изменить, и всё это в одном блоке, потому что это один
+                  вопрос. */}
+              <NutritionTodayCard
+                progress={progress}
+                onAnalyzed={openFormWithAnalysis}
+                onManual={() => openPicker("breakfast")}
+              />
 
               {/* Объяснение под цифрами, а не вместо них. Свёрнуто по
                   умолчанию: пришедший записать обед не должен пролистывать
                   абзац о белке до кнопки, а увидевший «140 из 160» впервые —
                   находит смысл этой цифры там же, где её прочитал. */}
               <MacroWhyCard progress={progress} />
-
-              {/* Сразу под цифрами дня: сначала человек видит, где он, потом —
-                  чем это изменить. Обратный порядок превратил бы экран в форму
-                  ввода, открывающуюся результатом. */}
-              <FoodCaptureCard
-                onAnalyzed={openFormWithAnalysis}
-                onManual={() => openPicker("breakfast")}
-              />
 
               <WaterCard progress={progress.waterMl} onAdd={(delta) => addWater(activeDay, delta)} />
 
@@ -331,6 +351,17 @@ export function NutritionView() {
                 </div>
               )}
             </>
+          )}
+
+          {tab === "plan" && (
+            <NutritionPlanTab
+              body={body}
+              caloriesGoal={goal.calories}
+              proteinGoal={goal.proteinG}
+              goalStartedAt={goalStartedAt}
+              onOpenGoalForm={openGoalForm}
+              onApplyTemplate={applyQuickTemplateToday}
+            />
           )}
 
           {tab === "templates" && (
@@ -417,17 +448,7 @@ export function NutritionView() {
       <GoalFormModal
         key={`goal-form-${goalKey}`}
         goal={goal}
-        body={
-          profile
-            ? {
-                age: profile.age,
-                heightCm: profile.heightCm,
-                weightKg: profile.weightKg,
-                gender: profile.gender,
-                activity: (profile.activityLevel as ActivityLevel | null) ?? null,
-              }
-            : null
-        }
+        body={body}
         open={goalFormOpen}
         onOpenChange={setGoalFormOpen}
         onSave={setGoal}

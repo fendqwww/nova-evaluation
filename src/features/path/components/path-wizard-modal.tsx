@@ -184,7 +184,7 @@ export function PathWizardModal({
                     />
                     <span className="shrink-0 text-body text-muted-foreground">кг</span>
                   </div>
-                  <span className="text-[0.6875rem] text-subtle-foreground">
+                  <span className="text-micro text-subtle-foreground">
                     Сейчас {currentWeightKg} кг. Nova предложила безопасный шаг — можно изменить.
                   </span>
                 </label>
@@ -201,7 +201,7 @@ export function PathWizardModal({
                   disabled={isCreating}
                   placeholder="Например: хочу убрать живот к отпуску, но колени болят от бега"
                 />
-                <span className="text-[0.6875rem] text-subtle-foreground">
+                <span className="text-micro text-subtle-foreground">
                   Ограничения, сроки, что не подходит — Nova учтёт это в плане.
                 </span>
               </label>

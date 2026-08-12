@@ -100,7 +100,7 @@ export function WorkoutCard({
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
               <span
                 className={cn(
-                  "text-[1.0625rem] font-semibold leading-snug tracking-[-0.018em]",
+                  "text-title font-semibold leading-snug tracking-[-0.018em]",
                   isArchived ? "text-muted-foreground" : "text-foreground",
                 )}
               >
@@ -127,7 +127,7 @@ export function WorkoutCard({
           <div className="flex items-baseline gap-2">
             <span
               className={cn(
-                "numeric text-[2rem] font-bold leading-none tracking-[-0.045em]",
+                "numeric text-metric-xl font-bold leading-none tracking-[-0.045em]",
                 stats.currentStreak > 0 && !isArchived
                   ? "text-foreground"
                   : "text-subtle-foreground",
@@ -158,7 +158,7 @@ export function WorkoutCard({
             </span>
             <span
               className={cn(
-                "numeric text-[0.75rem]",
+                "numeric text-micro",
                 stats.adherence === null
                   ? "text-muted-foreground"
                   : adherenceTextClass(stats.adherence),
@@ -172,7 +172,7 @@ export function WorkoutCard({
         </button>
 
         <div className="flex items-center justify-between gap-2 border-t border-border pt-3">
-          <span className="text-[0.6875rem] text-subtle-foreground">
+          <span className="text-micro text-subtle-foreground">
             {stats.isOpenToday
               ? "Тренировка идёт — не завершена"
               : stats.isDoneToday
@@ -182,7 +182,7 @@ export function WorkoutCard({
                   : "Ещё ни разу не выполнена"}
           </span>
           {stats.volumeKg > 0 && (
-            <span className="numeric shrink-0 text-[0.6875rem] font-medium text-muted-foreground">
+            <span className="numeric shrink-0 text-micro font-medium text-muted-foreground">
               {formatVolume(stats.volumeKg)} за полгода
             </span>
           )}

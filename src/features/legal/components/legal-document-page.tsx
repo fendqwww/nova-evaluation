@@ -26,7 +26,7 @@ export function LegalDocumentPage({ document }: { document: LegalDocument }) {
       }))}
     >
       {!isOperatorConfigured() && (
-        <p className="mt-14 rounded-2xl border border-(--nova-hairline) p-5 text-[0.8125rem] text-(--nova-text-faint)">
+        <p className="mt-14 rounded-2xl border border-(--nova-hairline) p-5 text-caption text-(--nova-text-faint)">
           Черновик: реквизиты оператора ещё не заполнены. Документ описывает
           фактическую работу сервиса и будет дополнен реквизитами и финальной
           юридической редакцией до публичного запуска.

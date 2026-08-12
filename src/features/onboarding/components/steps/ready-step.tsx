@@ -61,7 +61,7 @@ export function ReadyStep({
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1 rounded-2xl border border-accent-border bg-accent-soft px-4 py-4">
             <span className="text-label uppercase text-accent">Калорий в день</span>
-            <span className="numeric text-metric text-foreground">{targets.calories}</span>
+            <span className="numeric text-metric-2xl text-foreground">{targets.calories}</span>
             <span className="text-caption text-muted-foreground">
               Поддержание — {targets.tdee} ккал, в покое тело тратит {targets.bmr}
             </span>
@@ -89,10 +89,10 @@ export function ReadyStep({
 function MacroTile({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-col items-center gap-0.5 rounded-xl border border-border px-2 py-3">
-      <span className="numeric text-[1.375rem] font-bold leading-none tracking-[-0.03em] text-foreground">
+      <span className="numeric text-page font-bold leading-none tracking-[-0.03em] text-foreground">
         {value}
       </span>
-      <span className="text-[0.6875rem] text-subtle-foreground">{label}, г</span>
+      <span className="text-micro text-subtle-foreground">{label}, г</span>
     </div>
   );
 }

@@ -59,7 +59,7 @@ export function BookDetailModal({
             </ul>
           </div>
 
-          <p className="rounded-xl border border-border bg-fill-subtle p-3 text-[0.6875rem] leading-snug text-subtle-foreground">
+          <p className="rounded-xl border border-border bg-fill-subtle p-3 text-micro leading-snug text-subtle-foreground">
             Nova не продаёт книги и не отслеживает чтение. Раздел существует, чтобы объяснить,
             какая книга отвечает на твоё сегодняшнее состояние и почему.
           </p>

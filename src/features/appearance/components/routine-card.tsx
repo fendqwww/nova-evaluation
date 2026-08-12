@@ -86,7 +86,7 @@ export function RoutineCard({
             {stats.currentStreak > 0 && (
               <span
                 className={cn(
-                  "numeric rounded-md px-1.5 py-0.5 text-[0.6875rem] font-semibold",
+                  "numeric rounded-md px-1.5 py-0.5 text-micro font-semibold",
                   streakBadgeClass(stats.currentStreak),
                 )}
               >
@@ -119,7 +119,7 @@ export function RoutineCard({
               {isDone ? (
                 <Check className="h-4 w-4" strokeWidth={3} />
               ) : progress.total > 0 ? (
-                <span className="numeric text-[0.6875rem] font-semibold">
+                <span className="numeric text-micro font-semibold">
                   {progress.done}/{progress.total}
                 </span>
               ) : (
@@ -176,7 +176,7 @@ export function RoutineCard({
               style={{ width: `${Math.round(stats.week.ratio * 100)}%` }}
             />
           </div>
-          <span className="numeric shrink-0 text-[0.6875rem] text-subtle-foreground">
+          <span className="numeric shrink-0 text-micro text-subtle-foreground">
             {stats.week.done} / {stats.week.target} за неделю
           </span>
         </div>

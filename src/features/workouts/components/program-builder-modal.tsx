@@ -172,7 +172,7 @@ export function ProgramBuilderModal({
             )}
           </Button>
 
-          <p className="rounded-xl border border-border bg-fill-subtle p-3 text-[0.6875rem] leading-snug text-subtle-foreground">
+          <p className="rounded-xl border border-border bg-fill-subtle p-3 text-micro leading-snug text-subtle-foreground">
             Программа появится как обычные тренировки — их можно править, переносить на другие дни
             и удалять. Существующие программы останутся на месте.
           </p>
@@ -248,7 +248,7 @@ function Choice<T extends string>({
                   {option.label}
                 </span>
                 {option.hint && (
-                  <span className="text-[0.6875rem] text-subtle-foreground">{option.hint}</span>
+                  <span className="text-micro text-subtle-foreground">{option.hint}</span>
                 )}
               </span>
             </button>

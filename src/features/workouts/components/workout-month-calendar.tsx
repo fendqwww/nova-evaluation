@@ -89,7 +89,7 @@ export function WorkoutMonthCalendar({
         {WEEKDAY_SHORT.map((label) => (
           <span
             key={label}
-            className="pb-0.5 text-center text-[0.625rem] font-medium text-subtle-foreground"
+            className="pb-0.5 text-center text-nano font-medium text-subtle-foreground"
           >
             {label}
           </span>
@@ -116,7 +116,7 @@ export function WorkoutMonthCalendar({
           const cell = (
             <span
               className={cn(
-                "flex aspect-square w-full items-center justify-center rounded-lg text-[0.75rem] transition-colors duration-200",
+                "flex aspect-square w-full items-center justify-center rounded-lg text-caption transition-colors duration-200",
                 dayCellClass(state),
                 isToday && !isDone && "ring-1 ring-inset ring-accent-border",
               )}
@@ -174,7 +174,7 @@ function Legend({ className, label }: { className: string; label: string }) {
   return (
     <span className="flex items-center gap-1.5">
       <span className={cn("h-2.5 w-2.5 rounded-[0.25rem]", className)} aria-hidden />
-      <span className="text-[0.6875rem] text-subtle-foreground">{label}</span>
+      <span className="text-micro text-subtle-foreground">{label}</span>
     </span>
   );
 }

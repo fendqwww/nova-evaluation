@@ -95,7 +95,7 @@ export function TaskCard({
               {showPriority && (
                 <span
                   className={cn(
-                    "rounded-md px-1.5 py-0.5 text-[0.625rem] font-semibold uppercase tracking-[0.04em]",
+                    "rounded-md px-1.5 py-0.5 text-nano font-semibold uppercase tracking-[0.04em]",
                     priorityChipClass(task.priority),
                   )}
                 >

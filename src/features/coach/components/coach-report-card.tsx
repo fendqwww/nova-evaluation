@@ -39,7 +39,7 @@ export function CoachReportCard({ report }: { report: CoachDailyReport }) {
       <CardContent className="flex flex-col gap-3.5 p-4 pt-4">
         <div className="flex items-center justify-between gap-2">
           <p className="text-label uppercase text-muted-foreground">Вчера и сегодня</p>
-          <p className="text-[0.6875rem] text-subtle-foreground">
+          <p className="text-micro text-subtle-foreground">
             {formatDay(report.yesterdayDay, report.today)} → сегодня
           </p>
         </div>
@@ -70,7 +70,7 @@ export function CoachReportCard({ report }: { report: CoachDailyReport }) {
                   </span>
                   <span
                     className={cn(
-                      "numeric w-12 rounded-md px-1.5 py-0.5 text-center text-[0.6875rem] font-semibold",
+                      "numeric w-12 rounded-md px-1.5 py-0.5 text-center text-micro font-semibold",
                       deltaBadgeClass(row.delta, row.higherIsBetter),
                     )}
                   >
@@ -128,7 +128,7 @@ function ChangeList({
     <div className="flex flex-col gap-1.5">
       <div
         className={cn(
-          "flex items-center gap-1.5 text-[0.75rem] font-semibold",
+          "flex items-center gap-1.5 text-micro font-semibold",
           tone === "positive" ? "text-positive" : "text-destructive",
         )}
       >

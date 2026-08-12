@@ -12,7 +12,7 @@ export function GoalStatusBadge({
   return (
     <span
       className={cn(
-        "shrink-0 rounded-md px-2 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.04em]",
+        "shrink-0 rounded-md px-2 py-1 text-micro font-semibold uppercase tracking-[0.04em]",
         statusBadgeClass(status.tone),
         className,
       )}

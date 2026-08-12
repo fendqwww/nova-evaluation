@@ -54,13 +54,13 @@ function Stat({ value, label, className }: { value: string; label: string; class
     <div className="flex flex-1 flex-col items-center gap-0.5">
       <span
         className={cn(
-          "numeric text-[1.375rem] font-bold leading-none tracking-[-0.03em]",
+          "numeric text-page font-bold leading-none tracking-[-0.03em]",
           className,
         )}
       >
         {value}
       </span>
-      <span className="text-center text-[0.6875rem] text-subtle-foreground">{label}</span>
+      <span className="text-center text-micro text-subtle-foreground">{label}</span>
     </div>
   );
 }
@@ -144,7 +144,7 @@ export function WorkoutDetailModal({
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               <ModalTitle
                 className={cn(
-                  "text-[1.125rem] font-semibold leading-snug tracking-[-0.02em]",
+                  "text-title font-semibold leading-snug tracking-[-0.02em]",
                   isArchived && "text-muted-foreground",
                 )}
               >
@@ -162,7 +162,7 @@ export function WorkoutDetailModal({
               <div className="flex items-baseline gap-2">
                 <span
                   className={cn(
-                    "numeric text-[2.5rem] font-bold leading-none tracking-[-0.045em]",
+                    "numeric text-metric-2xl font-bold leading-none tracking-[-0.045em]",
                     stats.currentStreak > 0 && !isArchived
                       ? "text-foreground"
                       : "text-subtle-foreground",
@@ -252,20 +252,20 @@ export function WorkoutDetailModal({
                     key={exercise.id}
                     className="flex items-start gap-2.5 rounded-xl border border-border bg-surface-inset p-2.5"
                   >
-                    <span className="numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-[0.6875rem] font-semibold text-subtle-foreground">
+                    <span className="numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-micro font-semibold text-subtle-foreground">
                       {index + 1}
                     </span>
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="truncate text-caption font-medium text-foreground">
                         {exercise.name}
                       </span>
-                      <span className="numeric text-[0.6875rem] text-subtle-foreground">
+                      <span className="numeric text-micro text-subtle-foreground">
                         {formatTarget(exercise.targetSets, exercise.targetReps)} ·{" "}
                         {formatLoad(exercise.targetWeightKg)} · отдых{" "}
                         {formatRest(exercise.restSeconds)}
                       </span>
                       {exercise.note && (
-                        <span className="text-[0.6875rem] text-muted-foreground">
+                        <span className="text-micro text-muted-foreground">
                           {exercise.note}
                         </span>
                       )}
@@ -306,7 +306,7 @@ export function WorkoutDetailModal({
                       <span className="text-caption text-foreground">
                         {formatDay(session.day, today)}
                       </span>
-                      <span className="numeric text-[0.6875rem] text-subtle-foreground">
+                      <span className="numeric text-micro text-subtle-foreground">
                         {session.completedAt === null
                           ? "не завершена"
                           : `${session.sets.length} подх.`}

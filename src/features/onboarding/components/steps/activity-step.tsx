@@ -89,7 +89,7 @@ export function ActivityStep({
               >
                 <span
                   className={cn(
-                    "text-[0.9375rem] font-semibold tracking-[-0.012em]",
+                    "text-body font-semibold tracking-[-0.012em]",
                     selected ? "text-accent" : "text-foreground",
                   )}
                 >

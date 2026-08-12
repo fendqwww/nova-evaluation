@@ -121,7 +121,7 @@ export function GoalDetailModal({
                 a second line. */}
             <h2
               className={cn(
-                "min-w-0 flex-1 text-[1.125rem] font-semibold leading-snug tracking-[-0.02em]",
+                "min-w-0 flex-1 text-title font-semibold leading-snug tracking-[-0.02em]",
                 isCompleted ? "text-muted-foreground line-through" : "text-foreground",
               )}
             >
@@ -135,7 +135,7 @@ export function GoalDetailModal({
                 <div className="flex items-center gap-2">
                   <span
                     className={cn(
-                      "numeric text-[2.5rem] font-bold leading-none tracking-[-0.045em]",
+                      "numeric text-metric-2xl font-bold leading-none tracking-[-0.045em]",
                       isCompleted ? "text-positive" : "text-foreground",
                     )}
                   >
@@ -149,14 +149,14 @@ export function GoalDetailModal({
                       <span className="numeric text-caption font-semibold text-foreground">
                         {formatStepCount(progress.done, progress.total)}
                       </span>
-                      <span className="numeric text-[0.75rem] text-subtle-foreground">
+                      <span className="numeric text-micro text-subtle-foreground">
                         {progress.remaining > 0
                           ? formatRemainingSteps(progress.remaining)
                           : "все шаги закрыты"}
                       </span>
                     </>
                   ) : (
-                    <span className="text-[0.75rem] text-subtle-foreground">
+                    <span className="text-micro text-subtle-foreground">
                       шаги не заданы
                     </span>
                   )}

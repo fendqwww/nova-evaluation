@@ -103,7 +103,7 @@ export function WorkoutExerciseRunner({
       <div className="flex items-start gap-2.5">
         <span
           className={cn(
-            "numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[0.6875rem] font-semibold transition-colors duration-200",
+            "numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-micro font-semibold transition-colors duration-200",
             isComplete ? "bg-positive-muted text-positive" : "bg-fill-muted text-subtle-foreground",
           )}
         >
@@ -112,19 +112,19 @@ export function WorkoutExerciseRunner({
 
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-caption font-semibold text-foreground">{exercise.name}</span>
-          <span className="numeric text-[0.6875rem] text-subtle-foreground">
+          <span className="numeric text-micro text-subtle-foreground">
             План {formatTarget(exercise.targetSets, exercise.targetReps)} ·{" "}
             {formatLoad(exercise.targetWeightKg)}
             {exercise.restSeconds > 0 && ` · отдых ${formatRest(exercise.restSeconds)}`}
           </span>
           {exercise.note && (
-            <span className="text-[0.6875rem] text-muted-foreground">{exercise.note}</span>
+            <span className="text-micro text-muted-foreground">{exercise.note}</span>
           )}
         </div>
 
         <span
           className={cn(
-            "numeric shrink-0 text-[0.6875rem] font-semibold",
+            "numeric shrink-0 text-micro font-semibold",
             isComplete ? "text-positive" : "text-subtle-foreground",
           )}
         >
@@ -142,7 +142,7 @@ export function WorkoutExerciseRunner({
           return (
             <div key={position} className="flex flex-col gap-1.5">
               <div className="flex items-center gap-1.5">
-                <span className="numeric w-5 shrink-0 text-[0.6875rem] text-subtle-foreground">
+                <span className="numeric w-5 shrink-0 text-micro text-subtle-foreground">
                   {position + 1}
                   {isExtra && <span className="text-accent">+</span>}
                 </span>
@@ -225,7 +225,7 @@ export function WorkoutExerciseRunner({
               setDrafts((state) => ({ ...state, [position]: valuesFor(rowCount - 1) }));
               setEditing(position);
             }}
-            className="flex items-center gap-1.5 self-start rounded-lg px-1 py-1 text-[0.6875rem] font-medium text-subtle-foreground transition-colors duration-200 active:text-foreground disabled:opacity-50"
+            className="flex items-center gap-1.5 self-start rounded-lg px-1 py-1 text-micro font-medium text-subtle-foreground transition-colors duration-200 active:text-foreground disabled:opacity-50"
           >
             <Plus className="h-3 w-3" />
             Ещё подход

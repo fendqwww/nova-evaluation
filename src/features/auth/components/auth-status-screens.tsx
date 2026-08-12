@@ -52,7 +52,7 @@ export function TelegramAuthError({ onRetry }: { onRetry: () => void }) {
           href={SUPPORT_CHANNEL.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[0.6875rem] text-subtle-foreground underline underline-offset-2"
+          className="text-micro text-subtle-foreground underline underline-offset-2"
         >
           Написать в поддержку
         </a>

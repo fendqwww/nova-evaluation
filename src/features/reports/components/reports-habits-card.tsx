@@ -43,7 +43,7 @@ export function ReportsHabitsCard({
                     <span className="min-w-0 flex-1 truncate text-caption text-muted-foreground">
                       {habit.title}
                     </span>
-                    <span className="flex shrink-0 items-center gap-1 text-[0.6875rem] text-subtle-foreground">
+                    <span className="flex shrink-0 items-center gap-1 text-micro text-subtle-foreground">
                       {habit.currentStreak > 0 && (
                         <>
                           <Flame className="h-3 w-3 text-tint-orange" />

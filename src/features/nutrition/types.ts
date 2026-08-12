@@ -112,4 +112,15 @@ export interface NutritionSnapshot {
   water: NutritionWaterItem[];
   templates: NutritionMealTemplate[];
   goal: NutritionGoalItem;
+  /**
+   * ISO-момент, когда у человека впервые появилась дневная норма.
+   *
+   * Отдельным полем снимка, а не полем NutritionGoalItem: тот же тип служит
+   * входом для setGoal, и время создания строки — не то, что клиент вправе
+   * присылать. Нужно ровно одному потребителю — сценарию питания, которому надо
+   * знать, какая идёт неделя (см. scenarioWeekIndex).
+   *
+   * null означает «нормы ещё нет»: онбординг не пройден или строка не создана.
+   */
+  goalStartedAt: string | null;
 }

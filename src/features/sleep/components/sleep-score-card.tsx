@@ -90,10 +90,10 @@ export function SleepScoreCard({
         <div className="flex items-center gap-4">
           <CircularProgress value={result.score} size={96} strokeWidth={9}>
             <div className="flex flex-col items-center">
-              <span className="numeric text-[1.75rem] font-bold leading-none tracking-[-0.04em] text-foreground">
+              <span className="numeric text-metric-lg font-bold leading-none tracking-[-0.04em] text-foreground">
                 {displayValue}
               </span>
-              <span className="text-[0.625rem] text-subtle-foreground">Sleep Score</span>
+              <span className="text-nano text-subtle-foreground">Sleep Score</span>
             </div>
           </CircularProgress>
 
@@ -134,7 +134,7 @@ export function SleepScoreCard({
                   fillClass={componentFill(ratio)}
                   label={component.label}
                 />
-                <span className="text-[0.6875rem] text-subtle-foreground">{component.note}</span>
+                <span className="text-micro text-subtle-foreground">{component.note}</span>
               </div>
             );
           })}

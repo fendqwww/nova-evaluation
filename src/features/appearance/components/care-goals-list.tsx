@@ -47,7 +47,7 @@ export function CareGoalsList({
       <EmptyState
         className="py-8"
         icon={<Target className="h-5 w-5" />}
-        title="Направление не задано"
+        title="Выбери, к чему идёшь"
         description="Цель задаёт направление, процедуры — путь к ней. Начни с цели."
         action={
           <Button size="lg" onClick={onCreate}>
@@ -181,7 +181,7 @@ export function CareGoalsList({
                 {stats.expected > 0 && (
                   <span
                     className={cn(
-                      "numeric ml-auto text-[0.6875rem]",
+                      "numeric ml-auto text-micro",
                       adherenceTextClass(stats.adherence),
                     )}
                   >

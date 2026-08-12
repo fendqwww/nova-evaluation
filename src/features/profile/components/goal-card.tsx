@@ -63,7 +63,7 @@ export function ProfileGoalCard({ path }: { path: ProfilePathSummary | null }) {
             </p>
           </div>
 
-          <span className="numeric shrink-0 text-[1.375rem] font-bold leading-none tracking-[-0.04em] text-foreground">
+          <span className="numeric shrink-0 text-page font-bold leading-none tracking-[-0.04em] text-foreground">
             {path.percent}%
           </span>
         </div>

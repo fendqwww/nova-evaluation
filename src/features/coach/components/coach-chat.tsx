@@ -103,7 +103,7 @@ export function CoachChat({
         <div key={group.day} className="flex flex-col gap-3">
           <div className="flex items-center gap-3 py-0.5">
             <span className="h-px flex-1 bg-border" />
-            <span className="text-[0.6875rem] font-medium uppercase tracking-[0.05em] text-subtle-foreground">
+            <span className="text-micro font-medium uppercase tracking-[0.05em] text-subtle-foreground">
               {group.day === today ? "Сегодня" : formatDay(group.day, today)}
             </span>
             <span className="h-px flex-1 bg-border" />

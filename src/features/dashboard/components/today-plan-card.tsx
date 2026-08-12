@@ -5,10 +5,13 @@ import { Check, Droplet, Dumbbell, Moon, UtensilsCrossed } from "lucide-react";
 import { Card } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
 import { haptics } from "@/shared/lib/haptics";
-import type {
-  TodayPlanItem,
-  TodayPlanKind,
-  TodayPlanState,
+import {
+  PERIOD_LABELS,
+  PERIOD_ORDER,
+  type TodayPlanItem,
+  type TodayPlanKind,
+  type TodayPlanPeriod,
+  type TodayPlanState,
 } from "@/features/dashboard/lib/today-plan";
 
 /**
@@ -25,6 +28,16 @@ import type {
  *
  * Строка без времени (тренировка без истории, вода) показывает точку вместо
  * часов, а не выдуманное «18:00» — см. заголовок today-plan.ts.
+ *
+ * ЛЕНТА РАЗБИТА НА ЧАСТИ СУТОК. Шесть-семь строк подряд читались как список дел:
+ * «13:00 Обед» и «19:30 Вода» выглядели одинаково важными и одинаково
+ * безразличными к тому, который сейчас час. Заголовки «Утро · День · Вечер ·
+ * Ночь» стоят почти ничего по месту и возвращают ленте то, ради чего она
+ * задумывалась, — вид расписания, а не перечня.
+ *
+ * Пустые части суток не печатаются вовсе. Заголовок «Ночь» над пустотой сообщал
+ * бы, что там что-то должно было быть и не случилось, — а ночью там просто
+ * ничего не запланировано.
  */
 
 const ICONS: Record<TodayPlanKind, typeof Check> = {
@@ -128,6 +141,20 @@ export function TodayPlanCard({ items }: { items: TodayPlanItem[] }) {
 
   const doneCount = items.filter((item) => item.state === "done").length;
 
+  // Строки уже отсортированы по ходу дня, поэтому группировка — это просто
+  // раскладка по ключу с сохранением порядка: пересортировывать нечего.
+  const byPeriod = new Map<TodayPlanPeriod, TodayPlanItem[]>();
+  for (const item of items) {
+    const group = byPeriod.get(item.period);
+    if (group) group.push(item);
+    else byPeriod.set(item.period, [item]);
+  }
+
+  const groups = PERIOD_ORDER.map((period) => ({
+    period,
+    rows: byPeriod.get(period) ?? [],
+  })).filter((group) => group.rows.length > 0);
+
   return (
     <div className="flex flex-col gap-2.5">
       <div className="flex items-baseline justify-between gap-2">
@@ -139,8 +166,31 @@ export function TodayPlanCard({ items }: { items: TodayPlanItem[] }) {
 
       <Card>
         <div className="flex flex-col p-2">
-          {items.map((item, index) => (
-            <Row key={item.key} item={item} isLast={index === items.length - 1} />
+          {groups.map((group, groupIndex) => (
+            <div key={group.period} className="flex flex-col">
+              {/* Отступ сверху есть у всех групп, кроме первой: он отделяет
+                  части суток друг от друга, а над первой строкой карточки
+                  отделять нечего. */}
+              <p
+                className={cn(
+                  "px-2 pb-1 text-label uppercase text-subtle-foreground",
+                  groupIndex > 0 && "pt-3",
+                )}
+              >
+                {PERIOD_LABELS[group.period]}
+              </p>
+
+              {group.rows.map((item, index) => (
+                <Row
+                  key={item.key}
+                  item={item}
+                  // Соединитель обрывается на последней строке *своей* группы:
+                  // тянуть линию сквозь заголовок «Вечер» значило бы сначала
+                  // разбить ленту на части, а потом их же и склеить.
+                  isLast={index === group.rows.length - 1}
+                />
+              ))}
+            </div>
           ))}
         </div>
       </Card>

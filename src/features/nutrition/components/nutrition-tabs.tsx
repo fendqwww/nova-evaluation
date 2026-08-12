@@ -3,20 +3,32 @@
 import { motion } from "framer-motion";
 import { cn } from "@/shared/lib/cn";
 
-export type NutritionTabId = "diary" | "templates" | "foods" | "stats";
+export type NutritionTabId = "diary" | "plan" | "templates" | "foods" | "stats";
 
 const TABS: { id: NutritionTabId; label: string }[] = [
   { id: "diary", label: "Дневник" },
+  { id: "plan", label: "План" },
   { id: "templates", label: "Шаблоны" },
   { id: "foods", label: "Продукты" },
   { id: "stats", label: "Статистика" },
 ];
 
 /**
- * Four surfaces, one section — same sliding-pill control as WorkoutsTabs, and
+ * Five surfaces, one section — same sliding-pill control as WorkoutsTabs, and
  * for the same reason: today's diary, the reusable templates, the personal
  * catalogue and the weekly trend are different questions, and stacking them on
  * one scroll would bury today's log under a shelf of products.
+ *
+ * «ПЛАН» СТОИТ ВТОРЫМ, СРАЗУ ЗА ДНЕВНИКОМ. Он отвечает на вопрос, который
+ * возникает раньше всех остальных и до сих пор оставался без ответа: норму
+ * приложение считало само, а что именно есть, чтобы в неё попасть, человек
+ * придумывал сам. Дневник остаётся первым, потому что открывают раздел чаще
+ * всего чтобы записать; план — второй, потому что к нему возвращаются, когда
+ * записывать нечего.
+ *
+ * Пять вкладок — предел для этой полоски: подписи и так короткие, шестая
+ * потребовала бы сокращений или прокрутки, и с этого момента вкладка перестаёт
+ * быть видимой сразу.
  */
 export function NutritionTabs({
   tab,

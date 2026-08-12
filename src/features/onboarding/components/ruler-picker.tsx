@@ -150,8 +150,8 @@ export function RulerPicker({
         transition={{ duration: 0.15 }}
         className={
           compact
-            ? "numeric text-[1.5rem] font-bold leading-none text-foreground"
-            : "numeric text-metric text-foreground"
+            ? "numeric text-metric-md font-bold leading-none text-foreground"
+            : "numeric text-metric-2xl text-foreground"
         }
       >
         {value}
@@ -159,7 +159,7 @@ export function RulerPicker({
       <span
         className={
           compact
-            ? "text-[0.9375rem] font-medium text-muted-foreground"
+            ? "text-body font-medium text-muted-foreground"
             : "text-lg font-medium text-subtle-foreground"
         }
       >

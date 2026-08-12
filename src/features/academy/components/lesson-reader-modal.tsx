@@ -14,18 +14,8 @@ import { haptics } from "@/shared/lib/haptics";
 import {
   ACADEMY_TOPIC_LABELS,
   type AcademyLesson,
-  type AcademyTarget,
 } from "@/features/academy/content/lessons";
-
-const TARGET_HREF: Record<AcademyTarget, string> = {
-  nutrition: "/nutrition",
-  workouts: "/workouts",
-  sleep: "/sleep",
-  habits: "/habits",
-  profile: "/profile",
-  path: "/path",
-  coach: "/coach",
-};
+import { TARGET_HREF } from "@/features/academy/lib/target-href";
 
 /**
  * Урок целиком.

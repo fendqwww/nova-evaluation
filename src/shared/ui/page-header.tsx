@@ -16,7 +16,7 @@ export interface PageHeaderProps {
  * The top of an app screen.
  *
  * Every screen used to write this by hand, which is how fifteen files ended up
- * carrying the literal `text-[1.375rem] font-bold tracking-[-0.028em]` — a size
+ * carrying the literal `text-page font-bold tracking-[-0.028em]` — a size
  * that was in no scale and could not be changed anywhere without being changed
  * in fifteen places. The type now comes from the `text-page` role; the entrance
  * animation, the baseline of the actions against the title, and the gap between

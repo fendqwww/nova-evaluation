@@ -61,7 +61,7 @@ function ScoreCell({ score, onOpen }: { score: HealthScore; onOpen: () => void }
         {isEmpty ? (
           <Icon className="h-4.5 w-4.5 text-subtle-foreground" />
         ) : (
-          <span className="numeric text-[1.375rem] font-bold leading-none tracking-[-0.04em] text-foreground">
+          <span className="numeric text-page font-bold leading-none tracking-[-0.04em] text-foreground">
             {score.value}
           </span>
         )}
@@ -71,7 +71,7 @@ function ScoreCell({ score, onOpen }: { score: HealthScore; onOpen: () => void }
         <span className="text-caption font-medium text-foreground">{score.label}</span>
         <span
           className={cn(
-            "text-[0.6875rem] leading-tight",
+            "text-micro leading-tight",
             isEmpty ? "text-accent" : "text-muted-foreground",
           )}
         >
@@ -136,7 +136,7 @@ function ScoreBreakdownModal({
                     label={component.label}
                   />
                   {component.note && (
-                    <p className="text-[0.6875rem] leading-snug text-subtle-foreground">
+                    <p className="text-micro leading-snug text-subtle-foreground">
                       {component.note}
                     </p>
                   )}

@@ -40,7 +40,7 @@ export function CoachPreviewCard({ coach }: { coach: DashboardData["coach"] }) {
             <div className="flex items-center justify-between gap-2">
               <p className="text-label uppercase text-muted-foreground">Коуч Nova</p>
               {coach.potential > 0 && (
-                <span className="numeric shrink-0 rounded-md bg-accent-muted px-1.5 py-0.5 text-[0.6875rem] font-semibold text-accent">
+                <span className="numeric shrink-0 rounded-md bg-accent-muted px-1.5 py-0.5 text-micro font-semibold text-accent">
                   +{coach.potential} сегодня
                 </span>
               )}

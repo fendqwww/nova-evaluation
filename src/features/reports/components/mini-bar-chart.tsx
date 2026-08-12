@@ -55,7 +55,7 @@ export function MiniBarChart({
             {showWeekdayLabels && (
               <span
                 className={cn(
-                  "text-[0.625rem]",
+                  "text-nano",
                   isToday ? "font-semibold text-foreground" : "text-subtle-foreground",
                 )}
               >

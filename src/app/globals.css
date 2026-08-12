@@ -324,11 +324,6 @@
    * not a blanket font-semibold. display/headline are the only bold-weight
    * text on screen; card titles sit at medium; body copy is regular.
    */
-  --text-display: 2.25rem; /* the user's name — the one place accent-coloured text is allowed */
-  --text-display--line-height: 1.05;
-  --text-display--letter-spacing: -0.04em;
-  --text-display--font-weight: 700;
-
   /*
    * Onboarding scenes. A scene has exactly one headline and it is the largest
    * thing on screen by a wide margin — 36px against the 15px body the rest of
@@ -391,10 +386,67 @@
   --text-label--letter-spacing: 0.065em;
   --text-label--font-weight: 600;
 
-  --text-metric: 2.75rem; /* the Life Score number */
-  --text-metric--line-height: 1;
-  --text-metric--letter-spacing: -0.045em;
-  --text-metric--font-weight: 700;
+  /*
+   * THE TWO SMALLEST TIERS — the hole the scale used to have.
+   *
+   * `label` was the only 11px role, and it is a shouty one: uppercase, weight
+   * 600, +0.065em tracking. Plain 11px footnotes — a stat under a number, a
+   * note under a row — had nowhere to live, so 101 call sites wrote
+   * `text-[0.6875rem]` by hand and another 11 wrote `text-[0.75rem]` for the
+   * same job. That is not a scale with an exception, that is a scale with a
+   * missing role, and every hand-written size is a vote for adding it.
+   *
+   * micro is the quiet twin of label: same 11px, none of the shouting.
+   * nano is smaller still and exists for exactly three jobs — the tab bar's
+   * labels, a calendar's weekday header and a unit suffix next to a big
+   * number. Nothing a person has to *read* is allowed down here.
+   */
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.35;
+  --text-micro--letter-spacing: -0.002em;
+  --text-micro--font-weight: 400;
+
+  --text-nano: 0.625rem;
+  --text-nano--line-height: 1.2;
+  --text-nano--letter-spacing: -0.005em;
+  --text-nano--font-weight: 500;
+
+  /*
+   * METRICS — six sizes for one job: a number that is the point of its card.
+   *
+   * A health app is mostly numbers, and they were sized by hand at 1.125, 1.5,
+   * 1.625, 1.75, 2, 2.5, 2.75 and 3.5rem — eight values, seven of them chosen
+   * once and never reconciled. These six are the same sizes with the accidents
+   * removed (1.625 folded into lg, 2.75 into 2xl), and they are named by role
+   * size rather than by screen so the same number never has two sizes on two
+   * screens.
+   *
+   * Deliberately size + line-height ONLY: no weight, no letter-spacing. Every
+   * metric in the app already carries `numeric` (which sets tabular figures and
+   * its own tracking) plus an explicit `font-bold`, and a token that also
+   * declared those would collide with `numeric` on letter-spacing — two
+   * utilities of equal specificity, resolved by whichever CSS was emitted last.
+   * Sizing is the part that was actually broken; weight never was.
+   *
+   *   sm  18px  stat inside a row
+   *   md  24px  body weight, a picker's live value
+   *   lg  28px  card hero — sleep score, path percent, rest timer
+   *   xl  32px  list-card hero — goal percent, workout completion
+   *   2xl 40px  modal hero, onboarding's target number
+   *   3xl 56px  NOVA Score, and nothing else in the app
+   */
+  --text-metric-sm: 1.125rem;
+  --text-metric-sm--line-height: 1;
+  --text-metric-md: 1.5rem;
+  --text-metric-md--line-height: 1;
+  --text-metric-lg: 1.75rem;
+  --text-metric-lg--line-height: 1;
+  --text-metric-xl: 2rem;
+  --text-metric-xl--line-height: 1;
+  --text-metric-2xl: 2.5rem;
+  --text-metric-2xl--line-height: 1;
+  --text-metric-3xl: 3.5rem;
+  --text-metric-3xl--line-height: 1;
 }
 
 @utility numeric {

@@ -163,9 +163,54 @@ const FAT_SHARE = 0.27;
 /** Millilitres of water per kg of bodyweight. */
 const WATER_PER_KG = 33;
 
+/**
+ * Расход за сутки — BMR, умноженный на активность.
+ *
+ * Вынесено из calculateTargets отдельной функцией, потому что у него появился
+ * второй потребитель: inferAim сравнивает норму именно с поддержанием, и без
+ * этой функции ему пришлось бы либо считать полный набор целей ради одного
+ * числа, либо получить доступ к таблице коэффициентов, которая обязана
+ * остаться приватной.
+ */
+export function totalDailyEnergyExpenditure(input: {
+  age: number;
+  heightCm: number;
+  weightKg: number;
+  gender: string;
+  activity: ActivityLevel;
+}): number {
+  return Math.round(basalMetabolicRate(input) * ACTIVITY_FACTOR[input.activity]);
+}
+
+/**
+ * Какую цель человек фактически преследует, судя по его норме.
+ *
+ * ПОЧЕМУ ЭТО ВЫВОДИТСЯ, А НЕ ХРАНИТСЯ. `aim` спрашивают один раз в онбординге и
+ * нигде не сохраняют — он только выбирает коэффициент для первой нормы, после
+ * чего источником истины становится сама норма (см. комментарий к полю в
+ * onboardingProfileSchema и к созданию NutritionGoal в completeOnboarding).
+ * Завести колонку означало бы завести второй ответ на тот же вопрос: человек,
+ * поднявший норму до профицита руками, по колонке продолжал бы худеть.
+ *
+ * Порог в 5% от поддержания, а не точное сравнение: норма округляется, вес в
+ * профиле целочисленный, и разница в полсотни килокалорий не является выбором
+ * цели. Всё, что ближе — поддержание.
+ *
+ * `null` в ответ на нулевую или неправдоподобную норму: это «цель неизвестна», и
+ * показывать по такому основанию сценарий похудения нельзя.
+ */
+export function inferAim(caloriesGoal: number, tdee: number): NutritionAim | null {
+  if (caloriesGoal <= 0 || tdee <= 0) return null;
+
+  const ratio = caloriesGoal / tdee;
+  if (ratio < 0.95) return "lose";
+  if (ratio > 1.05) return "gain";
+  return "maintain";
+}
+
 export function calculateTargets(input: BodyInput): NutritionTargets {
   const bmr = basalMetabolicRate(input);
-  const tdee = Math.round(bmr * ACTIVITY_FACTOR[input.activity]);
+  const tdee = totalDailyEnergyExpenditure(input);
 
   const aimed = Math.round(tdee * AIM_FACTOR[input.aim]);
   const floor =

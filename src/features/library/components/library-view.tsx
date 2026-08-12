@@ -11,9 +11,11 @@ import { Reveal, RevealItem } from "@/shared/ui/reveal";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { cn } from "@/shared/lib/cn";
 import { haptics } from "@/shared/lib/haptics";
+import { useOpenIntent } from "@/shared/lib/use-add-intent";
 import { useLibrary } from "@/features/library/hooks/use-library";
 import { BookDetailModal } from "@/features/library/components/book-detail-modal";
 import {
+  LIBRARY_BOOKS,
   LIBRARY_CATEGORIES,
   LIBRARY_CATEGORY_LABELS,
   type LibraryBook,
@@ -36,6 +38,24 @@ export function LibraryView() {
   const { snapshot, isPending, isError, retry } = useLibrary();
   const [openBook, setOpenBook] = useState<LibraryBook | null>(null);
   const [filter, setFilter] = useState<LibraryCategory | "all">("all");
+
+  /**
+   * Пришли по ссылке на конкретную книгу — с экрана пути, из карточки «Что
+   * изучить под эту цель» (`/library?open=why-we-sleep`).
+   *
+   * Ищется в каталоге из кода, а не в `snapshot.books`: каталог одинаков для
+   * всех и доступен на первом же кадре, поэтому книга открывается сразу, а не
+   * после того, как приедет ответ сервера с рекомендациями. Ненайденный id
+   * молча даёт обычный экран библиотеки — см. тот же разбор в AcademyView.
+   */
+  const openIntent = useOpenIntent();
+  const [intentDismissed, setIntentDismissed] = useState(false);
+  const intentBook =
+    openIntent === null || intentDismissed
+      ? null
+      : (LIBRARY_BOOKS.find((book) => book.id === openIntent) ?? null);
+
+  const visibleBook = openBook ?? intentBook;
 
   const books = snapshot?.books ?? [];
   const visible = filter === "all" ? books : books.filter((book) => book.category === filter);
@@ -154,7 +174,7 @@ export function LibraryView() {
                         setFilter(id);
                       }}
                       className={cn(
-                        "shrink-0 rounded-full border px-3.5 py-2 text-[0.8125rem] font-medium tracking-[-0.01em] transition-colors duration-200",
+                        "shrink-0 rounded-full border px-3.5 py-2 text-caption font-medium tracking-[-0.01em] transition-colors duration-200",
                         isActive
                           ? "border-accent-border bg-accent-soft text-accent"
                           : "border-border bg-surface-2 text-foreground active:border-border-strong",
@@ -200,9 +220,14 @@ export function LibraryView() {
       </AsyncSection>
 
       <BookDetailModal
-        book={openBook}
-        open={openBook !== null}
-        onOpenChange={(next) => !next && setOpenBook(null)}
+        book={visibleBook}
+        open={visibleBook !== null}
+        onOpenChange={(next) => {
+          if (!next) {
+            setOpenBook(null);
+            setIntentDismissed(true);
+          }
+        }}
       />
     </PageContainer>
   );

@@ -12,6 +12,7 @@ import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { cn } from "@/shared/lib/cn";
 import { pluralizeRu } from "@/shared/lib/pluralize-ru";
+import { useAddIntent } from "@/shared/lib/use-add-intent";
 import { useTasks } from "@/features/tasks/hooks/use-tasks";
 import { clearCompletedTasksAction } from "@/features/tasks/server/clear-completed-tasks.action";
 import { TaskCard } from "@/features/tasks/components/task-card";
@@ -41,6 +42,14 @@ export function TasksView() {
 
   const [isFormOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskItem | null>(null);
+  /**
+   * Пришли из листа записи по «Задача» (`/tasks?add=1`) — форма создания
+   * открывается сразу. Ссылка существовала и раньше, но её никто не читал:
+   * кнопка в листе записи просто открывала список. См. тот же разбор в
+   * GoalsView.
+   */
+  const addIntent = useAddIntent();
+  const [intentDismissed, setIntentDismissed] = useState(false);
   // The open task is tracked by id, not by value: the detail modal then reads
   // the live row every render, so an optimistic completion shows up inside the
   // modal instead of only in the list behind it.
@@ -157,7 +166,7 @@ export function TasksView() {
         <EmptyState
           className="py-12"
           icon={<ListTodo className="h-5 w-5" />}
-          title="Список пуст"
+          title="Твой первый шаг"
           description="Запиши то, что висит в голове. Один закрытый пункт сегодня — уже движение."
           action={
             <Button size="lg" onClick={openCreate}>
@@ -227,7 +236,7 @@ export function TasksView() {
                     </span>
                     <span
                       className={cn(
-                        "numeric rounded-md px-1.5 py-0.5 text-[0.6875rem] font-semibold",
+                        "numeric rounded-md px-1.5 py-0.5 text-micro font-semibold",
                         groupCountClass(group.horizon),
                       )}
                     >
@@ -317,8 +326,11 @@ export function TasksView() {
         key={`form-${formKey}`}
         task={editingTask}
         today={today}
-        open={isFormOpen}
-        onOpenChange={setFormOpen}
+        open={isFormOpen || (addIntent !== null && !intentDismissed)}
+        onOpenChange={(next) => {
+          setFormOpen(next);
+          if (!next) setIntentDismissed(true);
+        }}
         onSaved={refresh}
       />
 

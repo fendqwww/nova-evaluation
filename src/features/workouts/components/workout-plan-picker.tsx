@@ -61,7 +61,7 @@ export function WorkoutPlanPicker({
             type="button"
             onClick={() => onChange(preset.mask)}
             className={cn(
-              "rounded-md border px-2 py-1 text-[0.6875rem] font-medium transition-colors duration-200",
+              "rounded-md border px-2 py-1 text-micro font-medium transition-colors duration-200",
               preset.mask === weekdayMask
                 ? "border-accent-border text-accent"
                 : "border-border text-subtle-foreground active:border-border-strong",
@@ -82,7 +82,7 @@ export function WorkoutPlanPicker({
         <button
           type="button"
           onClick={() => onChange(NO_PLAN_MASK)}
-          className="self-start text-[0.6875rem] font-medium text-subtle-foreground underline-offset-2 transition-colors duration-200 active:text-foreground"
+          className="self-start text-micro font-medium text-subtle-foreground underline-offset-2 transition-colors duration-200 active:text-foreground"
         >
           Убрать план
         </button>

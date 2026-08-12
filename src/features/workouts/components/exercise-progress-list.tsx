@@ -73,7 +73,7 @@ export function ExerciseProgressList({
                   {exercise.name}
                   {exercise.archivedAt !== null && " · убрано из плана"}
                 </span>
-                <span className="numeric text-[0.6875rem] text-subtle-foreground">
+                <span className="numeric text-micro text-subtle-foreground">
                   Последняя: {last.sets} ×{" "}
                   {Math.round(last.reps / Math.max(1, last.sets))}
                   {isBodyweight
@@ -85,7 +85,7 @@ export function ExerciseProgressList({
               {progress.points.length > 1 && (
                 <span
                   className={cn(
-                    "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-[0.6875rem] font-semibold",
+                    "flex shrink-0 items-center gap-1 rounded-md px-1.5 py-0.5 text-micro font-semibold",
                     delta > 0
                       ? "bg-positive-muted text-positive"
                       : delta < 0
@@ -156,10 +156,10 @@ function Fact({
 }) {
   return (
     <span className="flex items-baseline gap-1">
-      <span className="text-[0.6875rem] text-subtle-foreground">{label}</span>
+      <span className="text-micro text-subtle-foreground">{label}</span>
       <span
         className={cn(
-          "numeric text-[0.6875rem] font-semibold",
+          "numeric text-micro font-semibold",
           highlight ? "text-positive" : "text-foreground",
         )}
       >

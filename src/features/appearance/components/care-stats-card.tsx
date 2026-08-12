@@ -190,8 +190,8 @@ function WeekBars({
             <span
               className={
                 isToday
-                  ? "text-[0.6875rem] font-semibold text-foreground"
-                  : "text-[0.6875rem] text-subtle-foreground"
+                  ? "text-micro font-semibold text-foreground"
+                  : "text-micro text-subtle-foreground"
               }
             >
               {WEEKDAY_SHORT[weekdayIndex(entry.day)]}
