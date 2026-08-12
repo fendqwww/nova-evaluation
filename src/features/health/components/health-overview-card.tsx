@@ -90,7 +90,7 @@ function ScoreCell({ score, onOpen }: { score: HealthScore; onOpen: () => void }
  * же правило, что и в самой формуле: отсутствие данных не штраф, но и не
  * скрытая от пользователя деталь.
  */
-function ScoreBreakdownModal({
+export function ScoreBreakdownModal({
   score,
   open,
   onOpenChange,

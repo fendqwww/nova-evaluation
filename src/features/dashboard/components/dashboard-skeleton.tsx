@@ -24,8 +24,8 @@ export function DashboardSkeleton() {
         <Skeleton className="h-4 w-full" />
       </div>
 
-      {/* Герой: кольцо 168px, вердикт и сетка из четырёх ячеек под разделителем. */}
-      <Skeleton className="h-116 w-full rounded-xl" />
+      {/* Герой: шапка, сетка 2×2 из плиток с индексом в центре и вердикт. */}
+      <Skeleton className="h-81 w-full rounded-xl" />
 
       {/* Разбор коуча — теперь сразу под героем, до плана дня. */}
       <Skeleton className="h-64 w-full rounded-xl" />
