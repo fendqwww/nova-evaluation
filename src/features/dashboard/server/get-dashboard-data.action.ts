@@ -15,12 +15,10 @@ import { dayProgress, entriesOnDay, entryMacros } from "@/features/nutrition/lib
 import { MEAL_SLOTS } from "@/features/nutrition/schemas";
 import { listLogs as listSleepLogs } from "@/features/sleep/server/sleep.repository";
 import { sleepScore } from "@/features/sleep/lib/score";
+import { logOnDay as sleepLogOnDay } from "@/features/sleep/lib/stats";
 import { listWorkouts, listSessions } from "@/features/workouts/server/workouts.repository";
 import { workoutStats } from "@/features/workouts/lib/stats";
-import {
-  calculateHealthScores,
-  summarizeHealth,
-} from "@/features/health/lib/health-scores";
+import { buildDayScore } from "@/features/dashboard/lib/day-score";
 import { buildTodayPlan } from "@/features/dashboard/lib/today-plan";
 import { getActivePath } from "@/features/path/server/path.repository";
 import { pathProgress, stageCaption } from "@/features/path/lib/progress";
@@ -131,44 +129,34 @@ export async function getDashboardData(rawInitData: string | undefined) {
   const nextToday = todayWorkouts.find((row) => !row.stats.isDoneToday) ?? null;
   const targetWorkout = openToday ?? nextToday;
 
-  // --- Inputs the two interpretation layers need ---------------------------
+  // --- Inputs the interpretation layer needs -------------------------------
 
   const completedSessions = sessions.filter((session) => session.completedAt !== null);
-  const sessionsLast3Days = completedSessions.filter(
-    (session) => diffDays(addDays(today, -2), session.day) >= 0,
-  ).length;
-  const lastSessionDay = completedSessions.reduce<string | null>(
-    (latest, session) => (latest === null || session.day > latest ? session.day : latest),
-    null,
-  );
 
-  const nightsLoggedWeek = sleepLogs.filter(
-    (log) => diffDays(addDays(today, -6), log.day) >= 0,
-  ).length;
-
-  const health = calculateHealthScores({
-    localHour: analysis.clock.localHour,
-    sleep: {
-      score: sleep.score,
-      weekDeficitMin: sleep.weekDeficitMin,
-      normMin: sleep.norm.targetMin,
-      hasLogs: sleepLogs.length > 0,
-      nightsLoggedWeek,
-    },
+  /**
+   * NOVA Score — четыре доли выполнения сегодняшнего дня и их среднее.
+   *
+   * Раньше здесь считались «состояния организма» (Энергия, Сон, Питание,
+   * Восстановление) — четыре интерпретации с вердиктами, — а рядом в ответе
+   * ехал индекс из девяти блоков, и на экране они стояли в одной карточке, не
+   * складываясь друг в друга. Теперь главный экран показывает ровно одно
+   * измерение: сколько из запланированного на сегодня сделано. Индекс за период
+   * остался в Отчётах и в Профиле, где отвечает на свой вопрос.
+   */
+  const dayScore = buildDayScore({
     nutrition: {
-      hasGoal: goal.calories > 0,
-      caloriesValue: nutrition.calories.value,
+      calories: nutrition.calories.value,
       caloriesGoal: nutrition.calories.goal,
-      proteinValue: nutrition.proteinG.value,
-      proteinGoal: nutrition.proteinG.goal,
-      waterValue: nutrition.waterMl.value,
-      waterGoal: nutrition.waterMl.goal,
-      hasEntriesToday: entriesOnDay(entries, today).length > 0,
-      adherence: analysis.metrics.nutritionAdherence,
+      waterMl: nutrition.waterMl.value,
+      waterGoalMl: nutrition.waterMl.goal,
     },
-    training: {
-      sessionsLast3Days,
-      daysSinceLastSession: lastSessionDay === null ? null : diffDays(lastSessionDay, today),
+    workout: { plannedToday: todayWorkouts.length, doneToday },
+    sleep: {
+      // Длительность, а не оценка ночи: доля считается от нормы сна, и брать
+      // сюда sleepScore значило бы делить один составной балл (сон + режим +
+      // качество) на другой — число без смысла.
+      lastNightMin: sleepLogOnDay(sleepLogs, today)?.durationMin ?? null,
+      normMin: sleep.norm.targetMin,
     },
   });
 
@@ -243,15 +231,12 @@ export async function getDashboardData(rawInitData: string | undefined) {
     },
     timezone,
     today,
-    lifeScore: analysis.metrics.lifeScore,
     /**
-     * The four states of the body, already interpreted. The screen renders
-     * these verbatim — no thresholds, no label tables and no "what does 62
-     * mean" logic in a component.
+     * NOVA Score: четыре доли выполнения дня и их среднее. Экран рисует их
+     * дословно — ни порогов, ни таблиц вердиктов, ни логики «что значит 58» в
+     * компоненте.
      */
-    health,
-    /** One line the greeting carries: where today stands and what to work on. */
-    healthSummary: summarizeHealth(health, analysis.profile.firstName),
+    dayScore,
     /** Today, as a schedule. Empty only when there is genuinely nothing to place. */
     plan,
     coach: {

@@ -85,12 +85,11 @@ export function DashboardView() {
                 firstName={data.user.firstName}
                 photoUrl={data.user.photoUrl}
                 timezone={data.timezone}
-                summary={data.healthSummary}
               />
             </RevealItem>
 
             <RevealItem>
-              <NovaScoreCard result={data.lifeScore} health={data.health} />
+              <NovaScoreCard day={data.dayScore} />
             </RevealItem>
 
             <RevealItem>

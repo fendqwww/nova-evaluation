@@ -18,7 +18,7 @@ import { ReportsSleepCard } from "@/features/reports/components/reports-sleep-ca
 import { ReportsWorkoutsCard } from "@/features/reports/components/reports-workouts-card";
 import { ReportsWeightCard } from "@/features/reports/components/reports-weight-card";
 import { ReportsAppearanceCard } from "@/features/reports/components/reports-appearance-card";
-import { NovaScoreCard } from "@/features/dashboard/components/nova-score-card";
+import { PeriodIndexCard } from "@/features/reports/components/period-index-card";
 
 const WEEK_DAYS = 7;
 
@@ -64,7 +64,7 @@ export function ReportsView() {
           </RevealItem>
 
           <RevealItem>
-            <NovaScoreCard result={reports.lifeScore} />
+            <PeriodIndexCard result={reports.lifeScore} />
           </RevealItem>
 
           <RevealItem>
