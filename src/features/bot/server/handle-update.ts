@@ -1,12 +1,18 @@
 import "server-only";
 import { db } from "@/server/db";
 import { TELEGRAM_APP_URL } from "@/shared/config/app-bot";
+import { TELEGRAM_SUPPORT_URL } from "@/shared/config/support";
 import {
   HELP_MESSAGE,
   STOP_MESSAGE,
+  SUPPORT_MESSAGE,
   UNKNOWN_COMMAND_MESSAGE,
+  appMessage,
+  profileMessage,
+  sectionMessage,
   startMessage,
   streakMessage,
+  subscribeMessage,
   todayMessage,
   type BotMessage,
 } from "../lib/messages";
@@ -68,6 +74,13 @@ function appButton(message: BotMessage) {
         },
       ],
     ],
+  };
+}
+
+/** Кнопка в бот поддержки — другой чат, а не Mini App. */
+function supportButton() {
+  return {
+    inline_keyboard: [[{ text: "Написать в поддержку", url: TELEGRAM_SUPPORT_URL }]],
   };
 }
 
@@ -164,6 +177,13 @@ async function handleMessage(
       return;
     }
 
+    // Открыть приложение без побочных действий /start.
+    case "app": {
+      const message = appMessage();
+      await sendBotMessage(chatId, message.text, appButton(message));
+      return;
+    }
+
     case "today": {
       const state = await buildStateForTelegramId(telegramId);
       if (!state) {
@@ -171,6 +191,62 @@ async function handleMessage(
         return;
       }
       const message = todayMessage(state);
+      await sendBotMessage(chatId, message.text, appButton(message));
+      return;
+    }
+
+    case "profile": {
+      const state = await buildStateForTelegramId(telegramId);
+      if (!state) {
+        await sendBotMessage(chatId, NOT_REGISTERED_MESSAGE);
+        return;
+      }
+      const message = profileMessage(state);
+      await sendBotMessage(chatId, message.text, appButton(message));
+      return;
+    }
+
+    // Обе формы, потому что меню бота в BotFather исторически рекламировало
+    // /subscription, а просили /subscribe. Команда, которую человек уже видел в
+    // списке, обязана отвечать — иначе исправление выглядит как новая поломка.
+    case "subscribe":
+    case "subscription": {
+      const message = subscribeMessage();
+      await sendBotMessage(chatId, message.text, appButton(message));
+      return;
+    }
+
+    case "support":
+      await sendBotMessage(chatId, SUPPORT_MESSAGE, supportButton());
+      return;
+
+    case "coach": {
+      const message = sectionMessage(
+        "AI-коуч разбирает день по вашим данным и отвечает на вопросы — в приложении.",
+        "/coach",
+        "Открыть коуча",
+      );
+      await sendBotMessage(chatId, message.text, appButton(message));
+      return;
+    }
+
+    case "analyze":
+    case "nutrition": {
+      const message = sectionMessage(
+        "Фото еды и дневник питания — в разделе «Питание». Nova считает КБЖУ по снимку.",
+        "/nutrition",
+        "Открыть питание",
+      );
+      await sendBotMessage(chatId, message.text, appButton(message));
+      return;
+    }
+
+    case "settings": {
+      const message = sectionMessage(
+        "Тема, напоминания, часовой пояс и документы — в настройках приложения.",
+        "/settings",
+        "Открыть настройки",
+      );
       await sendBotMessage(chatId, message.text, appButton(message));
       return;
     }

@@ -28,7 +28,26 @@ const SECTIONS: { id: HealthSection; label: string; href: string }[] = [
  */
 export function HealthSectionTabs({ active }: { active: HealthSection }) {
   return (
-    <div role="tablist" aria-label="Раздел здоровья" className="flex items-stretch gap-5">
+    // ПОЛОСА ПРОКРУЧИВАЕТСЯ, А НЕ СЖИМАЕТСЯ. Была `flex gap-5` без прокрутки:
+    // её ширина складывалась из длины четырёх слов, «Тренировки Питание Сон
+    // Внешность» требуют 351px, и на экране в 320 (iPhone SE, узкие Android)
+    // «Внешность» уезжала за край, растягивая вместе с собой всю страницу —
+    // вкладки ниже, карточки статистики и календарь съезжали вправо. Замер в
+    // браузере: scrollWidth 351 при вьюпорте 320.
+    //
+    // Равные доли с `truncate` эту задачу решали хуже, чем не решали: на 320px
+    // слот получается 69px при нужных 75, и центрированный текст обрезался с
+    // обеих сторон — «ренировк», «нешност». Подпись, обрезанную слева, нельзя
+    // прочитать вообще.
+    //
+    // Прокрутка — тот же приём, что у панелей фильтров в целях, привычках и
+    // библиотеке: отрицательный отступ выводит ленту под край экрана, чтобы
+    // обрез читался как продолжение, а не как поломка.
+    <div
+      role="tablist"
+      aria-label="Раздел здоровья"
+      className="-mx-4 flex items-stretch gap-5 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
       {SECTIONS.map((section) => {
         const isActive = section.id === active;
 
@@ -40,7 +59,7 @@ export function HealthSectionTabs({ active }: { active: HealthSection }) {
             aria-selected={isActive}
             onClick={() => !isActive && haptics.selection()}
             className={cn(
-              "press-sm relative flex flex-col items-center gap-1.5 pb-2 pt-0.5 text-caption font-medium",
+              "press-sm relative flex shrink-0 flex-col items-center gap-1.5 pb-2 pt-0.5 text-caption font-medium",
               isActive ? "text-foreground" : "text-subtle-foreground active:text-muted-foreground",
             )}
           >

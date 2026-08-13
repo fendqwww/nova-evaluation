@@ -46,8 +46,11 @@ export function WorkoutsTabs({
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(option.id)}
+            // min-w-0 и truncate: без них `flex-1` не даёт кнопке стать уже
+            // своего текста, и «Статистика» на узком экране выталкивала полоску
+            // за край карточки.
             className={cn(
-              "relative flex-1 rounded-lg px-2 py-2 text-caption font-medium transition-colors duration-200",
+              "relative min-w-0 flex-1 truncate rounded-lg px-1 py-2 text-caption font-medium transition-colors duration-200",
               isActive ? "text-accent-foreground" : "text-muted-foreground active:text-foreground",
             )}
           >

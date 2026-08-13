@@ -293,18 +293,131 @@ export function streakMessage(state: BotUserState): BotMessage {
   };
 }
 
+/**
+ * Открыть приложение — и больше ничего.
+ *
+ * Отдельно от /start, хотя ведут в одно место: /start ещё и подписывает на
+ * сводки и здоровается, то есть у него есть побочное действие. Человеку,
+ * которому нужна просто дверь, побочное действие не нужно.
+ */
+export function appMessage(): BotMessage {
+  return {
+    text: "Nova открывается кнопкой ниже или кнопкой меню слева от поля ввода.",
+    deepLink: "/",
+    buttonText: "Открыть Nova",
+  };
+}
+
+/**
+ * Профиль — то же состояние, которым живут /today и рассылка.
+ *
+ * Ни одного поля, которого нет в BotUserState: профиль в чате обязан
+ * совпадать с профилем в приложении, а второй запрос за теми же данными рано
+ * или поздно ответит иначе. Отсюда же осторожность с формулировками — здесь
+ * нет ни веса, ни роста, ни цели, потому что состояние их не несёт, и
+ * выдумывать их ради красивого сообщения нельзя.
+ */
+export function profileMessage(state: BotUserState): BotMessage {
+  const lines = [`<b>${escapeHtml(state.firstName)}</b>`, ""];
+
+  lines.push(
+    state.bestStreak > 0
+      ? `Лучшая серия: ${state.bestStreak} ${pluralizeRu(state.bestStreak, ["день", "дня", "дней"])}`
+      : "Серий пока нет",
+  );
+
+  lines.push(
+    state.habitsDueToday > 0
+      ? `Привычки сегодня: ${state.habitsDoneToday} из ${state.habitsDueToday}`
+      : "Привычки сегодня: по расписанию ничего",
+  );
+
+  lines.push(`Питание сегодня: ${state.loggedNutritionToday ? "записано" : "дневник пуст"}`);
+  lines.push(
+    `Сон прошлой ночью: ${
+      state.sleepHoursLastNight !== null ? formatHours(state.sleepHoursLastNight) : "не записан"
+    }`,
+  );
+
+  if (state.tasksOverdue > 0) lines.push(`Просрочено задач: ${state.tasksOverdue}`);
+
+  const channels = [
+    state.notifyHabits && "привычки",
+    state.notifyNutrition && "питание",
+    state.notifyTasks && "задачи",
+  ].filter((value): value is string => typeof value === "string");
+
+  lines.push("", `Часовой пояс: ${escapeHtml(state.timezone)}`);
+  lines.push(
+    channels.length > 0
+      ? `Напоминания: ${channels.join(", ")}`
+      : "Напоминания: выключены",
+  );
+
+  return { text: lines.join("\n"), deepLink: "/profile", buttonText: "Открыть профиль" };
+}
+
+/**
+ * Команды-двери в разделы: /coach, /settings, /analyze.
+ *
+ * Их не просили, но они уже были напечатаны в меню бота в BotFather, а
+ * обработчика под ними не существовало — человек видел команду в списке,
+ * нажимал и получал «такой команды нет». Это и есть та поломка, которую
+ * описывали словами «команды добавлены, но не работают»; дешевле ответить, чем
+ * объяснять, почему список врал.
+ */
+export function sectionMessage(
+  text: string,
+  deepLink: string,
+  buttonText: string,
+): BotMessage {
+  return { text, deepLink, buttonText };
+}
+
+/**
+ * Тарифы.
+ *
+ * Сознательно без цен: они живут на экране подписки, и вторая копия прайса в
+ * коде бота — это место, где цена однажды разойдётся с настоящей.
+ */
+export function subscribeMessage(): BotMessage {
+  return {
+    text: [
+      "<b>Тарифы</b>",
+      "",
+      "Что входит в бесплатный доступ и что даёт платный — на экране подписки. Там же оформление.",
+    ].join("\n"),
+    deepLink: "/settings/subscription",
+    buttonText: "Открыть тарифы",
+  };
+}
+
+/**
+ * Поддержка живёт во втором боте, и кнопка ведёт туда, а не в приложение.
+ *
+ * Поэтому это не BotMessage: у BotMessage кнопка обязательно открывает Mini
+ * App, а здесь нужен переход в другой чат.
+ */
+export const SUPPORT_MESSAGE = [
+  "Поддержка отвечает в отдельном боте — там можно описать проблему, приложить скриншот и запросить платный тариф.",
+  "",
+  "Этот бот на сообщения не отвечает: он присылает сводки и открывает приложение.",
+].join("\n");
+
 export const HELP_MESSAGE = [
   "<b>Nova</b> — система, которая связывает сон, питание, тренировки и привычки в одну картину.",
   "",
   "<b>Команды</b>",
-  "/start — открыть приложение",
+  "/start — запустить бота и сводки",
+  "/app — открыть приложение",
   "/today — что у меня сегодня",
   "/streak — серии и прогресс",
+  "/profile — мой профиль",
+  "/subscribe — тарифы",
+  "/support — написать в поддержку",
   "/stop — не присылать напоминания",
   "",
   "Всё остальное живёт в самом приложении — кнопка меню слева от поля ввода.",
-  "",
-  "Вопрос или что-то сломалось — напишите в поддержку, она отвечает в отдельном боте.",
 ].join("\n");
 
 export const STOP_MESSAGE = [

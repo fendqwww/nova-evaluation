@@ -11,7 +11,7 @@ import { WorkoutMonthCalendar } from "@/features/workouts/components/workout-mon
 import { categoryOption } from "@/features/workouts/lib/categories";
 import { ADHERENCE_DAYS, overallStats, type WorkoutDayState } from "@/features/workouts/lib/stats";
 import { progressFillClass } from "@/features/workouts/lib/tone";
-import { formatVolume, sessionsWord, setsWord } from "@/features/workouts/lib/format";
+import { formatVolume, sessionsWord } from "@/features/workouts/lib/format";
 import type { WorkoutItem, WorkoutSessionItem } from "@/features/workouts/types";
 
 /**
@@ -90,22 +90,43 @@ export function WorkoutsStatsCard({
             />
           )}
 
-          <div className="grid grid-cols-3 gap-2 border-t border-border pt-3.5">
-            <Metric value={String(stats.monthDone)} label={`за ${ADHERENCE_DAYS} дней`} />
-            <Metric value={formatVolume(stats.volumeMonthKg)} label="объём за месяц" />
-            <Metric
-              value={String(stats.totalSetsMonth)}
-              label={`${setsWord(stats.totalSetsMonth)} за месяц`}
-            />
+          {/* Объём недели стоит рядом с недельным счётом, а не в блоке ниже.
+              Раньше он лежал в строке «за полгода», где кроме него были итог за
+              полгода и среднее за неделю — три разных отрезка времени в одном
+              ряду из трёх чисел. */}
+          <p className="text-caption text-muted-foreground">
+            Объём за неделю — {formatVolume(stats.volumeWeekKg)}
+          </p>
+
+          {/* ПОДПИСИ СТАЛИ ОДНОСЛОВНЫМИ, А ОТРЕЗОК ВРЕМЕНИ УЕХАЛ В ЗАГОЛОВОК
+              ГРУППЫ. Было «за 30 дней», «объём за месяц», «подходов за месяц» в
+              одном ряду: третья подпись не помещалась в свою колонку и
+              переносилась на вторую строку, из-за чего ряд становился выше
+              соседнего и числа переставали стоять на одной линии. Замер на
+              360px показывал ровно это. Повторять «за месяц» в каждой из трёх
+              колонок было и лишним — период у всей группы один. */}
+          <div className="flex flex-col gap-2.5 border-t border-border pt-3.5">
+            <p className="text-label uppercase text-subtle-foreground">
+              За {ADHERENCE_DAYS} дней
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <Metric value={String(stats.monthDone)} label="тренировок" />
+              <Metric value={formatVolume(stats.volumeMonthKg)} label="объём" />
+              <Metric value={String(stats.totalSetsMonth)} label="подходов" />
+            </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 border-t border-border pt-3.5">
-            <Metric value={String(stats.totalDone)} label="всего за полгода" />
-            <Metric value={formatVolume(stats.volumeWeekKg)} label="объём за неделю" />
-            <Metric
-              value={String(stats.averagePerWeek).replace(".", ",")}
-              label="в среднем в неделю"
-            />
+          {/* Та же сетка в три колонки при двух числах — намеренно: колонки
+              обеих групп стоят друг под другом, и глаз читает их как таблицу. */}
+          <div className="flex flex-col gap-2.5 border-t border-border pt-3.5">
+            <p className="text-label uppercase text-subtle-foreground">За полгода</p>
+            <div className="grid grid-cols-3 gap-2">
+              <Metric value={String(stats.totalDone)} label="тренировок" />
+              <Metric
+                value={String(stats.averagePerWeek).replace(".", ",")}
+                label="в неделю"
+              />
+            </div>
           </div>
         </div>
       </Card>
