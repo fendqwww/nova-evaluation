@@ -2,7 +2,12 @@ import { NextResponse } from "next/server";
 import { env } from "@/shared/config/env";
 import { constantTimeEqual } from "@/shared/lib/constant-time-equal";
 import { BOT_COMMANDS } from "@/features/bot/constants";
-import { setBotCommands, setBotMenuButton, setBotWebhook } from "@/features/bot/server/bot-api";
+import {
+  clearDefaultBotCommands,
+  setBotCommands,
+  setBotMenuButton,
+  setBotWebhook,
+} from "@/features/bot/server/bot-api";
 
 /**
  * Однократная настройка основного бота: вебхук, меню команд, кнопка Mini App.
@@ -34,16 +39,24 @@ export async function GET(request: Request): Promise<NextResponse> {
   const webhookUrl = `${origin}/api/telegram/app`;
   const appUrl = origin;
 
-  const [webhook, commands, menu] = await Promise.all([
+  const [webhook, commands, menu, defaultCleared] = await Promise.all([
     setBotWebhook(webhookUrl, env.TELEGRAM_WEBHOOK_SECRET),
     setBotCommands(BOT_COMMANDS),
     setBotMenuButton(appUrl),
+    // Стирается каждый запуск, а не однократно: список по умолчанию мог
+    // появиться заново через @BotFather между двумя настройками, и тогда в боте
+    // снова оказались бы два разных меню.
+    clearDefaultBotCommands(),
   ]);
 
   return NextResponse.json({
     ok: webhook,
     webhook: { url: webhookUrl, registered: webhook },
-    commands: { registered: commands, list: BOT_COMMANDS.map((item) => `/${item.command}`) },
+    commands: {
+      registered: commands,
+      list: BOT_COMMANDS.map((item) => `/${item.command}`),
+      defaultScopeCleared: defaultCleared,
+    },
     menuButton: { registered: menu, url: appUrl },
     hint: webhook
       ? "Бот готов. Напишите ему /start."

@@ -110,6 +110,32 @@ export async function setBotCommands(
   return result === true;
 }
 
+/**
+ * Стереть список команд из области по умолчанию.
+ *
+ * ЗАЧЕМ ЭТО ОТДЕЛЬНЫМ ВЫЗОВОМ. Области видимости в Telegram независимы, и в
+ * боте их оказалось две с разным содержимым: `all_private_chats` — список из
+ * кода, `default` — восемь команд, выставленных когда-то руками через
+ * @BotFather (start, help, profile, analyze, coach, settings, subscription,
+ * support). Проверено запросом: getMyCommands в двух областях возвращал два
+ * разных набора.
+ *
+ * В личном чате побеждает более узкая область, поэтому меню показывало список
+ * из кода — а тот, что в `default`, оставался лежать невидимой миной: любая
+ * область, где узкий список не задан, показывает его, и половина команд оттуда
+ * не существует в обработчике. Установка нового списка старый не затирает,
+ * стереть можно только явно.
+ */
+export async function clearDefaultBotCommands(): Promise<boolean> {
+  const { result } = await callBotApi<boolean>(
+    env.TELEGRAM_BOT_TOKEN,
+    "deleteMyCommands",
+    { scope: { type: "default" } },
+    log,
+  );
+  return result === true;
+}
+
 /** Кому и куда сейчас доставляются обновления — для диагностики. */
 export interface BotWebhookInfo {
   url: string;
