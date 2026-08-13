@@ -28,7 +28,14 @@ const SECTIONS: { id: PlanSection; label: string; href: string }[] = [
  */
 export function PlanSectionTabs({ active }: { active: PlanSection }) {
   return (
-    <div role="tablist" aria-label="Раздел плана" className="flex items-stretch gap-5">
+    // Прокрутка и shrink-0 — как в HealthSectionTabs: три подписи помещаются
+    // сегодня, но полоса без прокрутки растягивает страницу целиком, стоит
+    // добавить четвёртую или встретить узкий экран.
+    <div
+      role="tablist"
+      aria-label="Раздел плана"
+      className="-mx-4 flex items-stretch gap-5 overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+    >
       {SECTIONS.map((section) => {
         const isActive = section.id === active;
 
@@ -40,7 +47,7 @@ export function PlanSectionTabs({ active }: { active: PlanSection }) {
             aria-selected={isActive}
             onClick={() => !isActive && haptics.selection()}
             className={cn(
-              "press-sm relative flex flex-col items-center gap-1.5 pb-2 pt-0.5 text-caption font-medium",
+              "press-sm relative flex shrink-0 flex-col items-center gap-1.5 pb-2 pt-0.5 text-caption font-medium",
               isActive
                 ? "text-foreground"
                 : "text-subtle-foreground active:text-muted-foreground",

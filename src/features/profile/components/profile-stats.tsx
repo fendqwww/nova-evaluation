@@ -72,48 +72,67 @@ export function ProfileStatsCard({
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-2">
-        <StatTile
-          icon={<Repeat className="h-4 w-4" />}
-          tone="habit"
-          value={totals.habitTicks}
-          label="Привычек выполнено"
-        />
-        <StatTile
-          icon={<Check className="h-4 w-4" />}
-          tone="task"
-          value={totals.tasksCompleted}
-          label="Задач закрыто"
-        />
-        <StatTile
-          icon={<Dumbbell className="h-4 w-4" />}
-          tone="score"
-          value={totals.workouts}
-          label="Тренировок"
-        />
-        <StatTile
-          icon={<Utensils className="h-4 w-4" />}
-          tone="score"
-          value={totals.nutritionDays}
-          label="Дней питания"
-        />
-        <StatTile
-          icon={<Sparkles className="h-4 w-4" />}
-          tone="accent"
-          value={totals.careDone}
-          label="Процедур ухода"
-        />
-        <StatTile
-          icon={<Target className="h-4 w-4" />}
-          tone="goal"
-          value={totals.goalsCompleted}
-          label="Целей достигнуто"
-        />
-      </div>
+      {/* ШЕСТЬ ПЛИТОК В ТРИ КОЛОНКИ, А НЕ В ДВЕ. В две это три ряда высоких
+          карточек — примерно треть экрана на шесть чисел, которые меняются раз
+          в сутки. Глагол из подписи («выполнено», «закрыто», «достигнуто»)
+          вынесен в заголовок группы: он был один и тот же у всех шести и
+          заставлял подписи переноситься на вторую строку, из-за чего плитки в
+          ряду получались разной высоты. */}
+      <Card>
+        <div className="flex flex-col gap-3 p-4">
+          <p className="text-label uppercase text-subtle-foreground">Всего сделано</p>
+
+          <div className="grid grid-cols-3 gap-x-2 gap-y-4">
+            <StatTile
+              icon={<Repeat className="h-4 w-4" />}
+              tone="habit"
+              value={totals.habitTicks}
+              label="привычек"
+            />
+            <StatTile
+              icon={<Check className="h-4 w-4" />}
+              tone="task"
+              value={totals.tasksCompleted}
+              label="задач"
+            />
+            <StatTile
+              icon={<Dumbbell className="h-4 w-4" />}
+              tone="score"
+              value={totals.workouts}
+              label="тренировок"
+            />
+            <StatTile
+              icon={<Utensils className="h-4 w-4" />}
+              tone="score"
+              value={totals.nutritionDays}
+              label="дней еды"
+            />
+            <StatTile
+              icon={<Sparkles className="h-4 w-4" />}
+              tone="accent"
+              value={totals.careDone}
+              label="ухода"
+            />
+            <StatTile
+              icon={<Target className="h-4 w-4" />}
+              tone="goal"
+              value={totals.goalsCompleted}
+              label="целей"
+            />
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }
 
+/**
+ * Плитка больше не карточка внутри карточки.
+ *
+ * Шесть вложенных поверхностей с собственной рамкой и тенью — это шесть
+ * контуров там, где нужно шесть чисел. Общая рамка у группы одна, а плитки
+ * внутри отличаются цветом значка, и этого достаточно, чтобы их различать.
+ */
 function StatTile({
   icon,
   tone,
@@ -126,16 +145,12 @@ function StatTile({
   label: string;
 }) {
   return (
-    <Card>
-      <div className="flex flex-col gap-2.5 p-3.5">
-        <IconChip tone={tone} size="sm">
-          {icon}
-        </IconChip>
-        <div className="flex flex-col gap-0.5">
-          <span className="numeric text-title text-foreground">{value}</span>
-          <span className="text-caption text-muted-foreground">{label}</span>
-        </div>
-      </div>
-    </Card>
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <IconChip tone={tone} size="sm">
+        {icon}
+      </IconChip>
+      <span className="numeric text-title leading-none text-foreground">{value}</span>
+      <span className="truncate text-micro text-muted-foreground">{label}</span>
+    </div>
   );
 }

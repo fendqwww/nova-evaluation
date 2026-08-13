@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Home, Dumbbell, Sparkles, User, UtensilsCrossed } from "lucide-react";
+import { Home, HeartPulse, Sparkles, User, UtensilsCrossed } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { ThemeScript } from "@/components/theme-script";
 import { TelegramProvider } from "@/components/providers/telegram-provider";
@@ -39,17 +39,10 @@ import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 //
 // Что открывается не вкладкой:
 //   Сон и Внешность — через HealthSectionTabs, полоску на всех четырёх экранах
-//     здоровья, и через кольца состояния и план дня на главной.
+//     здоровья, и через плитки NOVA Score и план дня на главной. Вкладку
+//     «Здоровье» они при этом подсвечивают: она их и содержит.
 //   Путь, Библиотека, Академия, Цели, Привычки, Задачи, Отчёты, Настройки —
 //     через Профиль. alsoActiveFor держит вкладку подсвеченной на всех из них.
-//
-// ПОЧЕМУ «СОН» И «ВНЕШНОСТЬ» БОЛЬШЕ НЕ ПОДСВЕЧИВАЮТ ЧУЖУЮ ВКЛАДКУ. Сон стоял в
-// alsoActiveFor у «Тренировок», внешность — у «Профиля». Подсветка вкладки это
-// ответ на вопрос «где я сейчас», и на экране сна она отвечала «в тренировках»,
-// то есть врала. Лучше не подсвечивать ничего, чем подсветить чужой раздел:
-// пустая панель читается как «этот экран не живёт во вкладках», подсвеченная
-// чужая — как ошибка навигации. Оба экрана остаются в одном нажатии от полоски
-// HealthSectionTabs, которая и показывает, где человек находится.
 const navItems: BottomNavigationItem[] = [
   { key: "home", label: "Сегодня", href: "/", icon: <Home className="h-4.5 w-4.5" /> },
   {
@@ -58,11 +51,23 @@ const navItems: BottomNavigationItem[] = [
     href: "/nutrition",
     icon: <UtensilsCrossed className="h-4.5 w-4.5" />,
   },
+  // ВКЛАДКА НАЗЫВАЕТСЯ «ЗДОРОВЬЕ», А НЕ «ТРЕНИРОВКИ», И ЭТО ИСПРАВЛЕНИЕ ВРАНЬЯ,
+  // А НЕ СМЕНА ВЫВЕСКИ. За ней стоит не один экран, а четыре: тренировки, сон,
+  // внешность и питание — между ними переключает полоска HealthSectionTabs
+  // наверху каждого из них. Человек нажимал «Тренировки», видел там «Сон» и
+  // «Внешность» и справедливо не понимал, куда попал.
+  //
+  // Отсюда же alsoActiveFor. Раньше «Сон» и «Внешность» не подсвечивали ничего,
+  // и это было верно ровно до переименования: подсветить «Тренировки» на экране
+  // сна значило соврать, а «Здоровье» — сказать правду. Пустая панель на двух
+  // экранах из пяти была меньшим злом, но всё же злом: она читалась как «этот
+  // экран живёт вне навигации».
   {
-    key: "workouts",
-    label: "Тренировки",
+    key: "health",
+    label: "Здоровье",
     href: "/workouts",
-    icon: <Dumbbell className="h-4.5 w-4.5" />,
+    alsoActiveFor: ["/sleep", "/appearance"],
+    icon: <HeartPulse className="h-4.5 w-4.5" />,
   },
   {
     key: "coach",

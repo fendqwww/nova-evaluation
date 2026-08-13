@@ -58,7 +58,11 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
       )}
       style={{ bottom: "calc(var(--app-safe-bottom) + 0.625rem)" }}
     >
-      <ul className="flex items-stretch px-1.5 py-1.5">
+      {/* gap-0.5 вместо слипшихся слотов: подписи в пять символов и в десять
+          стояли вплотную, и «Здоровье» с «Профилем» читались как одно слово в
+          два этажа. Зазор задан здесь, а не отступами внутри слота, чтобы
+          подсветка активной вкладки оставалась во всю его ширину. */}
+      <ul className="flex items-stretch gap-0.5 px-1.5 py-1.5">
         {items.map((item) => {
           const active = isRouteActive(pathname, item);
 
@@ -73,7 +77,7 @@ export function BottomNavigation({ items, className }: BottomNavigationProps) {
                 // и защищает.
                 onClick={() => !active && haptics.selection()}
                 className={cn(
-                  "press-sm relative flex min-w-0 flex-col items-center gap-1 rounded-xl px-0.5 pb-1.5 pt-2",
+                  "press-sm relative flex min-w-0 flex-col items-center gap-1 rounded-xl px-1 pb-1.5 pt-2",
                   active
                     ? "text-accent"
                     : "text-subtle-foreground active:text-foreground",

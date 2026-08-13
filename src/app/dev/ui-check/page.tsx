@@ -13,7 +13,12 @@
  * ссылка приложения сюда не ведёт.
  */
 
+import { Home, HeartPulse, User, UtensilsCrossed } from "lucide-react";
 import { HealthSectionTabs } from "@/components/health-section-tabs";
+import { PlanSectionTabs } from "@/components/plan-section-tabs";
+import { NutritionTabs } from "@/features/nutrition/components/nutrition-tabs";
+import { AppearanceTabs } from "@/features/appearance/components/appearance-tabs";
+import { BottomNavigation } from "@/shared/ui/bottom-navigation";
 import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button } from "@/shared/ui/button";
@@ -24,6 +29,19 @@ import { NovaScoreCard } from "@/features/dashboard/components/nova-score-card";
 import { buildDayScore } from "@/features/dashboard/lib/day-score";
 import type { WorkoutItem, WorkoutSessionItem } from "@/features/workouts/types";
 import type { CalendarDay } from "@/shared/lib/calendar-day";
+
+const NAV_ITEMS = [
+  { key: "home", label: "Сегодня", href: "/", icon: <Home className="h-4.5 w-4.5" /> },
+  {
+    key: "nutrition",
+    label: "Питание",
+    href: "/nutrition",
+    icon: <UtensilsCrossed className="h-4.5 w-4.5" />,
+  },
+  { key: "health", label: "Здоровье", href: "/workouts", icon: <HeartPulse className="h-4.5 w-4.5" /> },
+  { key: "coach", label: "Коуч", href: "/coach", icon: <Sparkles className="h-4.5 w-4.5" /> },
+  { key: "profile", label: "Профиль", href: "/profile", icon: <User className="h-4.5 w-4.5" /> },
+];
 
 const TODAY = "2026-08-13" as CalendarDay;
 const WINDOW_START = "2026-02-14" as CalendarDay;
@@ -146,6 +164,13 @@ export default function UiCheckPage() {
       />
 
       <WorkoutsTabs tab="stats" onChange={() => {}} />
+      <NutritionTabs tab="stats" onChange={() => {}} />
+      <AppearanceTabs tab="progress" onChange={() => {}} />
+      <PlanSectionTabs active="habits" />
+
+      <div className="relative h-20">
+        <BottomNavigation items={NAV_ITEMS} />
+      </div>
 
       <WorkoutsStatsCard
         workouts={WORKOUTS}

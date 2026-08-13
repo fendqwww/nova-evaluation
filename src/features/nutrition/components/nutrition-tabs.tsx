@@ -1,21 +1,20 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { cn } from "@/shared/lib/cn";
+import { SegmentedTabs } from "@/shared/ui/segmented-tabs";
 
 export type NutritionTabId = "diary" | "plan" | "templates" | "foods" | "stats";
 
-const TABS: { id: NutritionTabId; label: string }[] = [
+const TABS = [
   { id: "diary", label: "Дневник" },
   { id: "plan", label: "План" },
   { id: "templates", label: "Шаблоны" },
   { id: "foods", label: "Продукты" },
   { id: "stats", label: "Статистика" },
-];
+] as const satisfies ReadonlyArray<{ id: NutritionTabId; label: string }>;
 
 /**
- * Five surfaces, one section — same sliding-pill control as WorkoutsTabs, and
- * for the same reason: today's diary, the reusable templates, the personal
+ * Five surfaces, one section — same control every other section uses, and for
+ * the same reason: today's diary, the reusable templates, the personal
  * catalogue and the weekly trend are different questions, and stacking them on
  * one scroll would bury today's log under a shelf of products.
  *
@@ -26,9 +25,10 @@ const TABS: { id: NutritionTabId; label: string }[] = [
  * всего чтобы записать; план — второй, потому что к нему возвращаются, когда
  * записывать нечего.
  *
- * Пять вкладок — предел для этой полоски: подписи и так короткие, шестая
- * потребовала бы сокращений или прокрутки, и с этого момента вкладка перестаёт
- * быть видимой сразу.
+ * ПЯТЬ ПОДПИСЕЙ НЕ ПОМЕЩАЮТСЯ В РЯД НА УЗКОМ ТЕЛЕФОНЕ, И ЭТО НОРМАЛЬНО. Раньше
+ * это было поломкой: полоска молча выезжала за край карточки, и «Статистика»
+ * после «Продуктов» обрезалась. Теперь лента прокручивается — см.
+ * SegmentedTabs.
  */
 export function NutritionTabs({
   tab,
@@ -38,37 +38,12 @@ export function NutritionTabs({
   onChange: (tab: NutritionTabId) => void;
 }) {
   return (
-    <div
-      role="tablist"
-      aria-label="Разделы питания"
-      className="glass-card flex gap-1 rounded-xl border p-1"
-    >
-      {TABS.map((option) => {
-        const isActive = option.id === tab;
-
-        return (
-          <button
-            key={option.id}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(option.id)}
-            className={cn(
-              "relative flex-1 rounded-lg px-2 py-2 text-caption font-medium transition-colors duration-200",
-              isActive ? "text-accent-foreground" : "text-muted-foreground active:text-foreground",
-            )}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="nutrition-tab-active"
-                className="absolute inset-0 -z-10 rounded-lg bg-accent shadow-[0_4px_14px_-6px_var(--accent)]"
-                transition={{ type: "spring", stiffness: 420, damping: 34 }}
-              />
-            )}
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
+    <SegmentedTabs
+      options={TABS}
+      value={tab}
+      onChange={onChange}
+      layoutId="nutrition-tab-active"
+      ariaLabel="Разделы питания"
+    />
   );
 }

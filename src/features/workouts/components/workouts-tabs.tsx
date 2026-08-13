@@ -1,15 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { cn } from "@/shared/lib/cn";
+import { SegmentedTabs } from "@/shared/ui/segmented-tabs";
 
 export type WorkoutsTabId = "plan" | "history" | "stats";
 
-const TABS: { id: WorkoutsTabId; label: string }[] = [
+const TABS = [
   { id: "plan", label: "Программы" },
   { id: "history", label: "История" },
   { id: "stats", label: "Статистика" },
-];
+] as const satisfies ReadonlyArray<{ id: WorkoutsTabId; label: string }>;
 
 /**
  * Three surfaces, one section.
@@ -19,9 +18,6 @@ const TABS: { id: WorkoutsTabId; label: string }[] = [
  * and what that log adds up to are three different questions, and stacking all
  * three on one scroll would bury the first one — the only one that is
  * actionable right now — under a month of history.
- *
- * The sliding pill uses the same shared-layoutId trick the bottom navigation
- * does, so the indicator physically moves between tabs instead of cross-fading.
  */
 export function WorkoutsTabs({
   tab,
@@ -31,40 +27,12 @@ export function WorkoutsTabs({
   onChange: (tab: WorkoutsTabId) => void;
 }) {
   return (
-    <div
-      role="tablist"
-      aria-label="Разделы тренировок"
-      className="glass-card flex gap-1 rounded-xl border p-1"
-    >
-      {TABS.map((option) => {
-        const isActive = option.id === tab;
-
-        return (
-          <button
-            key={option.id}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(option.id)}
-            // min-w-0 и truncate: без них `flex-1` не даёт кнопке стать уже
-            // своего текста, и «Статистика» на узком экране выталкивала полоску
-            // за край карточки.
-            className={cn(
-              "relative min-w-0 flex-1 truncate rounded-lg px-1 py-2 text-caption font-medium transition-colors duration-200",
-              isActive ? "text-accent-foreground" : "text-muted-foreground active:text-foreground",
-            )}
-          >
-            {isActive && (
-              <motion.span
-                layoutId="workouts-tab-active"
-                className="absolute inset-0 -z-10 rounded-lg bg-accent shadow-[0_4px_14px_-6px_var(--accent)]"
-                transition={{ type: "spring", stiffness: 420, damping: 34 }}
-              />
-            )}
-            {option.label}
-          </button>
-        );
-      })}
-    </div>
+    <SegmentedTabs
+      options={TABS}
+      value={tab}
+      onChange={onChange}
+      layoutId="workouts-tab-active"
+      ariaLabel="Разделы тренировок"
+    />
   );
 }

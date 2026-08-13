@@ -74,7 +74,7 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
   );
 
   return (
-    <PageContainer className="flex flex-col gap-6">
+    <PageContainer className="flex flex-col gap-4">
       <PageHeader title="Профиль" subtitle="Всё, что вы построили в Nova" />
 
       {isPending && <ProfileSkeleton />}
@@ -93,7 +93,7 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
       )}
 
       {!isPending && !isError && overview && (
-        <Reveal className="gap-6">
+        <Reveal className="gap-4">
           <RevealItem>
             <ProfileHeaderCard account={overview.account} />
           </RevealItem>
