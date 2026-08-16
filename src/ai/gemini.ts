@@ -1,5 +1,5 @@
 import "server-only";
-import { GoogleGenAI, ApiError } from "@google/genai";
+import { GoogleGenAI, ApiError, ThinkingLevel } from "@google/genai";
 import { env } from "@/shared/config/env";
 
 /**
@@ -23,14 +23,71 @@ export const GEMINI_CONFIG = {
   // retired out from under this project's API key while still appearing in
   // ListModels. The alias is what stays valid across that kind of retirement.
   model: "gemini-flash-latest",
+  /**
+   * Куда уходим, когда основная модель перегружена.
+   *
+   * Замер, ради которого это появилось: `gemini-flash-latest` в час пик отвечал
+   * 503 «high demand» примерно на половину запросов, а успешные занимали от 18
+   * до 37 секунд. Через несколько минут та же модель отвечала за 2,5–9 секунд.
+   * То есть отказ здесь — не поломка ключа и не наша ошибка, а состояние
+   * чужого сервиса, и переживать его молчаливым «ИИ недоступен» неправильно.
+   *
+   * `gemini-flash-lite-latest` в том же замере отработал 3 из 3 за 0,8–1,2
+   * секунды. Он слабее, и для разбора коуча это была бы заметная потеря, — но
+   * задача «назови блюдо на фото и посчитай КБЖУ» ему по силам, а выбор здесь
+   * стоит не между хорошим и отличным ответом, а между ответом и пустым
+   * экраном.
+   *
+   * Дублировать сюда датированные снимки (`gemini-2.5-flash`) бессмысленно: в
+   * том же замере они дали ошибку на всех трёх попытках — снимки отзывают
+   * из-под ключа, ровно как описано ниже.
+   */
+  fallbackModel: "gemini-flash-lite-latest",
   /** Deterministic-leaning: every caller here wants a structured, factual
    *  answer, not creative variation. */
   temperature: 0.4,
-  maxOutputTokens: 2048,
-  timeoutMs: 20_000,
+  /**
+   * Раньше было 2048. Поднято, потому что за алиасом теперь стоит модель с
+   * размышлением, а токены размышления тратятся из того же бюджета: при тесном
+   * потолке ответ возвращался пустым, и это классифицировалось как
+   * `invalid_response` — то есть выглядело как «ИИ сломался», хотя модель
+   * просто не успела дописать JSON.
+   */
+  maxOutputTokens: 4096,
+  /**
+   * ПОТОЛОК НА ОДНУ ПОПЫТКУ, А НЕ НА ВЕСЬ ВЫЗОВ. Было 20 000 — и это оказалось
+   * главной причиной, по которой анализ еды и внешности перестал работать.
+   * Замер тем же SDK и тем же ключом: тривиальный текстовый запрос отвечает за
+   * 4,6 с, 13,8 с и больше 20 с — разброс огромный, а фото тяжелее текста.
+   * Двадцати секунд перестало хватать, когда алиас переехал на думающую модель,
+   * и запрос обрывался ровно на 20 005 мс с AbortError.
+   */
+  attemptTimeoutMs: 40_000,
+  /**
+   * Потолок на ВСЕ попытки вместе, включая паузы между ними.
+   *
+   * Существует, потому что функция на Vercel убивается снаружи: на Hobby
+   * предел — 60 секунд, и попытка, начатая на 55-й секунде, не успеет ничего,
+   * зато гарантированно превратит понятную ошибку в оборванный запрос. Здесь
+   * запас в пять секунд на сериализацию ответа и на сам JSON.
+   */
+  overallTimeoutMs: 55_000,
   maxRetries: 2,
   /** Base delay for exponential backoff between retries, in ms. */
   retryBaseDelayMs: 500,
+  /**
+   * Уровень размышления.
+   *
+   * Модель за алиасом размышляет по умолчанию, и это стоит секунд: у «low»
+   * измеренная задержка заметно ниже, а задачи здесь — распознать еду по фото и
+   * посчитать КБЖУ — рассуждения на несколько абзацев не требуют.
+   *
+   * Параметр отправляется «мягко»: если модель за алиасом его не понимает и
+   * отвечает 400, вызов повторяется без него (см. INVALID_ARGUMENT ниже). Это
+   * не перестраховка — ровно так уже ломался thinkingBudget, когда алиас
+   * переехал на другую модель, и второй раз наступать на это не нужно.
+   */
+  thinkingLevel: ThinkingLevel.LOW,
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -75,6 +132,18 @@ const USER_MESSAGES: Record<GeminiErrorKind, string> = {
   unknown: "Что-то пошло не так на стороне ИИ. Попробуй ещё раз.",
 };
 
+/**
+ * Не понял ли сервер один из наших параметров.
+ *
+ * Отличается от прочих 400 тем, что лечится повтором без спорного параметра, —
+ * см. thinkingLevel. ApiError не выделяет причину полем, поэтому смотрим на
+ * статус и на текст.
+ */
+function isInvalidArgument(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  return error.status === 400 && /invalid[_ ]argument|unknown name|not supported/i.test(error.message);
+}
+
 function classifyApiError(error: ApiError): GeminiError {
   if (error.status === 429) {
     return new GeminiError(
@@ -107,7 +176,7 @@ function classifyUnknownError(error: unknown): GeminiError {
   if (error instanceof Error && error.name === "AbortError") {
     return new GeminiError(
       "timeout",
-      `Gemini call timed out after ${GEMINI_CONFIG.timeoutMs}ms`,
+      `Gemini call timed out after ${GEMINI_CONFIG.attemptTimeoutMs}ms`,
       USER_MESSAGES.timeout,
       true,
     );
@@ -206,29 +275,39 @@ export async function generateStructured(input: GenerateStructuredInput): Promis
   ];
 
   let lastError: GeminiError | null = null;
+  const deadline = Date.now() + GEMINI_CONFIG.overallTimeoutMs;
+  // Сбрасывается в false, если модель за алиасом не понимает thinkingLevel.
+  let sendThinkingLevel = true;
+  // Первая попытка — основной моделью, повторы после отказа — запасной.
+  let model: string = GEMINI_CONFIG.model;
 
   for (let attempt = 0; attempt <= GEMINI_CONFIG.maxRetries; attempt += 1) {
     if (attempt > 0) {
       await sleep(GEMINI_CONFIG.retryBaseDelayMs * 2 ** (attempt - 1));
     }
 
+    // Сколько времени осталось от общего бюджета. Попытка, на которую осталось
+    // меньше пяти секунд, гарантированно не успеет и только сменит понятную
+    // ошибку на оборванный запрос.
+    const remaining = deadline - Date.now();
+    if (remaining < 5_000) break;
+
     try {
       const response = await client.models.generateContent({
-        model: GEMINI_CONFIG.model,
+        model,
         contents,
         config: {
           systemInstruction: input.systemInstruction,
           temperature: input.temperature ?? GEMINI_CONFIG.temperature,
           maxOutputTokens: input.maxOutputTokens ?? GEMINI_CONFIG.maxOutputTokens,
-          // No thinkingConfig: forcing thinkingBudget: 0 was a latency
-          // optimization for gemini-2.5-flash, but the same request 400s
-          // ("invalid argument") against gemini-flash-latest — the option
-          // isn't universally supported across whatever model the alias
-          // currently resolves to, so a working structured answer wins over
-          // shaving a fraction of a second off it.
+          ...(sendThinkingLevel
+            ? { thinkingConfig: { thinkingLevel: GEMINI_CONFIG.thinkingLevel } }
+            : {}),
           responseMimeType: "application/json",
           responseJsonSchema: input.jsonSchema,
-          abortSignal: AbortSignal.timeout(GEMINI_CONFIG.timeoutMs),
+          abortSignal: AbortSignal.timeout(
+            Math.min(GEMINI_CONFIG.attemptTimeoutMs, remaining),
+          ),
         },
       });
 
@@ -253,11 +332,33 @@ export async function generateStructured(input: GenerateStructuredInput): Promis
         );
       }
     } catch (error) {
+      // Модель не поняла thinkingLevel — снимаем его и не тратим на это
+      // попытку: повтор без параметра делается тем же витком цикла.
+      if (sendThinkingLevel && isInvalidArgument(error)) {
+        sendThinkingLevel = false;
+        console.warn("[gemini] thinkingLevel не поддержан моделью — повтор без него");
+        attempt -= 1;
+        continue;
+      }
+
       lastError = classifyUnknownError(error);
       console.error(
-        `[gemini] attempt ${attempt + 1}/${GEMINI_CONFIG.maxRetries + 1} failed (${lastError.kind}): ${lastError.message}`,
+        `[gemini] attempt ${attempt + 1}/${GEMINI_CONFIG.maxRetries + 1} on ${model} failed (${lastError.kind}): ${lastError.message}`,
       );
       if (!lastError.retryable) break;
+
+      // Перегрузка или таймаут основной модели — дальше пробуем запасной.
+      // Повторять тем же способом, которым только что не получилось, смысла
+      // мало: 503 «high demand» держится минутами, а у нас есть секунды.
+      if (
+        model === GEMINI_CONFIG.model &&
+        (lastError.kind === "network" ||
+          lastError.kind === "timeout" ||
+          lastError.kind === "rate_limited")
+      ) {
+        model = GEMINI_CONFIG.fallbackModel;
+        console.warn(`[gemini] переключаюсь на запасную модель ${model}`);
+      }
     }
   }
 

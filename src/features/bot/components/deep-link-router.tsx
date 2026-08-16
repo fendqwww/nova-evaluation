@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { retrieveLaunchParams } from "@tma.js/sdk-react";
+import { decodeDeepLink, encodeDeepLink } from "@/shared/config/deep-links";
 
 /**
  * Приземление по ссылке из бота.
@@ -19,29 +20,6 @@ import { retrieveLaunchParams } from "@tma.js/sdk-react";
  * редирект под доменом Telegram. Белый список — не паранойя: это единственный
  * способ гарантировать, что переход ведёт туда, куда обещает кнопка.
  */
-
-/** Куда боту позволено приземлять. Совпадает с разделами приложения. */
-const ALLOWED_PATHS = new Set([
-  "/",
-  "/goals",
-  "/habits",
-  "/tasks",
-  "/workouts",
-  "/nutrition",
-  "/sleep",
-  "/appearance",
-  "/coach",
-  "/reports",
-  "/profile",
-  "/settings",
-  "/settings/subscription",
-  // Разделы наставника. Добавлены вместе с ними, потому что смысл напоминания
-  // «вернись к своему плану» — привести человека прямо в план, а не на главную,
-  // откуда до плана ещё нужно дойти.
-  "/path",
-  "/library",
-  "/academy",
-]);
 
 export function DeepLinkRouter() {
   const router = useRouter();
@@ -73,7 +51,11 @@ function readStartParam(): string | null {
     // некорректной последовательности.
     const decoded = safeDecode(raw);
 
-    return ALLOWED_PATHS.has(decoded) ? decoded : null;
+    // Сначала новый формат («habits», «settings_subscription»), затем — путь
+    // как есть: ссылки старого вида могли остаться в уже отправленных
+    // сообщениях, и ломать их не за что. Проверка по списку разрешённых путей
+    // живёт внутри decodeDeepLink, то есть в одном месте с кодированием.
+    return decodeDeepLink(decoded) ?? decodeDeepLink(encodeDeepLink(decoded));
   } catch {
     // Запуск вне Telegram: параметров нет, приземлять некуда.
     return null;

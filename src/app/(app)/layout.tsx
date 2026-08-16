@@ -8,6 +8,21 @@ import { ConsentGate } from "@/features/legal/components/consent-gate";
 import { DeepLinkRouter } from "@/features/bot/components/deep-link-router";
 import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 
+/**
+ * Потолок времени для серверных действий этой группы маршрутов.
+ *
+ * ЗАЧЕМ. Анализ фото еды и фото внешности — это вызов Gemini, а он на думающей
+ * модели занимает секунды и очень неровно: измеренный разброс на тривиальном
+ * запросе — от 4,6 до 20+ секунд, и фото тяжелее текста. По умолчанию функция
+ * на Vercel живёт 10 секунд и убивается снаружи вместе с недосчитанным
+ * ответом — снаружи это выглядит как «ИИ не работает».
+ *
+ * Шестьдесят — предел тарифа Hobby. Внутренний бюджет самого вызова меньше
+ * (GEMINI_CONFIG.overallTimeoutMs), чтобы ошибка успела вернуться человеку
+ * словами, а не обрывом соединения.
+ */
+export const maxDuration = 60;
+
 // Active state is derived from the route inside BottomNavigation, so this
 // stays a plain declaration of the app's tabs.
 //

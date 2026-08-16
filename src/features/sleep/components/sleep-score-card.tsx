@@ -98,7 +98,7 @@ export function SleepScoreCard({
           </CircularProgress>
 
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <p className="text-title text-foreground">{sleepScoreLabel(result.score)}</p>
+            <p className="text-title text-foreground">{sleepScoreLabel(result)}</p>
             {log && (
               <p className="text-caption text-muted-foreground">
                 {formatDuration(log.durationMin)} · {log.bedTime}–{log.wakeTime}

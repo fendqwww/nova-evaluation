@@ -15,6 +15,8 @@ import {
   type BotUserState,
 } from "./user-state.repository";
 import { TELEGRAM_APP_URL } from "@/shared/config/app-bot";
+import { encodeDeepLink } from "@/shared/config/deep-links";
+import { appScreenUrl } from "./app-url";
 
 /**
  * Один проход рассылки.
@@ -137,10 +139,17 @@ function buildMessage(state: BotUserState, kind: NotificationKind): BotMessage {
  * которая стоит нам бота, а не одного подписчика.
  */
 function keyboardFor(message: BotMessage, kind: NotificationKind) {
-  const openApp = {
-    text: message.buttonText,
-    url: `${TELEGRAM_APP_URL}=${encodeURIComponent(message.deepLink)}`,
-  };
+  // Кнопка собирается ровно так же, как в обработчике команд, и по тем же
+  // причинам — разбор в appButton (handle-update.ts). Коротко: `startapp` не
+  // принимает процентное кодирование, а простая ссылка на бота открывает Mini
+  // App только при настроенном Main Mini App.
+  const screenUrl = appScreenUrl(message.deepLink);
+  const openApp = screenUrl
+    ? { text: message.buttonText, web_app: { url: screenUrl } }
+    : {
+        text: message.buttonText,
+        url: `${TELEGRAM_APP_URL}=${encodeDeepLink(message.deepLink)}`,
+      };
 
   return kind === "winback"
     ? { inline_keyboard: [[openApp], [UNSUBSCRIBE_BUTTON]] }

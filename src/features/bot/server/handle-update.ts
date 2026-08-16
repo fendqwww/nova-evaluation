@@ -2,6 +2,8 @@ import "server-only";
 import { db } from "@/server/db";
 import { TELEGRAM_APP_URL } from "@/shared/config/app-bot";
 import { TELEGRAM_SUPPORT_URL } from "@/shared/config/support";
+import { encodeDeepLink } from "@/shared/config/deep-links";
+import { appScreenUrl } from "./app-url";
 import {
   HELP_MESSAGE,
   STOP_MESSAGE,
@@ -59,22 +61,38 @@ interface TelegramUpdate {
   };
 }
 
-/** Кнопка, открывающая нужный экран приложения. */
+/**
+ * Кнопка, открывающая нужный экран приложения.
+ *
+ * ПОЧЕМУ ЗДЕСЬ ТЕПЕРЬ `web_app`, А НЕ ССЫЛКА. Раньше кнопка вела на
+ * `t.me/<бот>?startapp=` + encodeURIComponent(путь) и не работала по двум
+ * причинам сразу.
+ *
+ * Первая: Telegram принимает в `startapp` только `A-Za-z0-9_-`, а
+ * encodeURIComponent("/") даёт «%2F». Параметр невалиден, ссылка перестаёт быть
+ * ссылкой на Mini App.
+ *
+ * Вторая: даже с правильным параметром `t.me/…?startapp` открывает приложение
+ * только когда у бота настроено Main Mini App. Иначе Telegram открывает чат с
+ * ботом — тот самый, где человек нажал кнопку. Снаружи обе причины выглядят
+ * одинаково: «нажимаю, ничего не происходит, приложение не работает».
+ *
+ * `web_app` открывает Mini App сам и в личных чатах разрешён — а это
+ * единственное место, где бот вообще говорит. Ссылка `t.me` осталась запасным
+ * вариантом на случай, когда публичный адрес неизвестен: путь в ней теперь
+ * кодируется по правилам Telegram (см. encodeDeepLink).
+ */
 function appButton(message: BotMessage) {
-  return {
-    inline_keyboard: [
-      [
-        {
-          text: message.buttonText,
-          // startapp-параметром передаётся путь: Mini App читает его при
-          // запуске и открывает нужный экран вместо главного. Точка входа одна,
-          // а приземление разное — иначе кнопка «Отметить привычки» открывала
-          // бы главный экран, и человек искал бы раздел сам.
-          url: `${TELEGRAM_APP_URL}=${encodeURIComponent(message.deepLink)}`,
-        },
-      ],
-    ],
-  };
+  const screenUrl = appScreenUrl(message.deepLink);
+
+  const button = screenUrl
+    ? { text: message.buttonText, web_app: { url: screenUrl } }
+    : {
+        text: message.buttonText,
+        url: `${TELEGRAM_APP_URL}=${encodeDeepLink(message.deepLink)}`,
+      };
+
+  return { inline_keyboard: [[button]] };
 }
 
 /** Кнопка в бот поддержки — другой чат, а не Mini App. */

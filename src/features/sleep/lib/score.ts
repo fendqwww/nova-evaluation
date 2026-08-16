@@ -39,9 +39,38 @@ export const SLEEP_BASELINE_MIN_NIGHTS = 4;
 const NORM_FLOOR_MIN = 5 * 60;
 const NORM_CEILING_MIN = 10 * 60;
 
-const MAX_DURATION = 50;
-const MAX_REGULARITY = 30;
+/**
+ * ЧЕТВЁРТЫЙ КОМПОНЕНТ — ВРЕМЯ ОТХОДА КО СНУ. Его здесь не было, и это была
+ * дыра, а не упрощение: человек, легший в 4 утра и вставший в 12, спал ровно
+ * восемь часов, стабильно, и получал полные баллы за продолжительность, полные
+ * за регулярность и совет «держи текущий режим — он работает». Приложение о
+ * здоровье хвалило за сбитый режим.
+ *
+ * Восемь часов сна с 4 до 12 и восемь часов с 23 до 7 — это не одна и та же
+ * ночь. Свет, мелатонин и температура тела привязаны к суткам, а не к
+ * длительности, и оценка, которая этого не видит, меряет только половину.
+ *
+ * Баллы под новый блок взяты у продолжительности (−10) и у регулярности (−10).
+ * У регулярности — потому что именно она давала полный балл за стабильно
+ * плохое расписание: ложиться каждый день в четыре утра «регулярно». У
+ * продолжительности — потому что пятьдесят из ста за один параметр делали
+ * оценку почти его синонимом.
+ */
+const MAX_DURATION = 40;
+const MAX_TIMING = 20;
+const MAX_REGULARITY = 20;
 const MAX_QUALITY = 20;
+
+/**
+ * До какого времени отход ко сну считается нормальным, в минутах на шкале
+ * bedtimeOffset (полночь = 0, вечер отрицательный).
+ *
+ * Час ночи, а не полночь: приложение не должно штрафовать взрослого человека за
+ * обычный поздний вечер. Ноль баллов — на четырёх утра: это уже не «поздно
+ * лёг», это перевёрнутые сутки.
+ */
+const TIMING_IDEAL_LATEST_MIN = 60;
+const TIMING_ZERO_AT_MIN = 240;
 
 /**
  * Bedtimes this far apart (in minutes) score zero for regularity. Two hours:
@@ -119,7 +148,7 @@ export function bedtimeSpreadMin(logs: SleepLogItem[], today: CalendarDay): numb
 }
 
 export interface SleepScoreComponent {
-  key: "duration" | "regularity" | "quality";
+  key: "duration" | "timing" | "regularity" | "quality";
   label: string;
   score: number;
   maxScore: number;
@@ -143,6 +172,34 @@ function durationScore(durationMin: number, targetMin: number): number {
   // out at the target rather than rewarding twelve hours in bed.
   const ratio = Math.min(1, durationMin / targetMin);
   return Math.round(MAX_DURATION * ratio);
+}
+
+/**
+ * Насколько сон попадает в сутки, а не только в восемь часов.
+ *
+ * Смотрит на отход ко сну, а не на подъём: подъём — следствие. Человек,
+ * ложащийся в 23:00, встанет в норме сам; человек, ложащийся в 4 утра, не
+ * встанет рано, даже если очень хочет.
+ */
+function timingScore(bedTime: string): number {
+  const offset = bedtimeOffset(bedTime);
+  // Время не распозналось — это не повод штрафовать: не измерено, значит не
+  // вычитаем. Та же логика, что и у пустого разброса в регулярности.
+  if (offset === null) return MAX_TIMING;
+
+  if (offset <= TIMING_IDEAL_LATEST_MIN) return MAX_TIMING;
+
+  const ratio = Math.max(
+    0,
+    1 - (offset - TIMING_IDEAL_LATEST_MIN) / (TIMING_ZERO_AT_MIN - TIMING_IDEAL_LATEST_MIN),
+  );
+  return Math.round(MAX_TIMING * ratio);
+}
+
+/** «04:00» как есть — для строки объяснения. */
+function isLateBedtime(bedTime: string): boolean {
+  const offset = bedtimeOffset(bedTime);
+  return offset !== null && offset > TIMING_IDEAL_LATEST_MIN;
 }
 
 function regularityScore(spread: number | null): number {
@@ -203,6 +260,15 @@ export function sleepScore(
           : `${formatHours(log.durationMin)} — ${norm.isPersonal ? "твоя норма" : "цель"} закрыта`,
     },
     {
+      key: "timing",
+      label: "Время отбоя",
+      score: timingScore(log.bedTime),
+      maxScore: MAX_TIMING,
+      note: isLateBedtime(log.bedTime)
+        ? `Отбой в ${log.bedTime} — организм считает это ночной сменой, сколько бы часов сна ни вышло`
+        : `Отбой в ${log.bedTime} — сон попадает в естественные часы`,
+    },
+    {
       key: "regularity",
       label: "Регулярность",
       score: regularityScore(spread),
@@ -232,9 +298,29 @@ export function sleepScore(
   };
 }
 
-/** The one-line verdict shown next to the number. */
-export function sleepScoreLabel(score: number | null): string {
+/**
+ * The one-line verdict shown next to the number.
+ *
+ * ПРИНИМАЕТ ВЕСЬ РЕЗУЛЬТАТ, А НЕ ОДНО ЧИСЛО, И ЭТО НУЖНО РОВНО ДЛЯ ОДНОГО
+ * СЛУЧАЯ. Восемь часов сна с 4 утра до 12 дают полный балл за
+ * продолжительность, полный за стабильность и ноль за время отбоя — в сумме
+ * около 76, то есть «хорошо восстановился» рядом со строкой «время отбоя
+ * 0 из 20». Вердикт, противоречащий собственному разбору строкой ниже, хуже
+ * отсутствующего вердикта: человек читает верхнюю строку и не читает нижнюю.
+ *
+ * Поэтому сбитые сутки опускают формулировку независимо от суммы. Само число
+ * при этом не трогается — оно честно сложено из компонентов, и подгонять его
+ * под подпись значило бы врать второй раз.
+ */
+export function sleepScoreLabel(result: SleepScoreResult): string {
+  const { score } = result;
   if (score === null) return "Ночь не записана";
+
+  const timing = result.components.find((component) => component.key === "timing");
+  const timingBroken = timing !== undefined && timing.score <= timing.maxScore * 0.25;
+
+  if (timingBroken) return score >= 70 ? "Выспался, но не в те часы" : "Режим сбит";
+
   if (score >= 85) return "Отличная ночь";
   if (score >= 70) return "Хорошо восстановился";
   if (score >= 50) return "Так себе ночь";
@@ -259,6 +345,24 @@ export function sleepTonightAdvice(
   )[0];
 
   if (!weakest) return null;
+
+  /**
+   * ВРЕМЯ ОТБОЯ ПРОВЕРЯЕТСЯ ПЕРВЫМ И ОТДЕЛЬНО ОТ «САМОГО СЛАБОГО».
+   *
+   * Здесь была настоящая ошибка совета, а не только оценки. У человека,
+   * ложащегося в 4 утра и спящего восемь часов, продолжительность закрыта,
+   * режим стабилен — и функция доходила до последней строки и отвечала «держи
+   * текущий режим — он работает». Приложение о здоровье советовало продолжать
+   * ложиться под утро.
+   *
+   * Сдвиг режима — единственный совет, который нельзя вывести из «самого
+   * слабого компонента»: сбитые сутки могут соседствовать с отличными баллами
+   * за всё остальное, и именно так они обычно и выглядят.
+   */
+  const timing = result.components.find((component) => component.key === "timing");
+  if (timing && timing.score <= timing.maxScore * 0.5) {
+    return "Отбой сильно за полночь. Сдвигай его на 20–30 минут раньше каждые пару дней — резкий перенос не приживается, а восемь часов под утро не заменяют восьми часов ночью.";
+  }
 
   if (weakest.key === "duration" && result.deficitMin > 0 && lastBedtime) {
     const earlier = Math.min(90, Math.max(15, Math.round(result.deficitMin / 15) * 15));
