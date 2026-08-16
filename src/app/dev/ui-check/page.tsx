@@ -19,6 +19,7 @@ import { PlanSectionTabs } from "@/components/plan-section-tabs";
 import { NutritionTabs } from "@/features/nutrition/components/nutrition-tabs";
 import { AppearanceTabs } from "@/features/appearance/components/appearance-tabs";
 import { BottomNavigation } from "@/shared/ui/bottom-navigation";
+import { ExerciseIllustration } from "@/features/workouts/components/exercise-illustration";
 import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button } from "@/shared/ui/button";
@@ -180,6 +181,27 @@ export default function UiCheckPage() {
       />
 
       <NovaScoreCard day={DAY_SCORE} />
+
+      <div className="flex flex-col gap-2">
+        {[
+          "Жим узким хватом",
+          "Французский жим",
+          "Отжимания на брусьях",
+          "Шраги со штангой",
+          "Подъём на бицепс",
+          "Махи в наклоне",
+          "Приседания со штангой",
+          "Моё упражнение",
+        ].map((name) => (
+          <div
+            key={name}
+            className="flex items-center gap-2.5 rounded-xl border border-border bg-surface-inset p-2.5"
+          >
+            <ExerciseIllustration name={name} size="sm" />
+            <span className="text-caption text-foreground">{name}</span>
+          </div>
+        ))}
+      </div>
     </PageContainer>
   );
 }

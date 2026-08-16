@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/shared/config/env";
 import { constantTimeEqual } from "@/shared/lib/constant-time-equal";
 import { getBotIdentity, getBotWebhookInfo } from "@/features/bot/server/bot-api";
+import { APP_ORIGIN } from "@/features/bot/server/app-url";
 
 /**
  * Одна страница, отвечающая на вопрос «почему бот молчит».
@@ -104,6 +105,15 @@ export async function GET(request: Request): Promise<NextResponse> {
     );
   }
 
+  // Без публичного адреса кнопка под сообщением деградирует до ссылки t.me,
+  // которая открывает Mini App только при настроенном Main Mini App. Проверять
+  // это глазами — значит нажимать кнопку и гадать, почему ничего не произошло.
+  if (APP_ORIGIN === null) {
+    problems.push(
+      "Публичный адрес приложения неизвестен (нет APP_PUBLIC_URL и VERCEL_PROJECT_PRODUCTION_URL) — кнопки под сообщениями бота откроют чат вместо приложения.",
+    );
+  }
+
   if (!env.CRON_SECRET) {
     problems.push(
       "CRON_SECRET не задан — Vercel Cron не сможет авторизоваться, рассылка запускается только вручную по ADMIN_SECRET.",
@@ -113,7 +123,9 @@ export async function GET(request: Request): Promise<NextResponse> {
   return NextResponse.json({
     ok: problems.length === 0,
     problems,
-    deploy: { origin },
+    // appOrigin — адрес, который бот подставляет в кнопки web_app. Отличается
+    // от origin, когда диагностику открыли на превью-деплое.
+    deploy: { origin, appOrigin: APP_ORIGIN },
     env: {
       // Только факт настройки. Значения не отдаются никогда — см. заголовок.
       DATABASE_URL: true,

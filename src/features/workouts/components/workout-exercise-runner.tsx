@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Check, Plus } from "lucide-react";
 import { cn } from "@/shared/lib/cn";
 import { NumberStepper } from "@/features/workouts/components/number-stepper";
+import { ExerciseIllustration } from "@/features/workouts/components/exercise-illustration";
 import {
   REPS_MAX,
   SETS_MAX,
@@ -109,6 +110,11 @@ export function WorkoutExerciseRunner({
         >
           {index + 1}
         </span>
+
+        {/* Картинка рядом с названием, а не вместо него: человек, стоящий у
+            стойки, сверяется взглядом, а читает подпись только когда не узнал
+            движение. */}
+        <ExerciseIllustration name={exercise.name} size="sm" />
 
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="text-caption font-semibold text-foreground">{exercise.name}</span>

@@ -14,6 +14,7 @@ import { WorkoutMonthCalendar } from "@/features/workouts/components/workout-mon
 import { ExerciseProgressList } from "@/features/workouts/components/exercise-progress-list";
 import { categoryOption } from "@/features/workouts/lib/categories";
 import { describePlan } from "@/features/workouts/lib/plan";
+import { ExerciseIllustration } from "@/features/workouts/components/exercise-illustration";
 import {
   ADHERENCE_DAYS,
   activeExercises,
@@ -255,6 +256,7 @@ export function WorkoutDetailModal({
                     <span className="numeric mt-px flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-micro font-semibold text-subtle-foreground">
                       {index + 1}
                     </span>
+                    <ExerciseIllustration name={exercise.name} size="sm" />
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <span className="truncate text-caption font-medium text-foreground">
                         {exercise.name}
