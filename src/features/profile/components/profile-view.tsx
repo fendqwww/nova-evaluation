@@ -4,11 +4,13 @@ import { useMemo, useState } from "react";
 import {
   BarChart3,
   BookOpen,
+  Crown,
   GraduationCap,
   ListTodo,
   Repeat,
   Route,
   Settings,
+  ShieldCheck,
   Sparkles,
   Target,
   Wand2,
@@ -29,29 +31,40 @@ import { WeightLogModal } from "@/features/profile/components/weight-log-modal";
 import { ActivityCard } from "@/features/profile/components/activity-card";
 import { AchievementsCard } from "@/features/profile/components/achievements-card";
 import { AiProfileCard } from "@/features/profile/components/ai-profile-card";
-import { ProfileSubscriptionCard } from "@/features/profile/components/subscription-card";
 import { SectionLinks } from "@/features/profile/components/section-links";
-import { ThemePicker } from "@/features/profile/components/theme-picker";
 import { evaluateAchievements } from "@/features/profile/lib/achievements";
 import { ACTIVITY_CHART_DAYS } from "@/features/profile/lib/constants";
-import { DEFAULT_THEME, type ThemeValue } from "@/shared/config/themes";
 
 /**
- * Профиль — кто ты, куда идёшь и что Nova о тебе знает.
+ * Профиль — кто ты, куда идёшь и куда отсюда можно попасть.
  *
- * ПОРЯДОК — ЭТО АРГУМЕНТ, и в нём изменилось одно: между «кто я» и «что я
- * сделал» встало «куда я иду». Раньше экран читался как отчёт о прошлом —
- * личность, тело, счёт, история, достижения — и человек, открывший его в
- * середине трёхмесячного пути, не находил на нём своей цели вовсе.
+ * ЧТО ИЗМЕНИЛОСЬ И ПОЧЕМУ. Экран состоял из одиннадцати карточек подряд:
+ * личность, тело, цель, счёт, ритм, достижения, AI-профиль, подписка, тема и
+ * только потом — список разделов. Каждая по отдельности была осмысленной, а
+ * вместе они делали ровно то, на что жаловались: «непонятно, что где и зачем».
+ * Профиль в этом приложении — единственный вход в восемь разделов без вкладки
+ * (путь, академия, библиотека, цели, привычки, задачи, отчёты, настройки), и
+ * вход был закопан под десятью экранами прокрутки.
  *
- * Теперь: личность → тело → цель и её прогресс → чем это подтверждено (счёт,
- * ритм, достижения) → чем это поддерживается (путь, библиотека, академия,
- * планирование) → отношения с приложением (AI, подписка, тема, настройки).
+ * ПОЭТОМУ НАВИГАЦИЯ ПОДНЯЛАСЬ НАВЕРХ. Прежний довод — «настройки последние,
+ * потому что это выход с экрана» — верен для настроек и неверен для всего
+ * остального: «Мой путь» и «Цели» это не выход, а причина, по которой человек
+ * сюда зашёл. Теперь порядок такой: кто я (личность, счёт, тело, цель) → куда
+ * отсюда (все разделы) → чем это подтверждено (достижения, ритм, что знает AI).
+ * Аналитика не удалена, она перестала стоять на дороге.
  *
- * Настройки остаются последними, потому что это выход с экрана, а тема — здесь,
- * потому что это единственная действительно личная настройка.
+ * ЧТО УБРАНО СОВСЕМ. Карточка подписки — она повторяла тариф, который и так
+ * написан рядом с именем в шапке, тремя колонками сравнения планов; вместо неё
+ * строка «Аккаунт и подписка» в группе «Приложение». Выбор темы — он полностью
+ * дублировал раздел «Оформление» в настройках, куда и ведёт строка. Обе
+ * функции на месте, просто перестали занимать по экрану каждая.
+ *
+ * ГРУППЫ НАЗВАНЫ ТЕМ, ЧЕМ ЯВЛЯЮТСЯ. «Развитие / План / Ещё» — три названия, из
+ * которых понятно одно. Стало «Персональное / Обучение / План / Приложение»: у
+ * академии и библиотеки теперь общий заголовок, который сразу говорит, что это
+ * не разделы про тело, а подписи под ними — что именно там лежит.
  */
-export function ProfileView({ themeColor }: { themeColor: string }) {
+export function ProfileView({ isAdmin = false }: { isAdmin?: boolean }) {
   const { overview, isPending, isError, retry, refresh } = useProfileOverview();
   const [weightOpen, setWeightOpen] = useState(false);
   const [weightKey, setWeightKey] = useState(0);
@@ -75,7 +88,10 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
 
   return (
     <PageContainer className="flex flex-col gap-4">
-      <PageHeader title="Профиль" subtitle="Всё, что вы построили в Nova" />
+      {/* «Ты», а не «вы»: всё приложение — от онбординга до коуча — обращается
+          на «ты», и этот подзаголовок был единственным местом, где Nova вдруг
+          переходила на «вы». */}
+      <PageHeader title="Профиль" subtitle="Кто ты, куда идёшь и что уже сделано" />
 
       {isPending && <ProfileSkeleton />}
 
@@ -98,9 +114,17 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
             <ProfileHeaderCard account={overview.account} />
           </RevealItem>
 
-          {/* Directly under the identity header: in a health product the body
-              is who you are on this screen, and it used to appear nowhere on
-              it. */}
+          <RevealItem>
+            <ProfileStatsCard
+              lifeScore={overview.lifeScore}
+              streak={overview.streak}
+              totals={overview.totals}
+            />
+          </RevealItem>
+
+          {/* Тело и цель — вместе они и есть ответ «вот мои цифры, вот куда они
+              двигаются». В приложении о здоровье это то, ради чего экран
+              открывают, поэтому они выше навигации. */}
           <RevealItem>
             <BodyCard
               ai={overview.ai}
@@ -112,63 +136,19 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
             />
           </RevealItem>
 
-          {/* Цель — сразу под телом: вместе они и есть ответ «вот мои цифры, вот
-              куда они двигаются». */}
           <RevealItem>
             <ProfileGoalCard path={overview.path} />
           </RevealItem>
 
-          <RevealItem>
-            <ProfileStatsCard
-              lifeScore={overview.lifeScore}
-              streak={overview.streak}
-              totals={overview.totals}
-            />
-          </RevealItem>
-
-          <RevealItem>
-            <ActivityCard
-              activity={overview.activity}
-              counts={overview.counts}
-              chartDays={ACTIVITY_CHART_DAYS}
-            />
-          </RevealItem>
-
-          <RevealItem>
-            <AchievementsCard items={achievements} />
-          </RevealItem>
-
-          <RevealItem>
-            <AiProfileCard ai={overview.ai} />
-          </RevealItem>
-
-          <RevealItem>
-            <ProfileSubscriptionCard plan={overview.account.plan} />
-          </RevealItem>
-
-          <RevealItem>
-            <ThemePicker current={(themeColor as ThemeValue) ?? DEFAULT_THEME} />
-          </RevealItem>
-
           {/* Все разделы без своей вкладки — одним блоком с подзаголовками.
-              Было три отдельные карточки подряд («Развитие», «План», «Ещё»),
-              то есть три одинаковых прямоугольника со ссылками, делившие низ
-              профиля на равные куски. Разбор слияния — в SectionLinks.
-
-              Порядок групп сохранён и остаётся аргументом: развитие выше
-              планирования, потому что человек, не знающий, что делать,
-              приходит за маршрутом, а не за списком задач; «Настройки»
-              последние, потому что это выход с экрана.
-
-              «Коуч Nova» из «Развития» ушёл раньше: у него постоянная вкладка
-              внизу, видимая с любого экрана, и строка здесь дублировала бы её,
-              ничего не добавляя. */}
+              «Коуч Nova» здесь нет намеренно: у него постоянная вкладка внизу,
+              видимая с любого экрана, и строка тут дублировала бы её. */}
           <RevealItem>
             <SectionLinks
               groups={[
                 {
-                  key: "growth",
-                  title: "Развитие",
+                  key: "personal",
+                  title: "Персональное",
                   items: [
                     {
                       key: "path",
@@ -176,15 +156,37 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
                       label: "Мой путь",
                       hint: overview.path
                         ? `${overview.path.title} · ${overview.path.percent}%`
-                        : "Выбрать цель и получить маршрут",
+                        : "Выбрать цель — Nova соберёт маршрут по шагам",
                       tone: "accent",
                       icon: <Route className="h-4 w-4" />,
                     },
                     {
+                      key: "appearance",
+                      href: "/appearance",
+                      label: "Внешность",
+                      hint: "Уход, фото прогресса, разбор по фото",
+                      tone: "ai",
+                      icon: <Wand2 className="h-4 w-4" />,
+                    },
+                    {
+                      key: "reports",
+                      href: "/reports",
+                      label: "Отчёты",
+                      hint: "Неделя и месяц в графиках, сводка от AI",
+                      tone: "neutral",
+                      icon: <BarChart3 className="h-4 w-4" />,
+                    },
+                  ],
+                },
+                {
+                  key: "learning",
+                  title: "Обучение",
+                  items: [
+                    {
                       key: "academy",
                       href: "/academy",
                       label: "Академия",
-                      hint: "Короткие уроки: питание, тренировки, сон, привычки",
+                      hint: "Уроки на 3 минуты: питание, тренировки, сон, привычки",
                       tone: "ai",
                       icon: <GraduationCap className="h-4 w-4" />,
                     },
@@ -192,7 +194,7 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
                       key: "library",
                       href: "/library",
                       label: "Библиотека",
-                      hint: "Книги под твою проблему, с объяснением зачем",
+                      hint: "Книги под твою задачу — с объяснением, зачем читать",
                       tone: "goal",
                       icon: <BookOpen className="h-4 w-4" />,
                     },
@@ -229,37 +231,61 @@ export function ProfileView({ themeColor }: { themeColor: string }) {
                   ],
                 },
                 {
-                  key: "more",
-                  title: "Ещё",
+                  key: "app",
+                  title: "Приложение",
                   items: [
                     {
-                      key: "appearance",
-                      href: "/appearance",
-                      label: "Внешность",
-                      hint: "Уход, фото прогресса, цели",
-                      tone: "ai",
-                      icon: <Wand2 className="h-4 w-4" />,
-                    },
-                    {
-                      key: "reports",
-                      href: "/reports",
-                      label: "Отчёты",
-                      hint: "Прогресс по всем сферам, графики, AI-сводка",
-                      tone: "neutral",
-                      icon: <BarChart3 className="h-4 w-4" />,
+                      key: "subscription",
+                      href: "/settings/subscription",
+                      label: "Аккаунт и подписка",
+                      hint: "Тариф, лимиты AI, продление",
+                      tone: "goal",
+                      icon: <Crown className="h-4 w-4" />,
                     },
                     {
                       key: "settings",
                       href: "/settings",
                       label: "Настройки",
-                      hint: "Тема, регион, уведомления, данные",
+                      hint: "Тема, язык, уведомления, данные и экспорт",
                       tone: "neutral",
                       icon: <Settings className="h-4 w-4" />,
                     },
+                    // Единственная строка на экране, которая есть не у всех.
+                    // Права проверяет сервер на каждом запросе — здесь решается
+                    // только то, показывать ли вход, чтобы у обычного человека
+                    // в меню не висел раздел, который ему ответит отказом.
+                    ...(isAdmin
+                      ? [
+                          {
+                            key: "admin",
+                            href: "/admin",
+                            label: "Панель",
+                            hint: "Пользователи, тарифы, расход AI, поддержка",
+                            tone: "ai" as const,
+                            icon: <ShieldCheck className="h-4 w-4" />,
+                          },
+                        ]
+                      : []),
                   ],
                 },
               ]}
             />
+          </RevealItem>
+
+          <RevealItem>
+            <AchievementsCard items={achievements} />
+          </RevealItem>
+
+          <RevealItem>
+            <ActivityCard
+              activity={overview.activity}
+              counts={overview.counts}
+              chartDays={ACTIVITY_CHART_DAYS}
+            />
+          </RevealItem>
+
+          <RevealItem>
+            <AiProfileCard ai={overview.ai} />
           </RevealItem>
         </Reveal>
       )}

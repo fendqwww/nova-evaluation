@@ -9,8 +9,11 @@
  * собраны ровно те блоки, где ищутся переполнения и сбитые отступы, с числами
  * заведомо худшего случая — длинный объём, длинные подписи, много категорий.
  *
- * В прод не попадает: каталог /dev уже содержит служебные маршруты, и ни одна
- * ссылка приложения сюда не ведёт.
+ * В прод не попадает — теперь по-настоящему. Раньше здесь было написано ровно
+ * это же, а основанием служило «ни одна ссылка сюда не ведёт»: маршрут
+ * собирался вместе с остальными и открывался по прямому адресу у кого угодно.
+ * Отсутствие ссылки — не ограничение доступа. Проверку делает app/dev/layout.tsx,
+ * общий для всего каталога.
  */
 
 import { Home, HeartPulse, User, UtensilsCrossed } from "lucide-react";
@@ -20,6 +23,8 @@ import { NutritionTabs } from "@/features/nutrition/components/nutrition-tabs";
 import { AppearanceTabs } from "@/features/appearance/components/appearance-tabs";
 import { BottomNavigation } from "@/shared/ui/bottom-navigation";
 import { ExerciseIllustration } from "@/features/workouts/components/exercise-illustration";
+import { MuscleMap } from "@/features/workouts/components/muscle-map";
+import { GROUP_LABELS, type MuscleGroup } from "@/features/workouts/lib/exercise-visual";
 import { PageContainer } from "@/shared/ui/page-container";
 import { PageHeader } from "@/shared/ui/page-header";
 import { Button } from "@/shared/ui/button";
@@ -182,15 +187,25 @@ export default function UiCheckPage() {
 
       <NovaScoreCard day={DAY_SCORE} />
 
+      {/* По одному упражнению на каждую группу мышц плюс два случая без
+          справочника: свободный ввод, который разбирается по словам, и
+          название, которое не разбирается вовсе. Ровно те состояния, в которых
+          ExerciseIllustration может ошибиться. */}
       <div className="flex flex-col gap-2">
         {[
-          "Жим узким хватом",
+          "Жим лёжа",
+          "Подтягивания",
+          "Приседания со штангой",
+          "Махи в стороны",
+          "Подъём штанги на бицепс",
           "Французский жим",
+          "Ягодичный мостик",
+          "Планка",
+          "Беговая дорожка",
+          "Жим узким хватом",
           "Отжимания на брусьях",
           "Шраги со штангой",
-          "Подъём на бицепс",
-          "Махи в наклоне",
-          "Приседания со штангой",
+          "Жим гантелей 30 градусов",
           "Моё упражнение",
         ].map((name) => (
           <div
@@ -202,6 +217,32 @@ export default function UiCheckPage() {
           </div>
         ))}
       </div>
+
+      <p className="text-section text-subtle-foreground">Схемы мышц крупно</p>
+
+      <div className="grid grid-cols-5 gap-2">
+        {MUSCLE_GROUPS.map((group) => (
+          <div key={group} className="flex flex-col items-center gap-1">
+            <div className="flex h-20 w-full items-center justify-center rounded-xl bg-fill-subtle p-1.5">
+              <MuscleMap group={group} className="h-full w-auto" />
+            </div>
+            <span className="text-nano text-subtle-foreground">{GROUP_LABELS[group]}</span>
+          </div>
+        ))}
+      </div>
     </PageContainer>
   );
 }
+
+const MUSCLE_GROUPS: MuscleGroup[] = [
+  "chest",
+  "back",
+  "shoulders",
+  "biceps",
+  "triceps",
+  "legs",
+  "glutes",
+  "core",
+  "cardio",
+  "fullBody",
+];

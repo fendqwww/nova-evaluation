@@ -10,6 +10,8 @@ import {
   type OnboardingProfileInput,
 } from "@/features/onboarding/schemas";
 import { sessionQueryKey } from "@/features/auth/hooks/use-telegram-session";
+import { markReleaseSeen } from "@/shared/lib/release-storage";
+import { APP_VERSION } from "@/features/settings/lib/about";
 import type { ResolvedSession } from "@/features/auth/server/resolve-session.action";
 
 /**
@@ -151,6 +153,11 @@ export function useOnboardingFlow(session: ResolvedSession) {
       onboardingCompleted: true,
       profile,
     });
+    // Тот, кто только что прошёл знакомство, видит приложение впервые, и
+    // рассказывать ему, что в нём изменилось, не о чем. Отмечаем текущую версию
+    // просмотренной, чтобы записка об обновлении пришла ему со следующей
+    // настоящей, а не через секунду после онбординга. Разбор — в WhatsNewGate.
+    markReleaseSeen(APP_VERSION);
     router.replace("/");
   }
 

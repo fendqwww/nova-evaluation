@@ -1,12 +1,21 @@
 /**
  * Что за упражнение записано — по его названию.
  *
- * ПОЧЕМУ ПО НАЗВАНИЮ, А НЕ ПО СПРАВОЧНИКУ. У упражнения здесь нет справочника и
- * не будет: имя — свободная строка, которую человек пишет сам («жим лёжа»,
- * «жим», «жим гантелей 30°»), и каталог движений на русском был бы неверен для
- * половины пользователей. Разбор ключевых слов ничего не запрещает и ничего не
- * навязывает: не опознали — показываем нейтральный силуэт, а не пустоту и не
- * чужое упражнение.
+ * СНАЧАЛА СПРАВОЧНИК, ПОТОМ РАЗБОР СЛОВ. Справочник (exercise-catalog.ts)
+ * появился позже этого файла и снял с него главную работу: у упражнения,
+ * выбранного из каталога, группа и картинка записаны прямо, и гадать не о чем.
+ * Разбор ключевых слов остался для второго случая — имени, которое человек ввёл
+ * руками («жим гантелей 30°», «моё упражнение»), и там он по-прежнему ничего не
+ * запрещает: не опознали — показываем схему всего тела, а не пустоту и не чужое
+ * движение.
+ *
+ * ПОЧЕМУ РАЗБОР БОЛЬШЕ НЕ ПОДСТАВЛЯЕТ КАРТИНКУ САМ. Раньше подставлял: не найдя
+ * точного совпадения, он брал «одну картинку на группу» — и «жим ногами»
+ * приходил со снимком жима лёжа, «подъём ног» — с тягой, «планка» — со штангой.
+ * Ошибка была видна на экране и читалась как небрежность, потому что ею и была.
+ * Теперь снимок ставится только при точном совпадении движения; во всех
+ * остальных случаях рисуется схема работающих мышц, которая не может ошибиться
+ * сильнее, чем на группу.
  *
  * ПОЧЕМУ НЕ ФОТО И НЕ ГИФКИ. Их пришлось бы либо лицензировать, либо
  * генерировать, и в обоих случаях везти мегабайты в Mini App, который и так
@@ -14,6 +23,8 @@
  * («что это и что тут работает»), весит килобайты, живёт в теме приложения и
  * не может протухнуть.
  */
+
+import { findCatalogExercise } from "@/features/workouts/lib/exercise-catalog";
 
 export type MuscleGroup =
   | "chest"
@@ -41,7 +52,7 @@ export interface ExerciseVisual {
   image: string | null;
 }
 
-const GROUP_LABELS: Record<MuscleGroup, string> = {
+export const GROUP_LABELS: Record<MuscleGroup, string> = {
   chest: "Грудь",
   back: "Спина",
   shoulders: "Плечи",
@@ -130,36 +141,41 @@ function imageFor(normalized: string): string | null {
   return null;
 }
 
-/** Одна картинка на группу — когда конкретное движение не опознано. */
-const GROUP_IMAGE: Partial<Record<MuscleGroup, string>> = {
-  triceps: "/exercises/triceps-pushdown.webp",
-  shoulders: "/exercises/shoulders-upright-row.webp",
-  biceps: "/exercises/biceps-curl.webp",
-};
+/** Подпись группы мышц — единственное место, где они называются по-русски. */
+export function muscleGroupLabel(group: MuscleGroup): string {
+  return GROUP_LABELS[group];
+}
 
 /**
  * Определить группу мышц и картинку по названию.
  *
- * Регистр и «ё» нормализуются: человек пишет и «Жим Лёжа», и «жим лежа», и это
- * одно упражнение.
+ * Порядок: справочник → точный снимок по ключевым словам → группа по ключевым
+ * словам → «всё тело». Регистр и «ё» нормализуются: человек пишет и «Жим Лёжа»,
+ * и «жим лежа», и это одно упражнение.
  */
 export function exerciseVisual(name: string): ExerciseVisual {
+  // Совпало со справочником — дальше можно не гадать: там всё записано руками.
+  const known = findCatalogExercise(name);
+  if (known) {
+    return {
+      group: known.group,
+      label: GROUP_LABELS[known.group],
+      image: known.image === null ? null : `/exercises/${known.image}.webp`,
+    };
+  }
+
   const normalized = name.toLowerCase().replace(/ё/g, "е").trim();
   const exact = imageFor(normalized);
 
   for (const rule of RULES) {
     for (const pattern of rule.patterns) {
       if (normalized.includes(pattern.replace(/ё/g, "е"))) {
-        return {
-          group: rule.group,
-          label: GROUP_LABELS[rule.group],
-          image: exact ?? GROUP_IMAGE[rule.group] ?? null,
-        };
+        return { group: rule.group, label: GROUP_LABELS[rule.group], image: exact };
       }
     }
   }
 
   // Не опознали — это честное «упражнение без определённой группы», а не
-  // ошибка: подпись скажет то же самое, картинки не будет.
+  // ошибка: схема покажет всё тело, подпись скажет то же самое.
   return { group: "fullBody", label: GROUP_LABELS.fullBody, image: exact };
 }

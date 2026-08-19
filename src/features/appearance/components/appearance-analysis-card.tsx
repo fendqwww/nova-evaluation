@@ -5,13 +5,22 @@ import { Card } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
 import type { AppearanceAnalysis, AppearanceZoneState } from "@/ai/types";
 
-/** The list blocks, in the order they read best: what's good → what to do. */
+/**
+ * Списочные блоки в том порядке, в каком читаются: что уже хорошо → над чем
+ * работать → что делать.
+ *
+ * У каждого блока свой цвет маркера, и это не украшение. Пять одинаковых
+ * стопок текста подряд читались одной сплошной простынёй: наблюдение и
+ * действие выглядели одинаково, хотя требуют разного — первое надо прочесть,
+ * второе сделать. Точка слева стоит ровно за этим: она отделяет «вот что видно»
+ * от «вот что с этим делать» до того, как прочитано первое слово.
+ */
 const ANALYSIS_SECTIONS = [
-  { key: "strengths", label: "Сильные стороны" },
-  { key: "weaknesses", label: "Точки роста" },
-  { key: "recommendations", label: "Рекомендации" },
-  { key: "care", label: "Уход" },
-  { key: "style", label: "Стиль" },
+  { key: "strengths", label: "Сильные стороны", dot: "bg-positive" },
+  { key: "weaknesses", label: "Точки роста", dot: "bg-warning" },
+  { key: "recommendations", label: "Что делать", dot: "bg-accent" },
+  { key: "care", label: "Уход", dot: "bg-accent" },
+  { key: "style", label: "Стиль", dot: "bg-tint-purple" },
 ] as const;
 
 /**
@@ -52,9 +61,8 @@ export function AppearanceAnalysisCard({ analysis }: { analysis: AppearanceAnaly
 
         {!analysis.isAnalyzable && (
           <p className="text-caption text-muted-foreground">
-            На фото не получилось разглядеть то, что было выбрано в «Что на фото».
-            Проверьте, что зона выбрана верно, и попробуйте более светлый и чёткий
-            снимок.
+            На фото не получилось разглядеть то, что выбрано в «Что на фото».
+            Проверь, верно ли выбрана зона, и попробуй снимок посветлее и почётче.
           </p>
         )}
 
@@ -115,17 +123,18 @@ export function AppearanceAnalysisCard({ analysis }: { analysis: AppearanceAnaly
           </div>
         )}
 
-        {ANALYSIS_SECTIONS.map(({ key, label }) => {
+        {ANALYSIS_SECTIONS.map(({ key, label, dot }) => {
           const items = analysis[key];
           if (items.length === 0) return null;
 
           return (
-            <div key={key} className="flex flex-col gap-1">
+            <div key={key} className="flex flex-col gap-1.5">
               <p className="text-caption font-medium text-foreground">{label}</p>
-              <ul className="flex flex-col gap-1">
+              <ul className="flex flex-col gap-1.5">
                 {items.map((item) => (
-                  <li key={item} className="text-caption text-muted-foreground">
-                    {item}
+                  <li key={item} className="flex gap-2 text-caption text-muted-foreground">
+                    <span className={cn("mt-1.5 h-1 w-1 shrink-0 rounded-full", dot)} />
+                    <span>{item}</span>
                   </li>
                 ))}
               </ul>

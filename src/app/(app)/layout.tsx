@@ -6,6 +6,7 @@ import { TelegramProvider } from "@/components/providers/telegram-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ConsentGate } from "@/features/legal/components/consent-gate";
 import { DeepLinkRouter } from "@/features/bot/components/deep-link-router";
+import { WhatsNewGate } from "@/features/settings/components/whats-new-gate";
 import type { BottomNavigationItem } from "@/shared/ui/bottom-navigation";
 
 /**
@@ -103,6 +104,7 @@ const navItems: BottomNavigationItem[] = [
       "/goals",
       "/habits",
       "/tasks",
+      "/admin",
     ],
     icon: <User className="h-4.5 w-4.5" />,
   },
@@ -127,6 +129,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               раздел, на который вела кнопка. */}
           <ConsentGate>
             <DeepLinkRouter />
+            {/* Записка «Nova обновилась» — внутри гейта согласий и рядом с
+                маршрутизатором ссылок, потому что это то же самое: то, что
+                случается один раз на входе, независимо от экрана. Разбор
+                условий показа — в самом компоненте. */}
+            <WhatsNewGate />
             {children}
           </ConsentGate>
         </AppShell>

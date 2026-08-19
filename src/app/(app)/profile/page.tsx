@@ -2,19 +2,17 @@
 
 import { AppScreen } from "@/features/auth/components/app-screen";
 import { ProfileView } from "@/features/profile/components/profile-view";
-import { DEFAULT_THEME } from "@/shared/config/themes";
 
+/**
+ * Тема сюда больше не передаётся: выбор акцента жил на профиле отдельной
+ * карточкой и полностью повторял раздел «Оформление» в настройках — одна и та
+ * же настройка в двух местах. Осталось одно, в настройках, куда с профиля ведёт
+ * строка «Настройки». Разбор — в ProfileView.
+ *
+ * isAdmin берётся из сессии, а не из снимка профиля: это факт о том, кто вошёл,
+ * а не о том, что человек про себя заполнил. Строка «Панель» от него только
+ * показывается — доступ проверяет сервер (features/admin/server/admin-guard).
+ */
 export default function ProfilePage() {
-  return (
-    <AppScreen>
-      {/* The accent colour comes from the session rather than from the profile
-          snapshot: it lives on Profile, AppScreen already applies it on every
-          load, and the picker writes back through the session's own cache.
-          Reading it from a second fetch would give the app two answers to one
-          question. */}
-      {(session) => (
-        <ProfileView themeColor={session.profile?.themeColor ?? DEFAULT_THEME} />
-      )}
-    </AppScreen>
-  );
+  return <AppScreen>{(session) => <ProfileView isAdmin={session.isAdmin} />}</AppScreen>;
 }

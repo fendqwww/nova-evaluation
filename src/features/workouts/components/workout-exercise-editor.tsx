@@ -8,6 +8,9 @@ import { Input } from "@/shared/ui/input";
 import { Card } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
 import { NumberStepper } from "@/features/workouts/components/number-stepper";
+import { ExerciseIllustration } from "@/features/workouts/components/exercise-illustration";
+import { ExercisePickerModal } from "@/features/workouts/components/exercise-picker-modal";
+import type { CatalogExercise } from "@/features/workouts/lib/exercise-catalog";
 import { formatRest, formatWeight } from "@/features/workouts/lib/format";
 import {
   EXERCISES_MAX,
@@ -42,28 +45,38 @@ export function WorkoutExerciseEditor({
   // Index of the open row, or null when every row is collapsed. One at a time:
   // two expanded rows on a phone means neither is readable.
   const [expanded, setExpanded] = useState<number | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   function patch(index: number, changes: Partial<WorkoutExerciseDraft>) {
     onChange(exercises.map((item, i) => (i === index ? { ...item, ...changes } : item)));
   }
 
-  function add() {
-    // Seeded from the last row rather than from constants: a leg day is usually
-    // the same scheme all the way down, and copying it is what the user would
-    // do by hand anyway.
+  /**
+   * Добавить строку.
+   *
+   * Схема подходов берётся из справочника, когда упражнение выбрано в нём, и от
+   * предыдущей строки, когда имя вводится руками. Порядок именно такой: у
+   * приседа и у махов в стороны разумные схемы разные, и «повторить прошлую
+   * строку» — хорошая догадка ровно до тех пор, пока мы не знаем движения. Как
+   * только знаем — знание сильнее догадки.
+   */
+  function add(preset?: CatalogExercise, name = "") {
     const previous = exercises.at(-1);
     onChange([
       ...exercises,
       {
-        name: "",
-        targetSets: previous?.targetSets ?? 3,
-        targetReps: previous?.targetReps ?? 10,
+        name: preset?.name ?? name,
+        targetSets: preset?.sets ?? previous?.targetSets ?? 3,
+        targetReps: preset?.reps ?? previous?.targetReps ?? 10,
         targetWeightKg: null,
-        restSeconds: previous?.restSeconds ?? 90,
+        restSeconds: preset?.restSeconds ?? previous?.restSeconds ?? 90,
         note: null,
       },
     ]);
-    setExpanded(exercises.length);
+    // Строка из справочника уже заполнена — раскрывать её незачем; строку со
+    // своим названием, наоборот, надо дозаполнить, и она открывается сразу.
+    setExpanded(preset ? null : exercises.length);
+    setPickerOpen(false);
   }
 
   function remove(index: number) {
@@ -111,9 +124,21 @@ export function WorkoutExerciseEditor({
                   onClick={() => setExpanded(isOpen ? null : index)}
                   className="flex w-full items-center gap-2.5 p-3 text-left"
                 >
-                  <span className="numeric flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-fill-muted text-micro font-semibold text-subtle-foreground">
-                    {index + 1}
-                  </span>
+                  {/* Схема мышц вместо порядкового номера: номер строки в
+                      плане не значит ничего (порядок и так виден сверху вниз),
+                      а группа — значит. Пока имени нет, показывать нечего,
+                      и на его месте стоит номер. */}
+                  {exercise.name.trim() ? (
+                    <ExerciseIllustration
+                      name={exercise.name}
+                      size="sm"
+                      className="h-9 w-9 rounded-lg"
+                    />
+                  ) : (
+                    <span className="numeric flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-fill-muted text-micro font-semibold text-subtle-foreground">
+                      {index + 1}
+                    </span>
+                  )}
 
                   <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                     <span
@@ -265,11 +290,18 @@ export function WorkoutExerciseEditor({
         variant="secondary"
         className="w-full"
         disabled={exercises.length >= EXERCISES_MAX}
-        onClick={add}
+        onClick={() => setPickerOpen(true)}
       >
         <Plus className="h-4 w-4" />
         Добавить упражнение
       </Button>
+
+      <ExercisePickerModal
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onSelect={(preset) => add(preset)}
+        onCreateCustom={(name) => add(undefined, name)}
+      />
     </div>
   );
 }

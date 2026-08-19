@@ -8,7 +8,7 @@ import { TELEGRAM_SUPPORT_HANDLE, TELEGRAM_SUPPORT_URL } from "@/shared/config/s
  * along with the entire dependency list, which is a lot of bytes and a small
  * information leak to render four characters.
  */
-export const APP_VERSION = "0.1.0";
+export const APP_VERSION = "0.2.0";
 
 /** What stage of the product this build is. Shown next to the version. */
 export const APP_STAGE = "MVP";
@@ -43,6 +43,18 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    day: "2026-08-19",
+    title: "Справочник упражнений и разбор профиля",
+    items: [
+      "Справочник из 60 упражнений по частям тела: грудь, спина, ноги, плечи, руки, пресс, кардио — с поиском и подходами по умолчанию",
+      "У каждого упражнения своя картинка или схема работающих мышц; неверные подстановки картинок убраны",
+      "Профиль стал короче: разделы собраны в четыре понятные группы, подписка и тема переехали туда, где их ищут",
+      "AI-коуч отвечает свободнее — не только про индекс, но и на вопросы «как» и «почему»",
+      "Разбор внешности перестал давать общие советы: теперь наблюдение, причина и что с этим делать",
+      "Новый экран запуска",
+    ],
+  },
   {
     day: "2026-08-08",
     title: "Документы и согласия",

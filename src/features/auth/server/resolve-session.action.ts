@@ -3,6 +3,7 @@
 import { db } from "@/server/db";
 import { resolveIdentity } from "@/server/auth/identity";
 import { recordAppVisit } from "@/features/bot/server/subscriber.repository";
+import { isAppAdmin } from "@/features/admin/server/admin-guard";
 
 export interface ResolvedProfile {
   name: string;
@@ -47,6 +48,15 @@ export interface ResolvedSession {
    * themeColor above is.
    */
   themeMode: string;
+  /**
+   * Показывать ли вход в панель со сводкой по продукту.
+   *
+   * Это подсказка интерфейсу, а не разрешение: доступ проверяет сервер на
+   * каждом запросе (features/admin/server/admin-guard.ts). Спрятанная строка
+   * меню — не ограничение доступа, и обращаться с ней как с ограничением
+   * значило бы оставить панель открытой всем, кто знает адрес.
+   */
+  isAdmin: boolean;
 }
 
 export async function resolveSession(
@@ -92,6 +102,7 @@ export async function resolveSession(
       photoUrl: user.photoUrl,
     },
     onboardingCompleted: user.onboardingCompletedAt !== null,
+    isAdmin: isAppAdmin(identity.telegramId),
     // No settings row yet means nothing has been chosen, which is exactly what
     // "system" means. Kept identical to DEFAULT_SETTINGS.themeMode.
     themeMode: user.settings?.themeMode ?? "system",

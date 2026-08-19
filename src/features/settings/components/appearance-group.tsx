@@ -3,7 +3,8 @@
 import { Moon, Palette, Smartphone, Sun } from "lucide-react";
 import { Card } from "@/shared/ui/card";
 import { cn } from "@/shared/lib/cn";
-import { SettingsGroup, SettingsRow } from "@/features/settings/components/settings-group";
+import { SettingsGroup } from "@/features/settings/components/settings-group";
+import { ThemePicker } from "@/features/profile/components/theme-picker";
 import { THEME_MODES, THEME_MODE_LABELS } from "@/features/settings/schemas";
 import { THEME_LABELS, type ThemeValue } from "@/shared/config/themes";
 import type { ThemeMode } from "@/features/settings/types";
@@ -24,9 +25,11 @@ const MODE_ICONS: Record<ThemeMode, typeof Sun> = {
  * (see useSettings) — which is the only behaviour that makes sense for a
  * control whose entire subject is what you are looking at.
  *
- * The accent hue is a separate axis living on Profile and already has a picker
- * on the Profile screen. This links there rather than duplicating six swatches
- * in a second place.
+ * Акцентный цвет — второй, независимый параметр, и он теперь тоже здесь. Было
+ * так: шесть кружков стояли карточкой на профиле, а настройки вели к ним
+ * строкой-ссылкой. Одна настройка в двух экранах, и человек, пришедший в
+ * «Внешний вид» менять цвет, уходил отсюда на профиль. Светлая тема и акцент —
+ * один вопрос («как это выглядит»), поэтому и один блок.
  */
 export function AppearanceGroup({
   mode,
@@ -73,13 +76,21 @@ export function AppearanceGroup({
         )}
       </div>
 
-      <SettingsRow
-        icon={<Palette className="h-4 w-4" />}
-        tone="accent"
-        label="Акцентный цвет"
-        value={THEME_LABELS[themeColor]}
-        href="/profile"
-      />
+      {/* Акцент — прямо здесь, а не ссылкой на профиль.
+          Раньше эта строка вела на /profile, где стояла карточка выбора цвета:
+          одна настройка в двух местах и переход между экранами ради шести
+          кружков. Карточка с профиля убрана (разбор — в ProfileView), выбор
+          переехал сюда, к светлой и тёмной теме, где его и ищут. */}
+      <div className="border-t border-border p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Palette className="h-4 w-4 text-accent" />
+          <span className="text-body font-medium text-foreground">Акцентный цвет</span>
+          <span className="ml-auto text-caption text-subtle-foreground">
+            {THEME_LABELS[themeColor]}
+          </span>
+        </div>
+        <ThemePicker current={themeColor} withHeading={false} />
+      </div>
     </SettingsGroup>
   );
 }
